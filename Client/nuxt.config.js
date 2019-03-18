@@ -4,9 +4,7 @@ const pkg = require('./package')
 module.exports = {
   mode: 'universal',
 
-  /*
-  ** Headers of the page
-  */
+  /* Headers of the page */
   head: {
     title: pkg.name,
     meta: [
@@ -16,50 +14,61 @@ module.exports = {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+    ],
+    script: [
+      { src: '/js/jquery-3.2.1.min.js'},
+      { src: '/js/bootstrap.min.js'},
+      { src: '/js/popper.js'},
+      { src: '/js/stellar.js'},
+      { src: '/vendors/isotope/isotope-min.js'},
+      { src: '/vendors/lightbox/simpleLightbox.min.js'},
+      { src: '/vendors/isotope/imagesloaded.pkgd.min.js'},
+      { src: '/vendors/jquery-ui/jquery-ui.js'},
+      { src: 'https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js'},
+      { src: 'https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js'}
     ]
   },
 
-  /*
-  ** Customize the progress-bar color
-  */
+  /* Customize the progress-bar color */
   loading: { color: '#fff' },
 
-  /*
-  ** Global CSS
-  */
+  /* Global CSS */
   css: [
-    "~/assets/styles/main.css"
+    "~/assets/css/bootstrap.css",
+    "~/assets/vendors/linericon/style.css",
+    "~/assets/css/font-awesome.min.css",
+    "~/assets/vendors/lightbox/simpleLightbox.css",
+    "~/assets/vendors/nice-select/css/nice-select.css",
+    "~/assets/vendors/animate-css/animate.css",
+    "~/assets/vendors/jquery-ui/jquery-ui.css",
+    "~/assets/css/style.css",
+    "~/assets/css/responsive.css"
   ],
 
-  /*
-  ** Plugins to load before mounting the App
-  */
+  /* Plugins to load before mounting the App */
   plugins: [
+    { src: '~/plugins/js/mail-script.js', ssr: false},
+    { src: '~/plugins/js/custom.js', ssr: false},
+    { src: '~/plugins/js/jquery.ajaxchimp.min.js', ssr: false},
+    { src: '~/plugins/vendors/nice-select/js/jquery.nice-select.min.js', ssr: false},
   ],
 
-  /*
-  ** Nuxt.js modules
-  */
+  /* Nuxt.js modules */
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
     // Doc: https://bootstrap-vue.js.org/docs/
     'bootstrap-vue/nuxt',
   ],
-  /*
-  ** Axios module configuration
-  */
+
+  /* Axios module configuration */
   axios: {
     // See https://github.com/nuxt-community/axios-module#options
   },
 
-  /*
-  ** Build configuration
-  */
+  /* Build configuration */
   build: {
-    /*
-    ** You can extend webpack config here
-    */
+    // You can extend webpack config here
     extend(config, ctx) {
       
     }

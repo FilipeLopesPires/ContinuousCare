@@ -1,9 +1,14 @@
 <template>
-  <div>
-    <header>Welcome to Continuous Care!</header>
-    <nuxt />
-  </div>
+    <html lang="en">
+        <nuxt/>
+    </html>
 </template>
+
+<script>
+export default {
+
+}
+</script>
 
 <style>
 
