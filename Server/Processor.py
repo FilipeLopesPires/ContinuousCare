@@ -2,7 +2,7 @@ import requests
 import json
 import threading
 from datetime import datetime, timedelta
-from Database import Database
+from database import *
 
 '''
 Component responsable for doing all the information gathering and processing
@@ -10,7 +10,7 @@ Component responsable for doing all the information gathering and processing
 class Processor:
 
     def __init__(self):
-        self.database=Database()
+        self.database=database.Database()
 
     '''
     def getPollution(self, city):
@@ -46,7 +46,7 @@ class Processor:
 
         out[jsondata["data"]["indexes"]["baqi"]["display_name"]]=jsondata["data"]["indexes"]["baqi"]["aqi_display"]
 
-        self.database.insert(out, lat, longi, "teste1", "1234")
+        #self.database.insert(out, lat, longi, "teste1", "1234")
 
         return str(out)
     

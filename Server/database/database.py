@@ -1,8 +1,13 @@
 #!/usr/bin/python3
 
+__all__ = [
+        "Database"
+        ]
+
 import time
 
 import influxdb
+
 
 class Database:
     def __init__(self):

@@ -1,0 +1,16 @@
+drop table supported_metric;
+drop table metric;
+drop table clients_device;
+drop table device;
+drop table supported_device;
+drop table personal_status;
+drop table status_type;
+drop table expired_permissions;
+drop table active_permissions;
+drop table pending_permissions;
+drop table medic_authentication;
+drop table client_authentication;
+drop table medic;
+drop table disease;
+drop table client;
+drop table user;
