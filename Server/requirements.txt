@@ -1,2 +1,10 @@
 Flask
 requests
+flask_cors
+
+# databases drivers
+influxdb
+mysql-connector-python
+
+# python docs
+sphinx
