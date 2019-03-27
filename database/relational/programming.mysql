@@ -1,0 +1,28 @@
+DELIMITER //
+CREATE PROCEDURE register_client (IN username varchar(30),
+                                IN password binary(64),
+                                IN full_name varchar(55),
+                                IN email varchar(30),
+                                IN health_number integer,
+                                IN birth_date date,
+                                IN weight float(24),
+                                IN height float(24))
+BEGIN
+  INSERT INTO user (username, password, full_name, email) 
+  VALUES (username, password, full_name, email);
+
+  INSERT INTO client (user_id, health_number, birth_date, weight, height)
+  VALUES (LAST_INSERT_ID(), health_number, birth_date, weight, height);
+
+  SELECT LAST_INSERT_ID();
+END //
+
+CREATE PROCEDURE insert_client_disease (
+                                IN client_id integer,
+                                IN description varchar(200))
+BEGIN
+  INSERT INTO disease (client_id, description) 
+  VALUES (client_id, description);
+END //
+
+DELIMITER ;

@@ -15,10 +15,14 @@ from database.time_series import config
 
 
 class InfluxProxy:
-    """Proxy used to interact with a Influx database allowing writes and reads"""
+    """
+    Proxy used to interact with a Influx database allowing writes and reads
+    """
 
     def __init__(self):
-        """Constructs InfluxProxy objects according to the config.py file"""
+        """
+        Constructs InfluxProxy objects according to the config.py file
+        """
         self.__conn = influxdb.InfluxDBClient(
             host      = config.HOST,
             port      = config.PORT,
@@ -29,19 +33,21 @@ class InfluxProxy:
         )
 
     @property
-    def _conn(self):
+    def _get_connection(self):
         return self.__conn
 
     def write(self, data):
-        """Write to the database data
+        """
+        Write to the database data
 
         :param data: data to write
         :type data: list
         """
-        self._conn.write_points(data, 's')
+        self._get_connection.write_points(data, 's')
 
     def read(self, username, measurement, begin_time=None, end_time=None, interval=None):
-        """Get from the database data of a specific user and a specific measurement
+        """
+        Get from the database data of a specific user and a specific measurement
         allowing also filtering results within a time interval
 
         :param username: username of the client
@@ -90,5 +96,5 @@ class InfluxProxy:
                 query += " AND time < $end_time"
                 params["end_time"] = end_time * 1000000000
 
-        result = self._conn.query(query, {"params": json.dumps(params)})
+        result = self._get_connection.query(query, {"params": json.dumps(params)})
         return list(result.get_points(measurement))
