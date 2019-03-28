@@ -1,6 +1,10 @@
+VIEW client_username AS
+    SELECT client.client_id AS client_id, user.username AS username
+    FROM client JOIN user ON client.user_id = user.user_id;
+
 DELIMITER //
 
-CREATE PROCEDURE register_client (
+CREATE PROCEDURE insert_client (
     IN _username varchar(30),
     IN _password char(88),
     IN _full_name varchar(55),
@@ -29,18 +33,49 @@ CREATE PROCEDURE register_client (
   END //
 
 CREATE PROCEDURE insert_client_disease (
-    IN client_id  integer,
-    IN description varchar(200))
+    IN _client_id  integer,
+    IN _description varchar(200))
   BEGIN
     INSERT INTO disease (client_id, description) 
     VALUES (_client_id, _description);
   END //
 
-CREATE PROCEDURE verify_login (
+CREATE PROCEDURE verify_credentials (
     IN _username varchar(30),
     IN _password char(88))
   BEGIN
     SELECT EXISTS(SELECT * FROM user WHERE username = _username and passoword = _password);
+  END //
+
+CREATE PROCEDURE get_all_client_devices (
+    IN _username VARCHAR(30))
+  BEGIN
+    SELECT device.id, device.type_id, device.acess_token
+    FROM (device JOIN client_device ON device.id = client_device.device_id)
+         JOIN client_username ON client_username.client_id = client_device.client_id
+    WHERE client_username.username = _username;
+  END //
+
+CREATE PROCEDURE insert_device (
+    IN _username varchar(30),
+    IN _type_id INTEGER,
+    IN _acess_token VARCHAR(300))
+  BEGIN
+    DECLARE __client_id, __new_device_id INTEGER;
+
+    SELECT client_id INTO __client_id
+    FROM client_username
+    WHERE username = _username;
+
+    INSERT INTO device (type_id, acess_token)
+    VALUES (_type_id, _acess_token);
+
+    SET __new_device_id = LAST_INSERT_ID();
+
+    INSERT INTO client_device (client_id, device_id)
+    VALUES (__client_id, __new_device_id);
+
+    select __new_device_id;
   END //
 
 DELIMITER ;

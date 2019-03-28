@@ -28,6 +28,7 @@ class TestDatabaseProxy(unittest.TestCase):
             ]
         })
 
+    @unittest.skip
     def test_verify_credentials(self):
         result = self.db.verifyUser({
             "username": "aspedrosa",
@@ -40,6 +41,19 @@ class TestDatabaseProxy(unittest.TestCase):
             "password": "olb"
         })
         self.assertFalse(result, "password olb")
+
+    @unittest.skip
+    def test_insert_device(self):
+        self.db.addDevices(
+            "aspedrosa",
+            {
+                "type": 1,
+                "token": "asdffghj"
+            }
+        )
+
+    def test_get_all_client_devices(self):
+        print(self.db.getAllDevices("aspedrosa"))
 
 
 if __name__ == '__main__':

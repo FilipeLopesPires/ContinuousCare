@@ -31,7 +31,7 @@ class Database:
         Register a client on the database
 
         :param data: keys : [username, password, name, email, phpn, birth_date, weight, height, diseases]
-        :param type: dict
+        :type data: dict
         :return: the client_id for the new client
         :rtype: int
         """
@@ -56,16 +56,40 @@ class Database:
         :return: true if credentials are ok, false otherwise
         :rtype: bool
         """
-        return self.relational_proxy.good_credentials(
+        return self.relational_proxy.check_credentials(
             data["username"],
             data["password"]
         )
 
-    def getAllDevices(self, user):
-        """"""
-        pass
-
     def addDevices(self, user, data):
+        """
+        Stores a new device on the database
+
+        :param user: username of the client to associate
+        :type user: str
+        :param data: keys : [type, token]
+        :type data: dict
+        :return: id of the new device created
+        :rtype: int
+        """
+        return self.relational_proxy.register_device(
+            user,
+            data["type"],
+            data["token"]
+        )
+
+    def getAllDevices(self, user):
+        """
+        Get all devices associated with the client passed on the arguments
+
+        :param user: username of the client to query
+        :type user: str
+        :return: all devices associated with the specific client
+        :rtype: list
+        """
+        return self.relational_proxy.get_all_devices_of_user(user)
+
+    def getSupportedDevices(self):
         """"""
         pass
 
@@ -158,9 +182,5 @@ class Database:
         pass
 
     def deleteProfile(self, user):
-        """"""
-        pass
-
-    def getSupportedDevices(self):
         """"""
         pass

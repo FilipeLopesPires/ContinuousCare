@@ -19,6 +19,14 @@ from cryptography.hazmat.primitives import hashes
 import base64
 
 
+class StoredProcedures:
+    REGISTER_CLIENT = "insert_client"
+    INSERT_DEVICE = "insert_device"
+    INSERT_CLIENT_DISEASE = "insert_client_disease"
+    VERIFY_CREDENTIALS = "verify_credentials"
+    GET_ALL_CLIENT_DEVICES = "get_all_client_devices"
+
+
 class MySqlProxy:
     """Proxy used to interact with a MySql database allowing ..."""
 
@@ -33,7 +41,7 @@ class MySqlProxy:
             password  = config.PASSWORD
         )
 
-        self.__hash_algorithm = hashes.SHA256()
+        self.__hash_algorithm = hashes.SHA512()
         self.__cipher_backend = default_backend()
 
     @property
@@ -75,12 +83,15 @@ class MySqlProxy:
 
     def _hash_password(self, password):
         """
-        :param password:
+        Applies a hash function (SHA512) to a clear text password to
+        either compared or stored.
+
+        :param password: clear text password
         :type password: str
-        :return:
+        :return: password after hash function applied and encoded in base 64
         :rtype: str
         """
-        hash_parser = hashes.Hash(hashes.SHA512(), default_backend())
+        hash_parser = hashes.Hash(self._hash_algorithm, self._cipher_backend)
         hash_parser.update(bytes(password, "utf-8"))
         password = base64.b64encode(hash_parser.finalize()).decode()
 
@@ -122,18 +133,16 @@ class MySqlProxy:
             password = self._hash_password(password)
 
             cursor.callproc(
-                "register_client",
+                StoredProcedures.REGISTER_CLIENT,
                 (username, password, full_name, email, health_number, birth_date, weight, height)
             )
 
             new_id = next(cursor.stored_results()).fetchone()[0]
 
             for disease in diseases:
-                cursor.callproc("insert_client_disease", (new_id, disease))
+                cursor.callproc(StoredProcedures.INSERT_CLIENT_DISEASE, (new_id, disease))
 
             conn.commit()
-        except:
-            raise Exception
         finally:
             self._close_conenction(conn, cursor)
 
@@ -143,7 +152,7 @@ class MySqlProxy:
         """"""
         pass
 
-    def good_credentials(self, username, password):
+    def check_credentials(self, username, password):
         """
         Verifies if the received credential are correct
 
@@ -159,10 +168,61 @@ class MySqlProxy:
 
             password = self._hash_password(password)
 
-            cursor.callproc("verify_login", (username, password))
+            cursor.callproc(StoredProcedures.VERIFY_CREDENTIALS, (username, password))
 
             return next(cursor.stored_results()).fetchone()[0] == 1
-        except:
-            raise Exception
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def register_device(self, username, type_id, token):
+        """
+        Inserts a new device on the database and associates it with the user
+
+        :param username: client to associate
+        :type username: str
+        :param type_id: type of the device
+        :type type_id: int
+        :param token: token to access device's APIs
+        :type token: str
+        :return: id of the new device
+        :rtype: int
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.INSERT_DEVICE, (username, type_id, token))
+
+            conn.commit()
+
+            return next(cursor.stored_results()).fetchone()[0]
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_all_devices_of_user(self, username):
+        """
+        Obtains all devices associated with the user with the same
+        username as the one received from the arguments
+
+        :param username: of the client
+        :type username: str
+        :return: info of all devices
+        :rtype: list
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_ALL_CLIENT_DEVICES, [username])
+
+            retval = []
+            for (device_id, type_id, token) in next(cursor.stored_results()).fetchall():
+                retval.append(
+                    {
+                        "device": device_id,
+                        "type": type_id,
+                        "token": token
+                    }
+                )
+
+            return retval
         finally:
             self._close_conenction(conn, cursor)
