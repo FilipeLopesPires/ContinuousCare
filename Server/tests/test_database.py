@@ -11,6 +11,7 @@ class TestDatabaseProxy(unittest.TestCase):
         super(TestDatabaseProxy, self).__init__(*args, **kwargs)
         self.db = database.Database()
 
+    @unittest.skip
     def test_insert_user(self):
         self.db.register({
             "username": "aspedrosa",
@@ -26,6 +27,19 @@ class TestDatabaseProxy(unittest.TestCase):
                 "outras cenas"
             ]
         })
+
+    def test_verify_credentials(self):
+        result = self.db.verifyUser({
+            "username": "aspedrosa",
+            "password": "ola"
+        })
+        self.assertTrue(result, "password ola")
+
+        result = self.db.verifyUser({
+            "username": "aspedrosa",
+            "password": "olb"
+        })
+        self.assertFalse(result, "password olb")
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ DELIMITER //
 
 CREATE PROCEDURE register_client (
     IN _username varchar(30),
-    IN _password binary(64),
+    IN _password char(88),
     IN _full_name varchar(55),
     IN _email varchar(30),
     IN _health_number integer,
@@ -38,7 +38,7 @@ CREATE PROCEDURE insert_client_disease (
 
 CREATE PROCEDURE verify_login (
     IN _username varchar(30),
-    IN _password binary(64))
+    IN _password char(88))
   BEGIN
     SELECT EXISTS(SELECT * FROM user WHERE username = _username and passoword = _password);
   END //

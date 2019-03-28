@@ -63,8 +63,6 @@ class InfluxProxy:
         :type interval: str
         """
 
-        # TODO read has to take into account separate down sampled data in different measurements
-
         # Parameters on query only work on the where clause
         params = {
             "username": username

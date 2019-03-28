@@ -2,7 +2,7 @@ create table user (
   user_id           integer     primary key auto_increment ,
 -- PRIMARY KEY
   username          varchar(30) unique,
-  password          binary(64),
+  password          char(88),
   full_name         varchar(55),
   email             varchar(30)
 );
