@@ -1,28 +1,46 @@
 DELIMITER //
-CREATE PROCEDURE register_client (IN username varchar(30),
-                                IN password binary(64),
-                                IN full_name varchar(55),
-                                IN email varchar(30),
-                                IN health_number integer,
-                                IN birth_date date,
-                                IN weight float(24),
-                                IN height float(24))
-BEGIN
-  INSERT INTO user (username, password, full_name, email) 
-  VALUES (username, password, full_name, email);
 
-  INSERT INTO client (user_id, health_number, birth_date, weight, height)
-  VALUES (LAST_INSERT_ID(), health_number, birth_date, weight, height);
+CREATE PROCEDURE register_client (
+    IN _username varchar(30),
+    IN _password binary(64),
+    IN _full_name varchar(55),
+    IN _email varchar(30),
+    IN _health_number integer,
+    IN _birth_date date,
+    IN _weight float(24),
+    IN _height float(24))
+  BEGIN
+    -- Verifications
+    IF EXISTS (SELECT * FROM user WHERE username = _username) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "username already exists";
+    ELSEIF EXISTS (SELECT * FROM client WHERE health_number = _health_number) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "health number already exists";
+    END IF;
 
-  SELECT LAST_INSERT_ID();
-END //
+    -- Insertions
+    INSERT INTO user (username, password, full_name, email) 
+    VALUES (_username, _password, _full_name, _email);
+    
+    INSERT INTO client (user_id, health_number, birth_date, weight, height)
+    VALUES (LAST_INSERT_ID(), _health_number, _birth_date, _weight, _height);
+    
+    -- Return client_id
+    SELECT LAST_INSERT_ID();
+  END //
 
 CREATE PROCEDURE insert_client_disease (
-                                IN client_id integer,
-                                IN description varchar(200))
-BEGIN
-  INSERT INTO disease (client_id, description) 
-  VALUES (client_id, description);
-END //
+    IN client_id  integer,
+    IN description varchar(200))
+  BEGIN
+    INSERT INTO disease (client_id, description) 
+    VALUES (_client_id, _description);
+  END //
+
+CREATE PROCEDURE verify_login (
+    IN _username varchar(30),
+    IN _password binary(64))
+  BEGIN
+    SELECT EXISTS(SELECT * FROM user WHERE username = _username and passoword = _password);
+  END //
 
 DELIMITER ;

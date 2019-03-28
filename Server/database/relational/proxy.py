@@ -73,8 +73,6 @@ class MySqlProxy:
         :param cursor:
         :type cursor: :class:``
         """
-        conn.commit()
-
         cursor.close()
         conn.close()
 
@@ -113,9 +111,10 @@ class MySqlProxy:
             new_id = next(cursor.stored_results()).fetchone()[0]
 
             for disease in diseases:
-                print(disease)
                 cursor.callproc("insert_client_disease", (new_id, disease))
-        except:
+
+            conn.commit()
+        except Exception:
             raise Exception
         finally:
             self._close_conenction(conn, cursor)

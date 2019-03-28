@@ -19,7 +19,7 @@ create table client (
 #create index client_health_num_idx on client (health_number);
 
 create table disease (
-  client_id       varchar(30)   references client (client_id),
+  client_id       integer       references client (client_id),
   description     varchar(200),
   primary key (client_id, description)
 );
