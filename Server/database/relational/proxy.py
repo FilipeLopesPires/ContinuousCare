@@ -22,10 +22,11 @@ import base64
 class StoredProcedures:
     REGISTER_CLIENT = "insert_client"
     INSERT_DEVICE = "insert_device"
-    INSERT_CLIENT_DISEASE = "insert_client_disease"
     VERIFY_CREDENTIALS = "verify_credentials"
     GET_ALL_CLIENT_DEVICES = "get_all_client_devices"
     GET_ALL_SUPPORTED_DEVICES = "get_all_supported_devices"
+    GET_USER_PROFILE_DATA = "get_user_info"
+    UPDATE_USER_PROFILE_DATA = "update_user_info"
 
 
 class MySqlProxy:
@@ -98,12 +99,12 @@ class MySqlProxy:
 
         return password
 
-    def register_client(self, username, password, full_name, email, health_number, birth_date, weight, height, diseases):
+    def register_client(self, username, password, full_name, email, health_number,
+                              birth_date, weight, height, additional_information):
         """
-        Creates a new user on the database. The `register_client` SP is used to create all user related
-        data and `insert_client_disease` SP is used to associate to the clients his several diseases.
+        Creates a new user on the database. The `register_client` SP is used to create all user related data.
         On this function the password is hashed to be stored.
-        The write to the database can fail if a user with the same username or heal_number already exists.
+        The write to the database can fail if an user with the same username or health_number already exists.
 
         :raises Exception: In case if something goes wrong when calling stored procedures
 
@@ -124,9 +125,10 @@ class MySqlProxy:
         :type weight: float
         :param height: in meters
         :type height: float
-        :param diseases: conditions that can be important to mention so a medic can me more contextualized
-        :type diseases: list
+        :param additional_information: information that can be important to mention so a medic can be more contextualized
+        :type additional_information: list
         :return: client_id of the client created on the database
+        :rtype: int
         """
         try:
             conn, cursor = self._init_connection()
@@ -135,19 +137,17 @@ class MySqlProxy:
 
             cursor.callproc(
                 StoredProcedures.REGISTER_CLIENT,
-                (username, password, full_name, email, health_number, birth_date, weight, height)
+                (username, password, full_name, email, health_number,
+                 birth_date, weight, height, additional_information)
             )
 
             new_id = next(cursor.stored_results()).fetchone()[0]
 
-            for disease in diseases:
-                cursor.callproc(StoredProcedures.INSERT_CLIENT_DISEASE, (new_id, disease))
-
             conn.commit()
+
+            return new_id
         finally:
             self._close_conenction(conn, cursor)
-
-        return new_id
 
     def register_medic(self, username, password, full_name, email, specialization, company):
         """"""
@@ -207,6 +207,7 @@ class MySqlProxy:
         :param username: of the client
         :type username: str
         :return: info of all devices
+        [{device:int, type:int, token:str}, ...]
         :rtype: list
         """
         try:
@@ -234,6 +235,7 @@ class MySqlProxy:
         the metrics that that device can read
 
         :return: all information of the supported devices
+        [{id:int, type:str, brand:str, model:str, metrics:[{name:str, unit:str}, ...]}, ...]
         :rtype: list
         """
         try:
@@ -259,5 +261,69 @@ class MySqlProxy:
                 })
 
             return list(retval.values())
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_user_profile_data(self, username):
+        """
+        Obtains all profile data associated with the username received
+
+        :param username: of the client to search for
+        :type username: str
+        :return: all client's profile data
+        {client_id:int, full_name:str, email:str, health_number:int, birth_date:datetime, weight:float, height:float}
+        :rtype: dict
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_USER_PROFILE_DATA, [username])
+
+            results = next(cursor.stored_results()).fetchall()
+
+            return {key: results[i] for i, key in enumerate(["client_id",
+                                                             "full_name",
+                                                             "email",
+                                                             "health_number",
+                                                             "birth_date",
+                                                             "weight",
+                                                             "height"])}
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def update_user_profile_data(self, username, password, full_name, email, health_number,
+                                       birth_date, weight, height, additional_information):
+        """
+
+        :param username: of the client to update the data
+        :type username: str
+        :param password: clear text password
+        :type password: str
+        :param full_name: full name of the client
+        :type full_name: str
+        :param email: email of the client
+        :type email: str
+        :param health_number: number used on the country of the client to identify him in which concerns the health
+            department
+        :type health_number: int
+        :param birth_date: with format dd-mm-yyyy
+        :type birth_date: str
+        :param weight: in kilograms
+        :type weight: float
+        :param height: in meters
+        :type height: float
+        :param additional_information: information that can be important to mention so a medic can be more contextualized
+        :type additional_information: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            password = self._hash_password(password)
+
+            cursor.callproc(StoredProcedures.UPDATE_USER_PROFILE_DATA, (username, password, full_name, email,
+                                                                        health_number, birth_date, weight, height,
+                                                                        additional_information))
+
+            conn.commit()
         finally:
             self._close_conenction(conn, cursor)

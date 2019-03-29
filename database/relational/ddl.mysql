@@ -1,115 +1,108 @@
 create table user (
-  user_id           integer     primary key auto_increment ,
+  user_id                 integer     primary key auto_increment ,
 -- PRIMARY KEY
-  username          varchar(30) unique,
-  password          char(88),
-  full_name         varchar(55),
-  email             varchar(30)
+  username                varchar(30) unique,
+  password                char(88),
+  full_name               varchar(55),
+  email                   varchar(30)
 );
 
 create table client (
-  client_id       integer       primary key auto_increment,
+  client_id               integer       primary key auto_increment,
 -- PRIMARY KEY
-  user_id         integer       references user (user_id) restrict,
-  health_number   integer       unique,
-  birth_date      date,
-  weight          float(24),
-  height          float(24)
+  user_id                 integer       references user (user_id) restrict,
+  health_number           integer       unique,
+  birth_date              date,
+  weight                  float(24),
+  height                  float(24),
+  additional_information
 );
 #create index client_health_num_idx on client (health_number);
 
-create table disease (
-  client_id       integer       references client (client_id) restrict,
-  description     varchar(200),
-  primary key (client_id, description)
-);
-drop index `PRIMARY` on disease;
-create index disesase_client_idx on disease (client_id);
-
 create table medic (
-  medic_id        integer       primary key auto_increment,
+  medic_id                integer       primary key auto_increment,
 -- PRIMARY KEY
-  user_id         integer       references user (user_id) restrict,
-  specialisation  varchar(30),
-  company         varchar(30)
+  user_id                 integer       references user (user_id) restrict,
+  specialisation          varchar(30),
+  company                 varchar(30)
 );
 
 create table authentication (
-  client_id       integer   primary key references user (user_id) restrict,
+  client_id               integer   primary key references user (user_id) restrict,
 -- PRIMARY KEY
-  expiration_date datetime,
-  acess_token     varchar(300)
+  expiration_date         datetime,
+  acess_token             varchar(300)
 );
 
 create table pending_permissions (
-  client_id       integer   references client (client_id) restrict,
-  medic_id        integer   references medic (medic_id) restrict,
+  client_id               integer   references client (client_id) restrict,
+  medic_id                integer   references medic (medic_id) restrict,
   primary key (client_id, medic_id),
-  begin_date      datetime,
-  end_date        datetime
+  begin_date              datetime,
+  end_date                datetime
 );
 create table active_permissions (
-  client_id       integer   references client (client_id) restrict,
-  medic_id        integer   references medic (medic_id) restrict,
+  client_id               integer   references client (client_id) restrict,
+  medic_id                integer   references medic (medic_id) restrict,
   primary key (client_id, medic_id),
-  begin_date      datetime,
-  expiration_date datetime
+  begin_date              datetime,
+  expiration_date         datetime
 );
 create table expired_permissions (
-  client_id       integer   references client (client_id) restrict,
-  medic_id        integer   references medic (medic_id) restrict,
-  begin_date      datetime,
+  client_id               integer   references client (client_id) restrict,
+  medic_id                integer   references medic (medic_id) restrict,
+  begin_date              datetime,
   primary key (client_id, medic_id, begin_date),
-  end_date        datetime
+  end_date                datetime
 );
 drop index `PRIMARY` on expired_permissions;
 create index exp_perm_client_idx on expired_permissions (client_id);
 create index exp_perm_medic_idx on expired_permissions (client_id);
 
 create table status_type (
-  id              integer       primary key auto_increment,
-  name            varchar(30)
+  id                      integer       primary key auto_increment,
+  name                    varchar(30)
 );
 
 create table personal_status (
-  client_id       integer       references client (client_id) restrict,
-  type            integer       references status_type (id) restrict,
-  time            datetime,
+  client_id               integer       references client (client_id) restrict,
+  type                    integer       references status_type (id) restrict,
+  time                    datetime,
   primary key (client_id, type, time)
 );
 drop index `PRIMARY` on personal_status;
 create index pers_stat_client_idx on personal_status (client_id);
 
 create table supported_device (
-  id              integer       primary key auto_increment,
+  id                      integer       primary key auto_increment,
 -- PRIMARY KEY
-  type            enum("bracelet", "home_device"),
-  brand           varchar(30),
-  model           varchar(30)
+  type                    enum("bracelet", "home_device"), -- TODO doesn't allow extensability
+  brand                   varchar(30),
+  model                   varchar(30)
 );
 
 create table device (
-  id              integer       primary key auto_increment,
+  id                      integer       primary key auto_increment,
 -- PRIMARY KEY
-  type_id         integer       references supported_device (id) restrict,
-  acess_token     varchar(300)
+  type_id                 integer       references supported_device (id) restrict,
+  acess_token             varchar(300)
 );
 
 create table clients_device (
-  client_id       integer       references client (client_id) restrict,
-  device_id       integer       references device (id) restrict,
+  client_id               integer       references client (client_id) restrict,
+  device_id               integer       references device (id) restrict,
   primary key (client_id, device_id)
 );
 
 create table metric (
-  id              integer       primary key auto_increment,
+  id                      integer       primary key auto_increment,
 -- PRIMARY KEY
-  name            varchar(30),
-  unit            varchar(10)
+  name                    varchar(30),
+  unit                    varchar(10)
 );
 
 create table supported_metric (
-  metric_id       integer       references metric (id) restrict,
-  device_id       integer       references supported_device (id) restrict,
+  metric_id               integer       references metric (id) restrict,
+  device_id               integer       references supported_device (id) restrict,
   primary key(metric_id, device_id)
 );

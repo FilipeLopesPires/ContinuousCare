@@ -30,7 +30,9 @@ class Database:
         """
         Register a client on the database
 
-        :param data: keys : [username, password, name, email, phpn, birth_date, weight, height, diseases]
+        :param data: keys : [username:str, password:str, name:str, email:str, phpn:int,
+                             birth_date:##, weight:float, height:float, diseases:str]
+        TODO define date class
         :type data: dict
         :return: the client_id for the new client
         :rtype: int
@@ -51,7 +53,7 @@ class Database:
         """
         Verifies if the received credentials are correct
 
-        :param data: keys : [username, password]
+        :param data: keys : [username:str, password:str]
         :type data:  dict
         :return: true if credentials are ok, false otherwise
         :rtype: bool
@@ -67,7 +69,7 @@ class Database:
 
         :param user: username of the client to associate
         :type user: str
-        :param data: keys : [type, token]
+        :param data: keys : [type:int, token:str]
         :type data: dict
         :return: id of the new device created
         :rtype: int
@@ -85,6 +87,7 @@ class Database:
         :param user: username of the client to query
         :type user: str
         :return: all devices associated with the specific client
+        [{device:int, type:int, token:str}, ...]
         :rtype: list
         """
         return self.relational_proxy.get_all_devices_of_user(user)
@@ -95,6 +98,7 @@ class Database:
         that the client can purchase/use
 
         :return: all supported devices by the system
+        [{id:int, type:str, brand:str, model:str, metrics:[{name:str, unit:str}, ...]}, ...]
         :rtype: list
         """
         return self.relational_proxy.get_all_supported_devices()
@@ -180,12 +184,39 @@ class Database:
         pass
 
     def updateProfile(self, user, data):
-        """"""
-        pass
+        """
+        Updates the profile data of a client with the username received from the arguments
+
+        :param user: username of the client to update
+        :type user: str
+        :param data: keys : [password:str, name:str, email:str, phpn:int, birth_date:str,
+                             weight:float, height:float, diseases:str]
+        TODO define date class
+        :type data: dict
+        """
+        self.relational_proxy.update_user_profile_data(
+            user,
+            data["password"],
+            data["name"],
+            data["email"],
+            data["phpn"],
+            data["birth_date"], # TODO may require conversion
+            data["weight"],
+            data["height"],
+            data["diseases"]
+        )
 
     def getProfile(self, user):
-        """"""
-        pass
+        """
+        Gets all profile data associated with the username (user) in the arguments
+
+        :param user: username of the client
+        :type user: str
+        :return: all profile data
+        {client_id:int, full_name:str, email:str, health_number:int, birth_date:datetime, weight:float, height:float}
+        :rtype: dict
+        """
+        return self.relational_proxy.get_user_profile_data(user)
 
     def deleteProfile(self, user):
         """"""
