@@ -294,6 +294,8 @@ class MySqlProxy:
     def update_user_profile_data(self, username, password, full_name, email, health_number,
                                        birth_date, weight, height, additional_information):
         """
+        Updates the profile information for a user. The function receives all information
+        to overload all data, assuming that some of it is the same as the stored one.
 
         :param username: of the client to update the data
         :type username: str
