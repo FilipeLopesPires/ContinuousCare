@@ -90,8 +90,14 @@ class Database:
         return self.relational_proxy.get_all_devices_of_user(user)
 
     def getSupportedDevices(self):
-        """"""
-        pass
+        """
+        Obtains all supported devices, that are integrated with the system,
+        that the client can purchase/use
+
+        :return: all supported devices by the system
+        :rtype: list
+        """
+        return self.relational_proxy.get_all_supported_devices()
 
     def getCurrentEnviroment(self, user):
         """"""

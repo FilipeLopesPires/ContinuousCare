@@ -52,8 +52,12 @@ class TestDatabaseProxy(unittest.TestCase):
             }
         )
 
+    @unittest.skip
     def test_get_all_client_devices(self):
         print(self.db.getAllDevices("aspedrosa"))
+
+    def test_get_all_supported_devices(self):
+        print(self.db.getSupportedDevices())
 
 
 if __name__ == '__main__':

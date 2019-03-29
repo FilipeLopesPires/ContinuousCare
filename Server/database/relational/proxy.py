@@ -25,6 +25,7 @@ class StoredProcedures:
     INSERT_CLIENT_DISEASE = "insert_client_disease"
     VERIFY_CREDENTIALS = "verify_credentials"
     GET_ALL_CLIENT_DEVICES = "get_all_client_devices"
+    GET_ALL_SUPPORTED_DEVICES = "get_all_supported_devices"
 
 
 class MySqlProxy:
@@ -218,11 +219,45 @@ class MySqlProxy:
                 retval.append(
                     {
                         "device": device_id,
-                        "type": type_id,
-                        "token": token
+                        "type"  : type_id,
+                        "token" : token
                     }
                 )
 
             return retval
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_all_supported_devices(self):
+        """
+        Retrieves all supported devices by the system giving also
+        the metrics that that device can read
+
+        :return: all information of the supported devices
+        :rtype: list
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_ALL_SUPPORTED_DEVICES)
+
+            retval = {}
+            for (device_id, device_type, device_brand, device_model,
+                 metric_name, metric_unit) in next(cursor.stored_results()).fetchall():
+                if device_id not in retval.keys():
+                    retval[device_id] = {
+                        "id": device_id,
+                        "type": device_type,
+                        "brand": device_brand,
+                        "model": device_model,
+                        "metrics": []
+                    }
+
+                retval[device_id]["metrics"].append({
+                    "name": metric_name,
+                    "unit": metric_unit
+                })
+
+            return list(retval.values())
         finally:
             self._close_conenction(conn, cursor)

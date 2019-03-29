@@ -78,4 +78,18 @@ CREATE PROCEDURE insert_device (
     select __new_device_id;
   END //
 
+
+CREATE PROCEDURE get_all_supported_devices ()
+  BEGIN
+    SELECT supported_device.id,
+           supported_device.type,
+           supported_device.brand,
+           supported_device.model,
+           metric.name,
+           metric.unit
+    FROM (supported_device JOIN supported_metric
+         ON supported_device.id = supported_metric.device_id) JOIN
+           metric ON supported_metric.metric_id = metric.id;
+  END //
+
 DELIMITER ;
