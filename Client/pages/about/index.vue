@@ -1,29 +1,31 @@
 <template>
-    <html lang="en">
+    <div>
         <!--================ HTML Header =================-->
-        <HeaderHTML />
+        <HeaderHTML page="About" />
 
         <body>
             <!--================ Header Menu Area =================-->
             <HeaderMenu />
 
             <!--================ Banner Area =================-->
-            <PageBanner />
+            <PageBanner page="About" parent_page="Home" />
 
-            <!--================ Testing Area =================-->
-            <div class="testing">
-                <h1>About ContinuousCare</h1>
-                <p>This is a project for the 'Projeto em Informática' subject of the 3rd year of LEI (2018/19).</p>
-                <p>The main purpose of this project is to develop a web information system that allows the integrated collecting and visualization of clinical and environmental data sources related to the daily life of a citizen.</p>
-                <p>The solution must be capable of automatically collecting several types of data, such as weather conditions, air quality indicators, vital signals, geolocalization, etc. On the other side, the application must allow the simplified registration of basic physical and mental health states of a person, such as local pains, depression, anxiety, fatigue, etc.</p>
-            </div>
+            <!--================ Content Area =================-->
+            <section class="sample-text-area">
+                <div class="container">
+                    <h3 class="text-heading title_color">About ContinuousCare</h3>
+                    <p class="sample-text">This is a project for the 'Projeto em Informática' subject of the 3rd year of LEI (2018/19).</p>
+                    <p class="sample-text">The main purpose of this project is to develop a web information system that allows the integrated collecting and visualization of clinical and environmental data sources related to the daily life of a citizen.</p>
+                    <p class="sample-text">The solution must be capable of automatically collecting several types of data, such as weather conditions, air quality indicators, vital signals, geolocalization, etc. On the other side, the application must allow the simplified registration of basic physical and mental health states of a person, such as local pains, depression, anxiety, fatigue, etc.</p>
+                </div>
+            </section>
 
             <!--================ Footer Area =================-->
             <PageFooter />
             
         </body>
         <nuxt/>
-    </html>
+    </div>
 </template>
 
 <script>

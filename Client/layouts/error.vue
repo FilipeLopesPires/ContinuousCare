@@ -1,9 +1,8 @@
 <template>
-  <div>
-    <header>Error Header</header>
+  <html lang="en">
     <h1>An error occurred, we're sorry!</h1>
-    <nuxt />
-  </div>
+    <nuxt/>
+  </html>
 </template>
 
 <script>

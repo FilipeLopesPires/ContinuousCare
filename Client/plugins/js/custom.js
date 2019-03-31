@@ -24,37 +24,6 @@
         $('#searchInput').fadeToggle(750);
     });
 
-    //--------  Carousel --------// 
-    /*
-    if($('.active-review-carusel').length) {
-        $('.active-review-carusel').owlCarousel({
-            loop: true,
-            margin: 0,
-            items: 1,
-            nav: false,
-            dots: true,
-            responsiveClass: true,
-            autoplay: 2500,
-            slideSpeed: 300,
-            paginationSpeed: 500,
-            responsive: {
-                0: {
-                    items: 1
-                }
-            }
-        });
-    }
-    */
-
-    // $('.active-review-carusel').owlCarousel({
-    //     items:1,
-    //     loop:true,
-    //     // autoplay:true,
-    //     autoplayHoverPause: true,        
-    //     margin:0,
-    //     dots: true
-    // });
-
     //-------- Counter js --------//
     $(window).on("load", function() {
         $('.counter').counterUp({
@@ -69,10 +38,10 @@
         $('#mc_embed_signup').find('form').ajaxChimp();
     }
     mailChimp();
-    
+    */
     $('select').niceSelect();
     
-    */
+    
     /*----------------------------------------------------*/
     /*  Google map js
     /*----------------------------------------------------*/
@@ -88,6 +57,6 @@
         marker = new google.maps.Marker({
             map: map
         });
-    }
+    };
 
 })(jQuery)

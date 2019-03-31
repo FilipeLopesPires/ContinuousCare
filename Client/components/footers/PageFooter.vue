@@ -28,7 +28,7 @@
                             Campus Universitário de Santiago, 3810-193 Aveiro
                         </p>
                         <p>+351 123 456 789</p>
-                        <p>general_cc@continuouscare.com</p>
+                        <p>general_email@continuouscare.com</p>
                     </div>
                 </div>
                 <div class="col-lg-6  col-md-12">
@@ -59,17 +59,14 @@
                     Copyright &copy; 2019 All rights reserved | ContinuousCare
                 </p>
                 <div class="col-lg-4 col-sm-12 footer-social">
-                    <a href="#">
-                        <i class="fa fa-facebook"></i>
+                    <a href="https://drive.google.com/open?id=1SzGB95gpO4g3TtLYx_FPNkP1XkCdRs-V">
+                        <i class="fa fa-google"></i>
                     </a>
-                    <a href="#">
-                        <i class="fa fa-twitter"></i>
+                    <a href="https://www.facebook.com/continuous.care.58">
+                        <i class="fa fa-facebook-f"></i>
                     </a>
-                    <a href="#">
-                        <i class="fa fa-dribbble"></i>
-                    </a>
-                    <a href="#">
-                        <i class="fa fa-behance"></i>
+                    <a href="http://code.ua.pt/projects/personal_monitoring_system?jump=search">
+                        <i class="fa fa-github"></i>
                     </a>
                 </div>
             </div>
@@ -79,7 +76,10 @@
 
 <script>
 export default {
-
+    name: 'PageFooter',
+    props: {
+        
+    }
 }
 </script>
 

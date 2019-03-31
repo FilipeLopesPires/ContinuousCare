@@ -1,14 +1,105 @@
 <template>
-  <html lang="en">
+  <div>
     <!--================ HTML Header =================-->
-    <HeaderHTML />
+    <HeaderHTML page="TMP" />
 
     <body>
+
+      <!--=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!= COMPONENTS =!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=-->
+
       <!--================Header Menu Area =================-->
-      <HeaderMenuHome />
+      <HeaderMenu />
 
       <!--================ Home Banner Area =================-->
-      <PageBanner />
+      <PageBanner parent_page="Home" page="TMP" />
+
+      <!--================ Tags Area =================-->
+      <div class="row justify-content-center d-flex align-items-center">
+        <div class="col-lg-9">
+          <TagsArea />
+        </div>
+      </div>
+
+      <!--================ Basic Table Area =================-->
+      <div class="row justify-content-center d-flex align-items-center">
+        <div class="col-lg-6">
+          <div class="blog_right_sidebar">
+            <BasicTable />
+          </div>
+        </div>
+      </div>
+
+      <!--================ Complex Table Area =================-->
+      <div class="row justify-content-center d-flex align-items-center">
+        <div class="col-lg-9">
+          <div class="whole-wrap">
+            <div class="container">
+              <ComplexTable />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--================ Profile Boxes Area =================-->
+      <section class="team-area section_gap">
+        <div class="row justify-content-center section-title-wrap">
+          <div class="col-lg-12">
+            <h1>Team Profiles</h1>
+            <p>
+              Description here.
+            </p>
+          </div>
+        </div>
+        <div class="container">
+          <div class="row justify-content-center d-flex align-items-center">
+            <ProfileBox />
+            <ProfileBox />
+            <ProfileBox />
+            <ProfileBox />
+            <ProfileBox />
+            <ProfileBox />
+            <ProfileBox />
+            <ProfileBox />
+          </div>
+        </div>
+      </section>
+
+      <!--================ ImageBoxes Area =================-->
+      <section class="recent-blog-area section_gap">
+        <div class="container">
+          <div class="row justify-content-center section-title-wrap">
+            <div class="col-lg-12">
+              <h1>Images Area</h1>
+              <p>
+                Description here.
+              </p>
+            </div>
+          </div>
+          <div class="row">
+            <ImageBox />
+            <ImageBox />
+            <ImageBox />
+          </div>
+        </div>
+      </section>
+
+      <!--================ Map Area =================-->
+      <section class="contact_area p_120">
+        <div class="row justify-content-center section-title-wrap">
+          <div class="col-lg-12">
+            <h1>Map</h1>
+            <p>
+              Description here.
+            </p>
+          </div>
+        </div>
+        <BasicMap />
+      </section>
+
+      <!--================ Pagination Area =================-->
+      <PaginationBox />
+
+      <!--=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!= NON COMPONENTS =!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=-->
 
       <!-- Start Sample Area -->
       <section class="sample-text-area">
@@ -160,7 +251,7 @@
             <h3 class="mb-30 title_color">Left Aligned</h3>
             <div class="row">
               <div class="col-md-3">
-                <img src="img/elements/d.jpg" alt="" class="img-fluid">
+                <img src="~/assets/img/elements/d.jpg" alt="" class="img-fluid">
               </div>
               <div class="col-md-9 mt-sm-20 left-align-p">
                 <p>Recently, the US Federal government banned online casinos from operating in America by making it illegal to transfer
@@ -187,7 +278,7 @@
                 <p class="text-right">Before we discuss all of the things that could be affecting your PC’s performance, let’s talk a little about what symptoms</p>
               </div>
               <div class="col-md-3">
-                <img src="img/elements/d.jpg" alt="" class="img-fluid">
+                <img src="~/assets/img/elements/d.jpg" alt="" class="img-fluid">
               </div>
             </div>
           </div>
@@ -234,152 +325,7 @@
               </div>
             </div>
           </div>
-          <div class="section-top-border">
-            <h3 class="mb-30 title_color">Table</h3>
-            <div class="progress-table-wrap">
-              <div class="progress-table">
-                <div class="table-head">
-                  <div class="serial">#</div>
-                  <div class="country">Countries</div>
-                  <div class="visit">Visits</div>
-                  <div class="percentage">Percentages</div>
-                </div>
-                <div class="table-row">
-                  <div class="serial">01</div>
-                  <div class="country">
-                    <img src="img/elements/f1.jpg" alt="flag">Canada</div>
-                  <div class="visit">645032</div>
-                  <div class="percentage">
-                    <div class="progress">
-                      <div class="progress-bar color-1" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="table-row">
-                  <div class="serial">02</div>
-                  <div class="country">
-                    <img src="img/elements/f2.jpg" alt="flag">Canada</div>
-                  <div class="visit">645032</div>
-                  <div class="percentage">
-                    <div class="progress">
-                      <div class="progress-bar color-2" role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="table-row">
-                  <div class="serial">03</div>
-                  <div class="country">
-                    <img src="img/elements/f3.jpg" alt="flag">Canada</div>
-                  <div class="visit">645032</div>
-                  <div class="percentage">
-                    <div class="progress">
-                      <div class="progress-bar color-3" role="progressbar" style="width: 55%" aria-valuenow="55" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="table-row">
-                  <div class="serial">04</div>
-                  <div class="country">
-                    <img src="img/elements/f4.jpg" alt="flag">Canada</div>
-                  <div class="visit">645032</div>
-                  <div class="percentage">
-                    <div class="progress">
-                      <div class="progress-bar color-4" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="table-row">
-                  <div class="serial">05</div>
-                  <div class="country">
-                    <img src="img/elements/f5.jpg" alt="flag">Canada</div>
-                  <div class="visit">645032</div>
-                  <div class="percentage">
-                    <div class="progress">
-                      <div class="progress-bar color-5" role="progressbar" style="width: 40%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="table-row">
-                  <div class="serial">06</div>
-                  <div class="country">
-                    <img src="img/elements/f6.jpg" alt="flag">Canada</div>
-                  <div class="visit">645032</div>
-                  <div class="percentage">
-                    <div class="progress">
-                      <div class="progress-bar color-6" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="table-row">
-                  <div class="serial">07</div>
-                  <div class="country">
-                    <img src="img/elements/f7.jpg" alt="flag">Canada</div>
-                  <div class="visit">645032</div>
-                  <div class="percentage">
-                    <div class="progress">
-                      <div class="progress-bar color-7" role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="table-row">
-                  <div class="serial">08</div>
-                  <div class="country">
-                    <img src="img/elements/f8.jpg" alt="flag">Canada</div>
-                  <div class="visit">645032</div>
-                  <div class="percentage">
-                    <div class="progress">
-                      <div class="progress-bar color-8" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="section-top-border">
-            <h3 class="title_color">Image Gallery</h3>
-            <div class="row gallery-item">
-              <div class="col-md-4">
-                <a href="img/elements/g1.jpg" class="img-gal">
-                  <div class="single-gallery-image" style="background: url(img/elements/g1.jpg);"></div>
-                </a>
-              </div>
-              <div class="col-md-4">
-                <a href="img/elements/g2.jpg" class="img-gal">
-                  <div class="single-gallery-image" style="background: url(img/elements/g2.jpg);"></div>
-                </a>
-              </div>
-              <div class="col-md-4">
-                <a href="img/elements/g3.jpg" class="img-gal">
-                  <div class="single-gallery-image" style="background: url(img/elements/g3.jpg);"></div>
-                </a>
-              </div>
-              <div class="col-md-6">
-                <a href="img/elements/g4.jpg" class="img-gal">
-                  <div class="single-gallery-image" style="background: url(img/elements/g4.jpg);"></div>
-                </a>
-              </div>
-              <div class="col-md-6">
-                <a href="img/elements/g5.jpg" class="img-gal">
-                  <div class="single-gallery-image" style="background: url(img/elements/g5.jpg);"></div>
-                </a>
-              </div>
-              <div class="col-md-4">
-                <a href="img/elements/g6.jpg" class="img-gal">
-                  <div class="single-gallery-image" style="background: url(img/elements/g6.jpg);"></div>
-                </a>
-              </div>
-              <div class="col-md-4">
-                <a href="img/elements/g7.jpg" class="img-gal">
-                  <div class="single-gallery-image" style="background: url(img/elements/g7.jpg);"></div>
-                </a>
-              </div>
-              <div class="col-md-4">
-                <a href="img/elements/g8.jpg" class="img-gal">
-                  <div class="single-gallery-image" style="background: url(img/elements/g8.jpg);"></div>
-                </a>
-              </div>
-            </div>
-          </div>
+          
           <div class="section-top-border">
             <div class="row">
               <div class="col-lg-4 col-sm-6 typo-sec">
@@ -451,6 +397,7 @@
               </div>
             </div>
           </div>
+
           <div class="section-top-border">
             <div class="row">
               <div class="col-lg-8 col-md-8">
@@ -750,107 +697,48 @@
         </div>
       </section>
 
-      <!--================ Recent-Blog Area =================-->
-      <section class="recent-blog-area section_gap">
-        <div class="container">
-          <div class="row justify-content-center section-title-wrap">
-            <div class="col-lg-12">
-              <h1>Our Recent Blogs</h1>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
-            </div>
-          </div>
-          <div class="row">
-            <div class="single-recent-blog col-lg-4 col-md-4">
-              <div class="thumb">
-                <img class="f-img img-fluid mx-auto" src="~/assets/img/b1.jpg" alt="">
-              </div>
-              <a href="#">
-                <h4>Portable Fashion for women</h4>
-              </a>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                Ut enim ad minim veniam, quis nostrud.
-              </p>
-              <div class="bottom d-flex justify-content-between align-items-center flex-wrap">
-                <div class="meta">
-                  <span class="lnr lnr-calendar-full"></span> 13th Dec
-                  <span class="lnr lnr-heart"></span> 15
-                  <span class="lnr lnr-bubble"></span> 04
-                </div>
-              </div>
-            </div>
-            <div class="single-recent-blog col-lg-4 col-md-4">
-              <div class="thumb">
-                <img class="f-img img-fluid mx-auto" src="~/assets/img/b2.jpg" alt="">
-              </div>
-              <a href="#">
-                <h4>Summer ware are coming</h4>
-              </a>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                Ut enim ad minim veniam, quis nostrud.
-              </p>
-              <div class="bottom d-flex justify-content-between align-items-center flex-wrap">
-                <div class="meta">
-                  <span class="lnr lnr-calendar-full"></span> 13th Dec
-                  <span class="lnr lnr-heart"></span> 15
-                  <span class="lnr lnr-bubble"></span> 04
-                </div>
-              </div>
-            </div>
-            <div class="single-recent-blog col-lg-4 col-md-4">
-              <div class="thumb">
-                <img class="f-img img-fluid mx-auto" src="~/assets/img/b3.jpg" alt="">
-              </div>
-              <a href="#">
-                <h4>Summer ware are coming</h4>
-              </a>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                Ut enim ad minim veniam, quis nostrud.
-              </p>
-              <div class="bottom d-flex justify-content-between align-items-center flex-wrap">
-                <div class="meta">
-                  <span class="lnr lnr-calendar-full"></span> 13th Dec
-                  <span class="lnr lnr-heart"></span> 15
-                  <span class="lnr lnr-bubble"></span> 04
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!--================ Footer Area =================-->
       <PageFooter />
 
     </body>
     <nuxt/>
-  </html>
+  </div>
 </template>
 
 <script>
 import ActivityBox from '@/components/boxes/ActivityBox.vue'
+import BasicMap from '@/components/maps/BasicMap.vue'
+import BasicTable from '@/components/tables/BasicTable.vue'
+import ComplexTable from '@/components/tables/ComplexTable.vue'
 import DeviceBox from '@/components//boxes/DeviceBox.vue'
 import Form from '@/components/forms/Form.vue'
 import HeaderHTML from '@/components/headers/HeaderHTML.vue'
-import HeaderMenuHome from '@/components/headers/HeaderMenuHome.vue'
+import HeaderMenu from '@/components/headers/HeaderMenu.vue'
+import ImageBox from '@/components/boxes/ImageBox.vue'
 import ServiceBox from '@/components/boxes/ServiceBox.vue'
 import PageBanner from '@/components/banners/PageBanner.vue'
 import PageFooter from '@/components/footers/PageFooter.vue'
+import PaginationBox from '@/components/boxes/PaginationBox.vue'
+import ProfileBox from '@/components/boxes/ProfileBox.vue'
+import TagsArea from '@/components/boxes/TagsArea.vue'
 
 export default { 
   components: {
     ActivityBox,
+    BasicMap,
+    BasicTable,
+    ComplexTable,
     DeviceBox,
     Form,
     HeaderHTML,
-    HeaderMenuHome,
+    HeaderMenu,
+    ImageBox,
     ServiceBox,
     PageBanner,
-    PageFooter
+    PageFooter,
+    PaginationBox,
+    ProfileBox,
+    TagsArea,
   }
 }
 </script>

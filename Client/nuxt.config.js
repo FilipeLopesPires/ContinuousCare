@@ -24,8 +24,10 @@ module.exports = {
       { src: '/vendors/lightbox/simpleLightbox.min.js'},
       { src: '/vendors/isotope/imagesloaded.pkgd.min.js'},
       { src: '/vendors/jquery-ui/jquery-ui.js'},
+      { src: '/vendors/nice-select/js/jquery.nice-select.min.js'},
       { src: 'https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js'},
-      { src: 'https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js'}
+      { src: 'https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js'},
+      { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyA7nx22ZmINYk9TGiXDEXGVxghC43Ox6qA'}, // key problem must be solved
     ]
   },
 
@@ -34,23 +36,22 @@ module.exports = {
 
   /* Global CSS */
   css: [
-    "~/assets/css/bootstrap.css",
-    "~/assets/vendors/linericon/style.css",
-    "~/assets/css/font-awesome.min.css",
-    "~/assets/vendors/lightbox/simpleLightbox.css",
-    "~/assets/vendors/nice-select/css/nice-select.css",
-    "~/assets/vendors/animate-css/animate.css",
-    "~/assets/vendors/jquery-ui/jquery-ui.css",
-    "~/assets/css/style.css",
-    "~/assets/css/responsive.css"
+    "~assets/css/bootstrap.css",
+    "~assets/vendors/linericon/style.css",
+    "~assets/css/font-awesome.min.css",
+    "~assets/vendors/lightbox/simpleLightbox.css",
+    "~assets/vendors/nice-select/css/nice-select.css",
+    "~assets/vendors/animate-css/animate.css",
+    "~assets/vendors/jquery-ui/jquery-ui.css",
+    "~assets/css/style.css",
+    "~assets/css/responsive.css"
   ],
 
   /* Plugins to load before mounting the App */
   plugins: [
-    { src: '~/plugins/js/mail-script.js', ssr: false},
-    { src: '~/plugins/js/custom.js', ssr: false},
-    { src: '~/plugins/js/jquery.ajaxchimp.min.js', ssr: false},
-    { src: '~/plugins/vendors/nice-select/js/jquery.nice-select.min.js', ssr: false},
+    { src: '~plugins/js/mail-script.js', ssr: false},
+    { src: '~plugins/js/custom.js', ssr: false},
+    { src: '~plugins/js/jquery.ajaxchimp.min.js', ssr: false},
   ],
 
   /* Nuxt.js modules */

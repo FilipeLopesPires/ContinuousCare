@@ -16,7 +16,10 @@
 
 <script>
 export default {
+    name: 'HomeBanner',
+    props: {
 
+    }
 }
 </script>
 

@@ -26,7 +26,10 @@
 
 <script>
 export default {
-
+    name: 'Form',
+    props: {
+        
+    }
 }
 </script>
 

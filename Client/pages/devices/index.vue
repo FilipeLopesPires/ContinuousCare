@@ -1,21 +1,21 @@
 <template>
-    <html lang="en">
+    <div>
         <!--================ HTML Header =================-->
-        <HeaderHTML />
+        <HeaderHTML page="Devices" />
 
         <body>
             <!--================ Header Menu Area =================-->
             <HeaderMenu />
 
             <!--================ Banner Area =================-->
-            <PageBanner />
+            <PageBanner parent_page="Home" page="Devices" />
             
             <!--================ Footer Area =================-->
             <PageFooter />
             
         </body>
         <nuxt/>
-    </html>
+    </div>
 </template>
 
 <script>

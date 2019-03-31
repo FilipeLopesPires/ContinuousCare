@@ -1,21 +1,28 @@
 <template>
-    <html lang="en">
+    <div>
         <!--================ HTML Header =================-->
-        <HeaderHTML />
+        <HeaderHTML page="Login" />
 
         <body>
             <!--================ Header Menu Area =================-->
             <HeaderMenu />
 
-            <!--================ Banner Area =================-->
-            <PageBanner />
-            
+            <!--================ Register Form Area =================-->
+            <div class="row justify-content-center d-flex align-items-center">
+                <div class="col-lg-6">
+                    <div class="whole-wrap">
+                        <div class="container">
+                            <RegisterForm />
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!--================ Footer Area =================-->
             <PageFooter />
             
         </body>
         <nuxt/>
-    </html>
+    </div>
 </template>
 
 <script>
@@ -23,13 +30,15 @@ import HeaderHTML from '@/components/headers/HeaderHTML.vue'
 import HeaderMenu from '@/components/headers/HeaderMenu.vue'
 import PageBanner from '@/components/banners/PageBanner.vue'
 import PageFooter from '@/components/footers/PageFooter.vue'
+import RegisterForm from '@/components/forms/RegisterForm.vue'
 
 export default {
     components: {
         HeaderHTML,
         HeaderMenu,
         PageBanner,
-        PageFooter
+        PageFooter,
+        RegisterForm
     }
 }
 </script>

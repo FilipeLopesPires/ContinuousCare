@@ -1,49 +1,6 @@
 <template>
     <header class="header_area">
-        <div class="top_menu row m0">
-            <div class="container">
-                <div class="float-left">
-                    <ul class="left_side">
-                        <li>
-                            <a href="#">
-                                <i class="fa fa-facebook-f"></i>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                            <i class="fa fa-twitter"></i>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                            <i class="fa fa-dribbble"></i>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                            <i class="fa fa-behance"></i>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="float-right">
-                    <ul class="right_side">
-                        <li>
-                            <a href="#">
-                            <i class="lnr lnr-phone-handset"></i>
-                            +351 123 456 789
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                            <i class="lnr lnr-envelope"></i>
-                            general_cc@continuouscare.com
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        <HeaderInfo />
         <div class="main_menu">
             <nav class="navbar navbar-expand-lg navbar-light">
                 <div class="container">
@@ -58,19 +15,25 @@
                     <span class="icon-bar"></span>
                     </button>
                     <!-- Collect the nav links, forms, and other content for toggling -->
-                    <div class="collapse navbar-collapse offset" id="navbarSupportedContent">
+                    <div class="collapse navbar-collapse offset" id="navbarSupportedContent" >
                         <div class="row ml-0 w-100">
                             <div class="col-lg-12 pr-0">
                                 <ul class="nav navbar-nav center_nav pull-right">
-                                    <li class="nav-item active">
-                                        <nuxt-link class="nav-link" to="/">Home</nuxt-link>
-                                    </li>
-                                    <li class="nav-item ">
-                                        <nuxt-link class="nav-link" to="/history">History</nuxt-link>
-                                    </li>
-                                    <li class="nav-item ">
-                                        <nuxt-link class="nav-link" to="/devices">Devices</nuxt-link>
-                                    </li>
+                                    <nuxt-link class="nav-item active" to="/">
+                                        <span class="nav-link">Home</span>
+                                    </nuxt-link>
+                                    <nuxt-link class="nav-item" to="/tmp">
+                                        <span class="nav-link">TMP</span>
+                                    </nuxt-link>
+                                    <nuxt-link class="nav-item" to="/history">
+                                        <span class="nav-link">History</span>
+                                    </nuxt-link>
+                                    <nuxt-link class="nav-item" to="/devices">
+                                        <span class="nav-link">Devices</span>
+                                    </nuxt-link>
+                                    <nuxt-link class="nav-item" to="/about">
+                                        <span class="nav-link">About</span>
+                                    </nuxt-link>
                                     <li class="nav-item submenu dropdown">
                                         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Help</a>
                                         <ul class="dropdown-menu">
@@ -82,12 +45,9 @@
                                             </li>
                                         </ul>
                                     </li>
-                                    <li class="nav-item ">
-                                        <nuxt-link class="nav-link" to="/about">About</nuxt-link>
-                                    </li>
-                                    <li class="nav-item ">
-                                        <nuxt-link class="nav-link" to="/tmp">TMP</nuxt-link>
-                                    </li>
+                                    <nuxt-link class="nav-item" to="/login">
+                                        <span class="nav-link">Login or Register</span>
+                                    </nuxt-link>
                                 </ul>
                             </div>
                         </div>
@@ -95,12 +55,21 @@
                 </div>
             </nav>
         </div>
+        <nuxt/>
     </header>
 </template>
 
 <script>
+import HeaderInfo from '@/components/headers/HeaderInfo.vue'
+
 export default {
-    
+    name: 'HeaderMenu',
+    props: {
+        
+    },
+    components: {
+        HeaderInfo
+    }
 }
 </script>
 

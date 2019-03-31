@@ -3,10 +3,10 @@
 		<div class="banner_inner d-flex align-items-center">
 			<div class="container">
 				<div class="banner_content text-left">
-					<h2>Second Page</h2>
+					<h2>{{ page }}</h2>
 					<div class="page_link">
-						<nuxt-link to="/">Home</nuxt-link>
-						<nuxt-link to="/">Second Page</nuxt-link>
+						<nuxt-link to="/">{{ parent_page }}</nuxt-link>
+						<nuxt-link to="/">{{ page }}</nuxt-link>
 					</div>
 				</div>
 			</div>
@@ -16,7 +16,17 @@
 
 <script>
 export default {
-
+	name: 'PageBanner',
+	props: {
+		parent_page: {
+			type: String,
+			required: true
+		},
+		page: {
+			type: String,
+			required: true
+		}
+	}
 }
 </script>
 

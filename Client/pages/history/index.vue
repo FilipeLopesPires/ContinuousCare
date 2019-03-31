@@ -1,20 +1,18 @@
 <template>
-    <html lang="en">
+    <div>
         <!--================ HTML Header =================-->
-        <HeaderHTML />
+        <HeaderHTML page="History" />
 
         <body>
             <!--================ Header Menu Area =================-->
             <HeaderMenu />
 
             <!--================ Banner Area =================-->
-            <PageBanner />
+            <PageBanner parent_page="Home" page="History" />
 
-            <!--================ Testing Area =================-->
+            <!--================ Content Area =================-->
             <div class="testing">
-                <h1>History Page</h1>
                 <p> {{ jsonData }} </p>
-                <!-- <button @click="onGoBack">Go Back</button> -->
             </div>
 
             <!--================ Footer Area =================-->
@@ -22,7 +20,7 @@
 
         </body>
         <nuxt/>
-    </html>
+    </div>
 </template>
 
 <script>

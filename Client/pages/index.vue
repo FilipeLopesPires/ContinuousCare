@@ -1,32 +1,32 @@
 <template>
-  <html lang="en">
+  <div>
     <!--================ HTML Header =================-->
-    <HeaderHTML />
+    <HeaderHTML page="Home" />
 
     <body>
       <!--================Header Menu Area =================-->
-      <HeaderMenuHome />
+      <HeaderMenu />
 
       <!--================ Home Banner Area =================-->
       <HomeBanner />
 
-      <!--================ Offered Services Area =================-->
-      <section class="service_area section_gap">
+      <!--================ Services Area =================-->
+      <section class=" section_gap">
         <div class="container">
           <div class="row justify-content-center section-title-wrap">
-            <div class="col-lg-12">
+            <div class="col-md-12 col-lg-12">
               <h1>Our Offered Services</h1>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
+              <p>Our system is capable of automatically collect health-oriented data, such as weather conditions, air quality indicators, vital signals, geolocalization, etc. once a client configures the health-tracking devices.
+                We make simple the registration of basic physical and mental health states of each client through our web application, such as local pains, depression, anxiety, fatigue and more, while respecting the privacy of all members.
+                This information is treated and presented to the client in an intuitive form, focusing on the relevant episodes throughout time.</p>
             </div>
           </div>
 
           <div class="row">
-            <ServiceBox />
-            <ServiceBox />
-            <ServiceBox />
-            <ServiceBox />
+            <ServiceBox icon="lnr lnr-map-marker" title="Environment Analysis based on Geolocation" description="... description here ..."/>
+            <ServiceBox icon="lnr lnr-heart-pulse" title="Real-time Health Status Tracking" description="... description here ..."/>
+            <ServiceBox icon="lnr lnr-picture" title="User Friendly Data Visualization" description="... description here ..."/>
+            <ServiceBox icon="lnr lnr-arrow-right" title="Data Sharing for Medical Consultations" description="... description here ..."/>
           </div>
         </div>
       </section>
@@ -36,12 +36,12 @@
 
     </body>
     <nuxt/>
-  </html>
+  </div>
 </template>
 
 <script>
 import HeaderHTML from '@/components/headers/HeaderHTML.vue'
-import HeaderMenuHome from '@/components/headers/HeaderMenuHome.vue'
+import HeaderMenu from '@/components/headers/HeaderMenu.vue'
 import HomeBanner from '@/components/banners/HomeBanner.vue'
 import ServiceBox from '@/components/boxes/ServiceBox.vue'
 import PageFooter from '@/components/footers/PageFooter.vue'
@@ -49,7 +49,7 @@ import PageFooter from '@/components/footers/PageFooter.vue'
 export default { 
   components: {
     HeaderHTML,
-    HeaderMenuHome,
+    HeaderMenu,
     HomeBanner,
     ServiceBox,
     PageFooter

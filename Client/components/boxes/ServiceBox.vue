@@ -1,20 +1,32 @@
 <template>
     <div class="col-lg-3 col-md-6">
         <div class="single_service">
-            <span class="lnr lnr-heart-pulse"></span> <!-- "lnr lnr-rocket","lnr lnr-bug","lnr lnr-users",etc. -->
+            <span :class="icon"></span> <!-- "lnr lnr-rocket","lnr lnr-bug","lnr lnr-users",etc. -->
             <a href="#">
-                <h4>Expert Consultation</h4>
+                <h4>{{ title }}</h4>
             </a>
-            <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            </p>
+            <p>{{ description }}</p>
         </div>
     </div>
 </template>
 
 <script>
 export default {
-
+    name: 'ServiceBox',
+    props: {
+        icon: {
+            type: String,
+            required: true
+        },
+        title: {
+            type: String,
+            required: true
+        },
+        description: {
+            type: String,
+            required: true
+        }
+    }
 }
 </script>
 
