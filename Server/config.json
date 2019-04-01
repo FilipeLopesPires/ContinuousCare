@@ -1,0 +1,49 @@
+{
+	"FitBit":{
+		"headerStart":"{\"Authorization\": \"Bearer ",
+		"metrics":{
+			"HearthRate":{
+				"url":"https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json",
+				"updateTime":0,
+				"savingTime":0,
+				"getData":"jsonData[\"restingHeartRate\"]",
+				"saveCondition":""
+			},
+			"Sleep":{
+				"url":"https://api.fitbit.com/1.2/user/-/sleep/date/today.json",
+				"updateTime":0,
+				"savingTime":0,
+				"getData":"jsonData[\"sleep\"][0][\"levels\"][\"data\"]"
+			},
+			"Calories":{
+				"url":"https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json",
+				"updateTime":0,
+				"savingTime":0,
+				"getData":"sum([zone[\"caloriesOut\"] for zone in jsonData[\"activities-heart\"][0][\"value\"][\"heartRateZones\"]])"
+			},
+			"Activity":{
+				"url":"https://api.fitbit.com/1/user/-/activities/date/today.json",
+				"updateTime":0,
+				"savingTime":0,
+				"getData":"jsonData[\"activities\"]"
+			},
+			"Steps":{
+				"url":"https://api.fitbit.com/1/user/-/activities/date/today.json",
+				"updateTime":0,
+				"savingTime":0,
+				"getData":"jsonData[\"summary\"][\"steps\"]"
+			}
+		}
+	},
+	"Foobot":{
+		"headerStart":"{\"Accept\":\"application/json;charset=UTF-8\",\"X-API-KEY-TOKEN\":\"",
+		"metrics":{
+			"All":{
+				"url":"http://api.foobot.io/v2/device/240D676D40002482/datapoint/10/last/0/",
+				"updateTime":0,
+				"savingTime":0,
+				"getData":"[[metric, value] for metric, value in zip(jsonData[\"sensors\"], jsonData[\"datapoints\"][0])]"
+			}
+		}
+	}
+}
