@@ -85,14 +85,16 @@ class InfluxProxy:
             else:
                 query += " AND time > now() - $interval"
 
-        else:
-            if begin_time is not None:
-                query += " AND time > $begin_time"
-                params["begin_time"] = begin_time * 1000000000
+        elif begin_time is not None:
+            query += " AND time > $begin_time"
+            params["begin_time"] = begin_time * 1000000000
 
-            if end_time is not None:
-                query += " AND time < $end_time"
-                params["end_time"] = end_time * 1000000000
+        elif end_time is not None:
+            query += " AND time < $end_time"
+            params["end_time"] = end_time * 1000000000
+
+        else:
+            query += " ORDER BY time DESC LIMIT 1"
 
         result = self._get_connection.query(query, {"params": json.dumps(params)})
         return list(result.get_points(measurement))

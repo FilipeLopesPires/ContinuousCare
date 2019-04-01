@@ -27,6 +27,8 @@ class StoredProcedures:
     GET_ALL_SUPPORTED_DEVICES = "get_all_supported_devices"
     GET_USER_PROFILE_DATA = "get_user_info"
     UPDATE_USER_PROFILE_DATA = "update_user_info"
+    GET_ENVIRONMENT_METRICS = "get_environment_metrics"
+    GET_HEALTH_STATUS_METRICS = "get_health_status_metrics"
 
 
 class MySqlProxy:
@@ -327,5 +329,37 @@ class MySqlProxy:
                                                                         additional_information))
 
             conn.commit()
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_all_environment_metrics(self):
+        """
+        Gets all environment metrics names
+
+        :return: all metric names
+        :rtype: list
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_ENVIRONMENT_METRICS)
+
+            return [line[0] for line in next(cursor.stored_results()).fetchall()]
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_all_health_status_metrics(self):
+        """
+        Gets all health status metrics names
+
+        :return: all metric names
+        :rtype: list
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_HEALTH_STATUS_METRICS)
+
+            return [line[0] for line in next(cursor.stored_results()).fetchall()]
         finally:
             self._close_conenction(conn, cursor)

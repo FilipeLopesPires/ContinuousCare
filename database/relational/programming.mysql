@@ -131,5 +131,19 @@ CREATE PROCEDURE update_user_info (
     WHERE client_id = __client_id;
   END //
 
+CREATE PROCEDURE get_environment_metrics ()
+  BEGIN
+    SELECT name
+    FROM metric
+    where type = "environment";
+  END //
+
+CREATE PROCEDURE get_health_status ()
+  BEGIN
+    SELECT *
+    FROM metric
+    WHERE type = "health_status";
+  END //
+
 DELIMITER ;
 

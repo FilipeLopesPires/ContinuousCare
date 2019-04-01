@@ -98,7 +98,8 @@ create table metric (
   id                      integer       primary key auto_increment,
 -- PRIMARY KEY
   name                    varchar(30),
-  unit                    varchar(10)
+  unit                    varchar(10),
+  type                    enum("environment", "health_status")
 );
 
 create table supported_metric (

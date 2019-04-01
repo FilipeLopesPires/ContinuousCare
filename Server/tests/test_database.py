@@ -11,6 +11,7 @@ class TestDatabaseProxy(unittest.TestCase):
         super(TestDatabaseProxy, self).__init__(*args, **kwargs)
         self.db = database.Database()
 
+    @unittest.skip
     def test_insert_user(self):
         self.db.register({
             "username": "zonnax",
@@ -75,6 +76,9 @@ class TestDatabaseProxy(unittest.TestCase):
                 "diseases": "doime cenas muitas vezes"
             }
         )
+
+    def test_all_metrics(self):
+        print(self.db._get_all_environment_metrics())
 
 
 if __name__ == '__main__':

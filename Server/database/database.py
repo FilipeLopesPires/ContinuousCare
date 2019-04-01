@@ -103,69 +103,301 @@ class Database:
         """
         return self.relational_proxy.get_all_supported_devices()
 
-    def getCurrentEnviroment(self, user):
-        """"""
-        pass
+    def _get_environment_metrics(self):
+        """
+        Obtains all environment metrics.
+        This method is used before a query to get all environment values.
 
-    def getEnviromentStartInterval(self, user, start, interval):
-        """"""
-        pass
+        :return: all supported environment metrics by the system
+        :rtype: list
+        """
+        return self.relational_proxy.get_all_environment_metrics()
 
-    def getEnviromentStartEnd(self, user, start, end):
-        """"""
-        pass
+    def _time_series_read(self, username, measurements, start=None, end=None, interval=None):
+        """
+        Method used to read from the time_series database. Was created mainly to reduce
+        the redundancy of code on the functions bellow.
 
-    def getEnviromentEndInterval(self, user, end, interval):
-        """"""
-        pass
+        :param username: of the client
+        :type username: str
+        :param measurements: which measurements to get from database
+        :type measurements: list
+        :param start: values after this time
+        :type start: # TODO define time type
+        :param end: values before this time
+        :type end: # TODO define time type
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: # TODO see what influx returns
+        :rtype: list or dict
+        """
+        return_value = []
 
-    def currentEnviromentSpecific(self, user, measurement):
-        """"""
-        pass
+        for metric in measurements:
+            return_value.append(self.time_series_proxy.read(username, metric, start, end, interval))
 
-    def currentEnviromentSpecificStartInterval(self, user, measurement, start, interval):
-        """"""
-        pass
+        return return_value
 
-    def currentEnviromentSpecificStartEnd(self, user, measurement, start, end):
-        """"""
-        pass
+    def getCurrentEnvironment(self, user):
+        """
+        Gets CURRENT values of ALL ENVIRONMENT MEASUREMENTS
 
-    def currentEnviromentSpecificEndInterval(self, user, measurement, end, interval):
-        """"""
-        pass
+        :param user: username of the client
+        :type user: str
+        :return: data
+        :rtype: # TODO see what influx returns
+        """
+        return self._time_series_read(user, self._get_environment_metrics())
+
+    def getEnvironmentStartInterval(self, user, start, interval):
+        """
+        Gets ALL ENVIRONMENT MEASUREMENTS values within an interval STARTING from a given time plus a given INTERVAL
+
+        :param user: username of the client
+        :type user: str
+        :param start: values after this time
+        :type start: # TODO define time type
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: data
+        :rtype: # TODO see what influx returns
+        """
+        return self._time_series_read(user, self._get_environment_metrics(), start, interval=interval)
+
+    def getEnvironmentStartEnd(self, user, start, end):
+        """
+        Gets ALL ENVIRONMENT MEASUREMENTS values within an interval STARTING from
+        a given time and ENDING at a given time
+
+        :param user: username of the client
+        :type user: str
+        :param start: values after this time
+        :type start: #TODO define time type
+        :param end: values before this time
+        :type end: #TODO define time type
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, self._get_environment_metrics(), start, end)
+
+    def getEnvironmentEndInterval(self, user, end, interval):
+        """
+        Gets ALL ENVIRONMENT MEASUREMENTS values within an interval ENDING from
+        a given time minus a given INTERVAL
+
+        :param user: username of the client
+        :type user: str
+        :param end: values before this time
+        :type end: #TODO define time type
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, self._get_environment_metrics(), end=end, interval=interval)
+
+    def currentEnvironmentSpecific(self, user, measurement):
+        """
+        Gets CURRENT values of a SPECIFIC ENVIRONMENT measurement
+
+        :param user: username of the client
+        :type user: str
+        :param measurement: name of the specific measurement to get form the database
+        :type measurement: str
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, [measurement])
+
+    def currentEnvironmentSpecificStartInterval(self, user, measurement, start, interval):
+        """
+        Gets values of a SPECIFIC ENVIRONMENT MEASUREMENT within an interval STARTING from a given
+        time plus a given INTERVAL
+
+        :param user: username of the client
+        :type user: str
+        :param measurement: name of the specific measurement to get form the database
+        :type measurement: str
+        :param start: values after this time
+        :type start: #TODO define time type
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, [measurement], start, interval=interval)
+
+    def currentEnvironmentSpecificStartEnd(self, user, measurement, start, end):
+        """
+        Gets values of a SPECIFIC ENVIRONMENT MEASUREMENT within an interval STARTING from a given
+        time and ENDING on a given time
+
+        :param user: username of the client
+        :type user: str
+        :param measurement: name of the specific measurement to get from the database
+        :type measurement: str
+        :param start: values after this time
+        :type start: #TODO define time type
+        :param end: values before this time
+        :type end: #TODO define time type
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, [measurement], start, end)
+
+    def currentEnvironmentSpecificEndInterval(self, user, measurement, end, interval):
+        """
+        Gets values of a SPECIFIC ENVIRONMENT MEASUREMENT within an interval STARTING from a given
+        time minus a given INTERVAL
+
+        :param user: username of the client
+        :type user: str
+        :param measurement: name of the specific measurement to get from the database
+        :type measurement: str
+        :param end: values before this time
+        :type end: #TODO define time type
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, [measurement], end=end, interval=interval)
+
+    def _get_health_status_metrics(self):
+        """
+        Obtains all health status metrics.
+        This method is used before a query to get all health status values.
+
+        :return: all supported health status metrics by the system
+        :rtype: list
+        """
+        return self.relational_proxy.get_all_health_status_metrics()
 
     def getCurrentHealthStatus(self, user):
-        """"""
-        pass
+        """
+        Gets CURRENT values of ALL HEALTH STATUS MEASUREMENTS
+
+        :param user: username of the client
+        :type user: str
+        :return: data
+        :rtype: # TODO see what influx returns
+        """
+        return self._time_series_read(user, self._get_health_status_metrics())
 
     def getCurrentHealthStatusStartInterval(self, user, start, interval):
-        """"""
-        pass
+        """
+        Gets ALL HEALTH STATUS MEASUREMENTS values within an interval STARTING from a
+        given time plus a given INTERVAL
+
+        :param user: username of the client
+        :type user: str
+        :param start: values after this time
+        :type start: # TODO define time type
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: data
+        :rtype: # TODO see what influx returns
+        """
+        return self._time_series_read(user, self._get_health_status_metrics(), start, interval=interval)
 
     def getCurrentHealthStatusStartEnd(self, user, start, end):
-        """"""
-        pass
+        """
+        Gets ALL HEALTH STATUS MEASUREMENTS values within an interval STARTING from
+        a given time and ENDING at a given time
+
+        :param user: username of the client
+        :type user: str
+        :param start: values after this time
+        :type start: #TODO define time type
+        :param end: values before this time
+        :type end: #TODO define time type
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, self._get_health_status_metrics(), start, end)
 
     def getCurrentHealthStatusEndInterval(self, user, end, interval):
-        """"""
-        pass
+        """
+        Gets ALL HEALTH STATUS MEASUREMENTS values within an interval ENDING from
+        a given time minus a given INTERVAL
+
+        :param user: username of the client
+        :type user: str
+        :param end: values before this time
+        :type end: #TODO define time type
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, self._get_health_status_metrics(), end=end, interval=interval)
 
     def getCurrentHealthStatusSpecific(self, user, measurement):
-        """"""
-        pass
+        """
+        Gets CURRENT values of a SPECIFIC HEALTH STATUS measurement
+
+        :param user: username of the client
+        :type user: str
+        :param measurement: name of the specific measurement to get form the database
+        :type measurement: str
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, [measurement])
 
     def getCurrentHealthStatusSpecificStartInterval(self, user, measurement, start, interval):
-        """"""
-        pass
+        """
+        Gets values of a SPECIFIC HEALTH STATUS MEASUREMENT within an interval STARTING from a given
+        time plus a given INTERVAL
+
+        :param user: username of the client
+        :type user: str
+        :param measurement: name of the specific measurement to get form the database
+        :type measurement: str
+        :param start: values after this time
+        :type start: #TODO define time type
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, [measurement], start, interval=interval)
 
     def getCurrentHealthStatusSpecificStartEnd(self, user, measurement, start, end):
-        """"""
-        pass
+        """
+        Gets values of a SPECIFIC HEALTH STATUS MEASUREMENT within an interval STARTING from a given
+        time and ENDING on a given time
+
+        :param user: username of the client
+        :type user: str
+        :param measurement: name of the specific measurement to get from the database
+        :type measurement: str
+        :param start: values after this time
+        :type start: #TODO define time type
+        :param end: values before this time
+        :type end: #TODO define time type
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, [measurement], start, end=end)
 
     def getCurrentHealthStatusSpecificEndInterval(self, user, measurement, end, interval):
-        """"""
-        pass
+        """
+        Gets values of a SPECIFIC HEALTH STATUS MEASUREMENT within an interval STARTING from a given
+        time minus a given INTERVAL
+
+        :param user: username of the client
+        :type user: str
+        :param measurement: name of the specific measurement to get from the database
+        :type measurement: str
+        :param end: values before this time
+        :type end: #TODO define time type
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: data
+        :rtype: #TODO see what influx returns
+        """
+        return self._time_series_read(user, [measurement], end=end, interval=interval)
 
     def personalStatus(self, user):
         """"""
