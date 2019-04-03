@@ -31,7 +31,7 @@ class Database:
         Register a client on the database
 
         :param data: keys : [username:str, password:str, name:str, email:str, phpn:int,
-                             birth_date:str dd-mm-yyyy, weight:float, height:float, diseases:str]
+                             birth_date:tuple dd-mm-yyyy, weight:float, height:float, diseases:str]
         :type data: dict
         :return: the client_id for the new client
         :rtype: int

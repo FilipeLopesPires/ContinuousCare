@@ -10,54 +10,63 @@ create table user (
 create table client (
   client_id               integer       primary key auto_increment,
 -- PRIMARY KEY
-  user_id                 integer       references user (user_id) restrict,
+  user_id                 integer,
+  foreign key (user_id) references user (user_id),
   health_number           integer       unique,
   birth_date              date,
   weight                  float(24),
   height                  float(24),
-  additional_information  varchar(1000)
+  additional_information  varchar(1000),
 );
 #create index client_health_num_idx on client (health_number);
 
 create table medic (
   medic_id                integer       primary key auto_increment,
 -- PRIMARY KEY
-  user_id                 integer       references user (user_id) restrict,
+  user_id                 integer,
+  foreign key (user_id) references user (user_id),
   specialisation          varchar(30),
   company                 varchar(30)
 );
 
 create table authentication (
-  client_id               integer   primary key references user (user_id) restrict,
+  client_id               integer   primary key,
+  foreign key (client_id) references user (user_id),
 -- PRIMARY KEY
   expiration_date         datetime,
   acess_token             varchar(300)
 );
 
 create table pending_permissions (
-  client_id               integer   references client (client_id) restrict,
-  medic_id                integer   references medic (medic_id) restrict,
+  client_id               integer,
+  foreign key (client_id) references client (client_id),
+  medic_id                integer,
+  foreign key (medic_id) references medic (medic_id),
   primary key (client_id, medic_id),
   begin_date              datetime,
   end_date                datetime
 );
 create table active_permissions (
-  client_id               integer   references client (client_id) restrict,
-  medic_id                integer   references medic (medic_id) restrict,
+  client_id               integer,
+  foreign key (client_id) references client (client_id),
+  medic_id                integer,
+  foreign key (medic_id) references medic (medic_id),
   primary key (client_id, medic_id),
   begin_date              datetime,
   expiration_date         datetime
 );
 create table expired_permissions (
-  client_id               integer   references client (client_id) restrict,
-  medic_id                integer   references medic (medic_id) restrict,
+  client_id               integer,
+  foreign key (client_id) references client (client_id),
+  medic_id                integer,
+  foreign key (medic_id) references medic (medic_id),
   begin_date              datetime,
   primary key (client_id, medic_id, begin_date),
   end_date                datetime
 );
-drop index `PRIMARY` on expired_permissions;
-create index exp_perm_client_idx on expired_permissions (client_id);
-create index exp_perm_medic_idx on expired_permissions (client_id);
+#drop index `PRIMARY` on expired_permissions;
+#create index exp_perm_client_idx on expired_permissions (client_id);
+#create index exp_perm_medic_idx on expired_permissions (client_id);
 
 create table status_type (
   id                      integer       primary key auto_increment,
@@ -65,13 +74,15 @@ create table status_type (
 );
 
 create table personal_status (
-  client_id               integer       references client (client_id) restrict,
-  type                    integer       references status_type (id) restrict,
+  client_id               integer,
+  foreign key (client_id) references client (client_id),
+  type                    integer,
+  foreign key (type) references status_type (id),
   time                    datetime,
   primary key (client_id, type, time)
 );
-drop index `PRIMARY` on personal_status;
-create index pers_stat_client_idx on personal_status (client_id);
+#drop index `PRIMARY` on personal_status;
+#create index pers_stat_client_idx on personal_status (client_id);
 
 create table supported_device (
   id                      integer       primary key auto_increment,
@@ -84,13 +95,16 @@ create table supported_device (
 create table device (
   id                      integer       primary key auto_increment,
 -- PRIMARY KEY
-  type_id                 integer       references supported_device (id) restrict,
+  type_id                 integer,
+  foreign key (type_id) references supported_device (id),
   acess_token             varchar(300)
 );
 
 create table client_device (
-  client_id               integer       references client (client_id) restrict,
-  device_id               integer       references device (id) restrict,
+  client_id               integer,
+  foreign key (client_id) references client (client_id),
+  device_id               integer,
+  foreign key (device_id) references device (id),
   primary key (client_id, device_id)
 );
 
@@ -103,7 +117,9 @@ create table metric (
 );
 
 create table supported_metric (
-  metric_id               integer       references metric (id) restrict,
-  device_id               integer       references supported_device (id) restrict,
+  metric_id               integer,
+  foreign key (metric_id) references metric (id),
+  device_id               integer,
+  foreign key (device_id) references supported_device (id),
   primary key(metric_id, device_id)
 );

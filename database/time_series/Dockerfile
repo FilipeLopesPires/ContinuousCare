@@ -1,0 +1,8 @@
+FROM influxdb
+
+ENV INFLUXDB_ADMIN_USER root
+ENV INFLUXDB_ADMIN_PASSWORD NnMM3oeEiQa{zJ9XznYt
+ENV INFLUXDB_DB db
+ENV INFLUXDB_HTTP_AUTH_ENABLED true
+
+COPY ./init.iql /docker-entrypoint-initdb.d/
