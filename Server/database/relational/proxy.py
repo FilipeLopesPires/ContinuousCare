@@ -281,15 +281,17 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.GET_USER_PROFILE_DATA, [username])
 
-            results = next(cursor.stored_results()).fetchall()
+            results = next(cursor.stored_results()).fetchall()[0]
 
-            return {key: results[i] for i, key in enumerate(["client_id",
-                                                             "full_name",
-                                                             "email",
-                                                             "health_number",
-                                                             "birth_date",
-                                                             "weight",
-                                                             "height"])}
+            return {key: (results[i] if key != "birth_date" else results[i].strftime("%d-%m-%Y"))
+                    for i, key in enumerate(["client_id",
+                                             "full_name",
+                                             "email",
+                                             "health_number",
+                                             "birth_date",
+                                             "weight",
+                                             "height",
+                                             "additional_info"])}
         finally:
             self._close_conenction(conn, cursor)
 

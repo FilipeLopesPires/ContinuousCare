@@ -63,7 +63,7 @@ class Database:
             data["password"]
         )
 
-    def addDevices(self, user, data):
+    def addDevice(self, user, data):
         """
         Stores a new device on the database
 

@@ -11,8 +11,8 @@ chmod 600 config.py
 
 
 HOST      = "localhost"
-PORT      = "8086"
-USERNAME  = "pi2019cc"
+PORT      = 8086
+USERNAME  = "pi2019cc_flaskapp"
 PASSWORD  = "#asHa)B/VW\_$P`of1FF"
 DATABASE  = "db"
-POOL_SIZE = "30"
+POOL_SIZE = 15

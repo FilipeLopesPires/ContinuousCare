@@ -15,7 +15,7 @@ create table client (
   birth_date              date,
   weight                  float(24),
   height                  float(24),
-  additional_information
+  additional_information  varchar(1000)
 );
 #create index client_health_num_idx on client (health_number);
 
@@ -88,7 +88,7 @@ create table device (
   acess_token             varchar(300)
 );
 
-create table clients_device (
+create table client_device (
   client_id               integer       references client (client_id) restrict,
   device_id               integer       references device (id) restrict,
   primary key (client_id, device_id)

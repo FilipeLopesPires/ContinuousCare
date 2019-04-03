@@ -57,7 +57,6 @@ class TestDatabaseProxy(unittest.TestCase):
     def test_get_all_supported_devices(self):
         print(self.db.getSupportedDevices())
 
-    @unittest.skip
     def test_get_user_profile(self):
         print(self.db.getProfile("aspedrosa"))
 
@@ -76,9 +75,6 @@ class TestDatabaseProxy(unittest.TestCase):
                 "diseases": "doime cenas muitas vezes"
             }
         )
-
-    def test_all_metrics(self):
-        print(self.db._get_all_environment_metrics())
 
 
 if __name__ == '__main__':

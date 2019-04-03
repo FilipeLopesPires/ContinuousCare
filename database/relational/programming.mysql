@@ -1,4 +1,4 @@
-VIEW client_username AS
+CREATE VIEW client_username AS
     SELECT client.client_id AS client_id, user.username AS username
     FROM client JOIN user ON client.user_id = user.user_id;
 
@@ -12,7 +12,7 @@ CREATE PROCEDURE insert_client (
     IN _health_number integer,
     IN _birth_date date,
     IN _weight float(24),
-    IN _height float(24)
+    IN _height float(24),
     IN _additional_information varchar(100))
   BEGIN
     -- Verifications
@@ -119,7 +119,7 @@ CREATE PROCEDURE update_user_info (
     UPDATE user
     SET password = _password,
         full_name = _full_name,
-        email = _email,
+        email = _email
     WHERE username = _username;
     
     UPDATE client
