@@ -1,6 +1,6 @@
 <template>
     <div class=""><!-- placeholder="Date of Birth *" -->
-        <datepicker :readonly="true" format="YYYY-MM-DD" name="birthdate" placeholder="Date of Birth *"></datepicker>
+        <datepicker value="birthdate" :readonly="false" format="DD-MM-YYYY" name="birthdate" placeholder="Date of Birth *"></datepicker>
     </div>
 </template>
 

@@ -3,16 +3,17 @@
         <!--================ HTML Header =================-->
         <HeaderHTML page="Login" />
 
-        <body>
+        <body style="overflow-x: none;">
             <!--================ Header Menu Area =================-->
-            <HeaderMenu />
+            <HeaderMenu activePage="Login or Register" />
 
             <!--================ Register Form Area =================-->
-            <div class="row justify-content-center d-flex align-items-center">
+            
+            <div class="row m0 justify-content-center align-items-center" >
                 <div class="col-lg-6">
                     <div class="whole-wrap">
                         <div class="container">
-                            <RegisterForm />
+                            <LoginForm />
                         </div>
                     </div>
                 </div>
@@ -30,7 +31,7 @@ import HeaderHTML from '@/components/headers/HeaderHTML.vue'
 import HeaderMenu from '@/components/headers/HeaderMenu.vue'
 import PageBanner from '@/components/banners/PageBanner.vue'
 import PageFooter from '@/components/footers/PageFooter.vue'
-import RegisterForm from '@/components/forms/RegisterForm.vue'
+import LoginForm from '@/components/forms/LoginForm.vue'
 
 export default {
     components: {
@@ -38,7 +39,7 @@ export default {
         HeaderMenu,
         PageBanner,
         PageFooter,
-        RegisterForm
+        LoginForm
     }
 }
 </script>

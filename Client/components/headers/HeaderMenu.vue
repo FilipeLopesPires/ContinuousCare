@@ -19,35 +19,43 @@
                         <div class="row ml-0 w-100">
                             <div class="col-lg-12 pr-0">
                                 <ul class="nav navbar-nav center_nav pull-right">
-                                    <nuxt-link class="nav-item active" to="/">
+                                    <nuxt-link :class="{ active: isActive('Home') }" class="nav-item" to="/">
                                         <span class="nav-link">Home</span>
                                     </nuxt-link>
-                                    <nuxt-link class="nav-item" to="/tmp">
+                                    <nuxt-link :class="{ active: isActive('TMP') }" class="nav-item" to="/tmp">
                                         <span class="nav-link">TMP</span>
                                     </nuxt-link>
-                                    <nuxt-link class="nav-item" to="/history">
+                                    <nuxt-link :class="{ active: isActive('History') }" class="nav-item" to="/history">
                                         <span class="nav-link">History</span>
                                     </nuxt-link>
-                                    <nuxt-link class="nav-item" to="/devices">
+                                    <nuxt-link :class="{ active: isActive('Devices') }" class="nav-item" to="/devices">
                                         <span class="nav-link">Devices</span>
                                     </nuxt-link>
-                                    <nuxt-link class="nav-item" to="/about">
+                                    <nuxt-link :class="{ active: isActive('About') }" class="nav-item" to="/about">
                                         <span class="nav-link">About</span>
                                     </nuxt-link>
                                     <li class="nav-item submenu dropdown">
-                                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Help</a>
+                                        <a href="" :class="{ active: isActive('Help') }" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Help</a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item">
                                                 <nuxt-link class="nav-link" to="/settings">Account Settings</nuxt-link>
                                             </li>
                                             <li class="nav-item">
-                                                <nuxt-link class="nav-link" to="/settings">Contact Us</nuxt-link>
+                                                <nuxt-link class="nav-link" to="/contact">Contact Us</nuxt-link>
                                             </li>
                                         </ul>
                                     </li>
-                                    <nuxt-link class="nav-item" to="/login">
-                                        <span class="nav-link">Login or Register</span>
-                                    </nuxt-link>
+                                    <li class="nav-item submenu dropdown">
+                                        <a href="" :class="{ active: isActive('Login or Register') }" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Login or Register</a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item">
+                                                <nuxt-link class="nav-link" to="/login">Login</nuxt-link>
+                                            </li>
+                                            <li class="nav-item">
+                                                <nuxt-link class="nav-link" to="/register">Register</nuxt-link>
+                                            </li>
+                                        </ul>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -65,10 +73,18 @@ import HeaderInfo from '@/components/headers/HeaderInfo.vue'
 export default {
     name: 'HeaderMenu',
     props: {
-        
+        activePage: {
+			type: String,
+			required: true
+		},
     },
     components: {
         HeaderInfo
+    },
+    methods: {
+        isActive(menuItem) {
+            return this.activePage === menuItem;
+        }
     }
 }
 </script>

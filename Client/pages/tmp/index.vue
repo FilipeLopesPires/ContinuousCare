@@ -8,7 +8,7 @@
       <!--=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!= COMPONENTS =!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=-->
 
       <!--================Header Menu Area =================-->
-      <HeaderMenu />
+      <HeaderMenu activePage="TMP" />
 
       <!--================ Home Banner Area =================-->
       <PageBanner parent_page="Home" page="TMP" />
@@ -613,6 +613,7 @@
       </section>
 
       <!--================ About Myself Area =================-->
+      <!-- 
       <section class="about_myself pad_bottom">
         <div class="container">
           <div class="row">
@@ -641,7 +642,7 @@
             </div>
           </div>
         </div>
-      </section>
+      </section> -->
 
       <!--================ Offered Services Area =================-->
       <section class="service_area section_gap">

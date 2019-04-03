@@ -5,7 +5,7 @@
 
         <body>
             <!--================ Header Menu Area =================-->
-            <HeaderMenu />
+            <HeaderMenu activePage="About" />
 
             <!--================ Banner Area =================-->
             <PageBanner page="About" parent_page="Home" />
