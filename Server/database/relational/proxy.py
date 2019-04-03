@@ -121,8 +121,8 @@ class MySqlProxy:
         :param health_number: number used on the country of the client to identify him in which concerns the health
             department
         :type health_number: int
-        :param birth_date: with format dd-mm-yyyy
-        :type birth_date: str
+        :param birth_date: with format (day, month, year)
+        :type birth_date: tuple
         :param weight: in kilograms
         :type weight: float
         :param height: in meters
@@ -137,10 +137,11 @@ class MySqlProxy:
 
             password = self._hash_password(password)
 
+            birth_day, birth_month, birth_year = birth_date
             cursor.callproc(
                 StoredProcedures.REGISTER_CLIENT,
                 (username, password, full_name, email, health_number,
-                 birth_date, weight, height, additional_information)
+                 "%s-%s-%s" % (birth_year, birth_month, birth_day), weight, height, additional_information)
             )
 
             new_id = next(cursor.stored_results()).fetchone()[0]
@@ -312,8 +313,8 @@ class MySqlProxy:
         :param health_number: number used on the country of the client to identify him in which concerns the health
             department
         :type health_number: int
-        :param birth_date: with format dd-mm-yyyy
-        :type birth_date: str
+        :param birth_date: with format (day, month, year)
+        :type birth_date: tuple
         :param weight: in kilograms
         :type weight: float
         :param height: in meters
@@ -326,9 +327,14 @@ class MySqlProxy:
 
             password = self._hash_password(password)
 
+            birth_day, birth_month, birth_year = birth_date
+
             cursor.callproc(StoredProcedures.UPDATE_USER_PROFILE_DATA, (username, password, full_name, email,
-                                                                        health_number, birth_date, weight, height,
-                                                                        additional_information))
+                                                                        "%s-%s-%s" % (birth_year,
+                                                                                      birth_month,
+                                                                                      birth_year),
+                                                                        birth_date, weight,
+                                                                        height, additional_information))
 
             conn.commit()
         finally:

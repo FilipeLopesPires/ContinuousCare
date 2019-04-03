@@ -31,19 +31,20 @@ class Database:
         Register a client on the database
 
         :param data: keys : [username:str, password:str, name:str, email:str, phpn:int,
-                             birth_date:##, weight:float, height:float, diseases:str]
-        TODO define date class
+                             birth_date:str dd-mm-yyyy, weight:float, height:float, diseases:str]
         :type data: dict
         :return: the client_id for the new client
         :rtype: int
         """
+        birth_day, birth_month, birth_year = data["birth_date"].split("-")
+
         return self.relational_proxy.register_client(
             data["username"],
             data["password"],
             data["name"],
-            data["email"],
+            (birth_day, birth_month, birth_year),
             data["phpn"],
-            data["birth_date"], # TODO may require conversion
+            data["birth_date"],
             data["weight"],
             data["height"],
             data["diseases"]
@@ -421,18 +422,18 @@ class Database:
 
         :param user: username of the client to update
         :type user: str
-        :param data: keys : [password:str, name:str, email:str, phpn:int, birth_date:str,
-                             weight:float, height:float, diseases:str]
-        TODO define date class
+        :param data: keys : [password:str, name:str, email:str, phpn:int,
+                             birth_date:str dd-mm-yyyy, weight:float, height:float, diseases:str]
         :type data: dict
         """
+        birth_day, birth_month, birth_year = data["birth_date"].split("-")
         self.relational_proxy.update_user_profile_data(
             user,
             data["password"],
             data["name"],
             data["email"],
             data["phpn"],
-            data["birth_date"], # TODO may require conversion
+            (birth_day, birth_month, birth_year),
             data["weight"],
             data["height"],
             data["diseases"]
