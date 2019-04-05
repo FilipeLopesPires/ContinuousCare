@@ -29,6 +29,7 @@ class StoredProcedures:
     UPDATE_USER_PROFILE_DATA = "update_user_info"
     GET_ENVIRONMENT_METRICS = "get_environment_metrics"
     GET_HEALTH_STATUS_METRICS = "get_health_status_metrics"
+    GET_DEVICE_INFO_FOR_QUERY = "get_device_info_for_query"
 
 
 class MySqlProxy:
@@ -40,6 +41,7 @@ class MySqlProxy:
             pool_name = config.POOL_NAME,
             pool_size = config.POOL_SIZE,
             host      = config.HOST,
+            port      = config.PORT,
             database  = config.DATABASE,
             user      = config.USERNAME,
             password  = config.PASSWORD
@@ -219,12 +221,15 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.GET_ALL_CLIENT_DEVICES, [username])
 
             retval = []
-            for (device_id, type_id, token) in next(cursor.stored_results()).fetchall():
+            for (device_id, type_id, type, brand, model, token) in next(cursor.stored_results()).fetchall():
                 retval.append(
                     {
-                        "device": device_id,
-                        "type"  : type_id,
-                        "token" : token
+                        "device"  : device_id,
+                        "type_id" : type_id,
+                        "type"    : type,
+                        "brand"   : brand,
+                        "model"   : model,
+                        "token"   : token
                     }
                 )
 
@@ -369,5 +374,25 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.GET_HEALTH_STATUS_METRICS)
 
             return [line[0] for line in next(cursor.stored_results()).fetchall()]
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_device_info_for_query(self, device_id):
+        """
+
+        :param device_id: id of the device of the client
+        :type device_id: int
+        :return: device info
+        {type:bracelet, brand:fitbit, model:charge 3}
+        :rtype: dict
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_DEVICE_INFO_FOR_QUERY, [device_id])
+
+            results = next(cursor.stored_results()).fetchone()
+
+            return {key: results[i] for i, key in enumerate(["type", "brand", "model"])}
         finally:
             self._close_conenction(conn, cursor)

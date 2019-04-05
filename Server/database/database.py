@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+from database.time_series.proxy import *
+from database.relational.proxy import *
+
 """
 This class uses acts as a proxy for the proxies of the different database used.
 This allows the main server only having to use just one class. Also the development of
@@ -7,12 +10,11 @@ the specific proxies and the Processor can be done separably, this class being t
 point of both ends.
 """
 
+"""get timestamp from date string datetime.datetime.strptime(s, "%d/%m/%Y").timestamp()"""
+
 __all__ = [
         "Database"
         ]
-
-from database.time_series.proxy import *
-from database.relational.proxy import *
 
 
 class Database:
@@ -88,7 +90,7 @@ class Database:
         :param user: username of the client to query
         :type user: str
         :return: all devices associated with the specific client
-        [{device:int, type:int, token:str}, ...]
+        [{device:int, type:int,  token:str}, ...]
         :rtype: list
         """
         return self.relational_proxy.get_all_devices_of_user(user)
@@ -123,21 +125,60 @@ class Database:
         :type username: str
         :param measurements: which measurements to get from database
         :type measurements: list
-        :param start: values after this time
-        :type start: # TODO define time type
-        :param end: values before this time
-        :type end: # TODO define time type
+        :param start: values after this time (seconds)
+        :type start: int
+        :param end: values before this time (seconds)
+        :type end: int
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
-        :return: # TODO see what influx returns
-        :rtype: list or dict
+        :return: {
+                    data:{
+                        co2:{
+                            device_id:{
+                                time:[],
+                                value:[],
+                                lat:[],
+                                long:[]
+                            }, ...
+                        }, ...
+                    },
+                    devices: {
+                        device_id:{
+                            type:bracelet
+                            brand:fitbit
+                            model:charge 3
+                        }, ...
+                    }
+                 }
+        :rtype: dict
         """
-        return_value = []
+        data = {}
+        present_devices = []
 
         for metric in measurements:
-            return_value.append(self.time_series_proxy.read(username, metric, start, end, interval))
+            metric_dict = dict()
+            for read in self.time_series_proxy.read(username, metric, start, end, interval):
+                device_id = read["deviceId"]
+                if device_id not in metric_dict:
+                    present_devices.append(device_id)
+                    metric_dict[device_id] = dict()
 
-        return return_value
+                target = metric_dict[device_id]
+                for key, value in read.items():
+                    if key == "username" or key == "deviceId":
+                        continue
+                    if key not in target.keys():
+                        target[key] = []
+
+                    target[key].append(value)
+
+            data[metric] = metric_dict
+
+        devices = dict()
+        for device_id in present_devices:
+            devices[device_id] = self.relational_proxy.get_device_info_for_query(device_id)
+
+        return {"data": data, "devices": devices}
 
     def getCurrentEnvironment(self, user):
         """
@@ -145,8 +186,8 @@ class Database:
 
         :param user: username of the client
         :type user: str
-        :return: data
-        :rtype: # TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, self._get_environment_metrics())
 
@@ -156,12 +197,12 @@ class Database:
 
         :param user: username of the client
         :type user: str
-        :param start: values after this time
-        :type start: # TODO define time type
+        :param start: values after this time (seconds)
+        :type start: int
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
-        :return: data
-        :rtype: # TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, self._get_environment_metrics(), start, interval=interval)
 
@@ -172,12 +213,12 @@ class Database:
 
         :param user: username of the client
         :type user: str
-        :param start: values after this time
-        :type start: #TODO define time type
-        :param end: values before this time
-        :type end: #TODO define time type
-        :return: data
-        :rtype: #TODO see what influx returns
+        :param start: values after this time (seconds)
+        :type start: int
+        :param end: values before this time (seconds)
+        :type end: int
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, self._get_environment_metrics(), start, end)
 
@@ -188,12 +229,12 @@ class Database:
 
         :param user: username of the client
         :type user: str
-        :param end: values before this time
-        :type end: #TODO define time type
+        :param end: values before this time (seconds)
+        :type end: int
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
-        :return: data
-        :rtype: #TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, self._get_environment_metrics(), end=end, interval=interval)
 
@@ -205,8 +246,8 @@ class Database:
         :type user: str
         :param measurement: name of the specific measurement to get form the database
         :type measurement: str
-        :return: data
-        :rtype: #TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, [measurement])
 
@@ -219,12 +260,12 @@ class Database:
         :type user: str
         :param measurement: name of the specific measurement to get form the database
         :type measurement: str
-        :param start: values after this time
-        :type start: #TODO define time type
+        :param start: values after this time (seconds)
+        :type start: int
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
-        :return: data
-        :rtype: #TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, [measurement], start, interval=interval)
 
@@ -237,12 +278,12 @@ class Database:
         :type user: str
         :param measurement: name of the specific measurement to get from the database
         :type measurement: str
-        :param start: values after this time
-        :type start: #TODO define time type
-        :param end: values before this time
-        :type end: #TODO define time type
-        :return: data
-        :rtype: #TODO see what influx returns
+        :param start: values after this time (seconds)
+        :type start: int
+        :param end: values before this time (seconds)
+        :type end: int
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, [measurement], start, end)
 
@@ -255,12 +296,12 @@ class Database:
         :type user: str
         :param measurement: name of the specific measurement to get from the database
         :type measurement: str
-        :param end: values before this time
-        :type end: #TODO define time type
+        :param end: values before this time (seconds)
+        :type end: int
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
-        :return: data
-        :rtype: #TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, [measurement], end=end, interval=interval)
 
@@ -280,8 +321,8 @@ class Database:
 
         :param user: username of the client
         :type user: str
-        :return: data
-        :rtype: # TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, self._get_health_status_metrics())
 
@@ -292,12 +333,12 @@ class Database:
 
         :param user: username of the client
         :type user: str
-        :param start: values after this time
-        :type start: # TODO define time type
+        :param start: values after this time (seconds)
+        :type start: int
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
-        :return: data
-        :rtype: # TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, self._get_health_status_metrics(), start, interval=interval)
 
@@ -308,12 +349,12 @@ class Database:
 
         :param user: username of the client
         :type user: str
-        :param start: values after this time
-        :type start: #TODO define time type
-        :param end: values before this time
-        :type end: #TODO define time type
-        :return: data
-        :rtype: #TODO see what influx returns
+        :param start: values after this time (seconds)
+        :type start: int
+        :param end: values before this time (seconds)
+        :type end: int
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, self._get_health_status_metrics(), start, end)
 
@@ -324,12 +365,12 @@ class Database:
 
         :param user: username of the client
         :type user: str
-        :param end: values before this time
-        :type end: #TODO define time type
+        :param end: values before this time (seconds)
+        :type end: int
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
-        :return: data
-        :rtype: #TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, self._get_health_status_metrics(), end=end, interval=interval)
 
@@ -341,8 +382,8 @@ class Database:
         :type user: str
         :param measurement: name of the specific measurement to get form the database
         :type measurement: str
-        :return: data
-        :rtype: #TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, [measurement])
 
@@ -355,12 +396,12 @@ class Database:
         :type user: str
         :param measurement: name of the specific measurement to get form the database
         :type measurement: str
-        :param start: values after this time
-        :type start: #TODO define time type
+        :param start: values after this time (seconds)
+        :type start: int
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
-        :return: data
-        :rtype: #TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, [measurement], start, interval=interval)
 
@@ -373,12 +414,12 @@ class Database:
         :type user: str
         :param measurement: name of the specific measurement to get from the database
         :type measurement: str
-        :param start: values after this time
-        :type start: #TODO define time type
-        :param end: values before this time
-        :type end: #TODO define time type
-        :return: data
-        :rtype: #TODO see what influx returns
+        :param start: values after this time (seconds)
+        :type start: int
+        :param end: values before this time (seconds)
+        :type end: int
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, [measurement], start, end=end)
 
@@ -391,12 +432,12 @@ class Database:
         :type user: str
         :param measurement: name of the specific measurement to get from the database
         :type measurement: str
-        :param end: values before this time
-        :type end: #TODO define time type
+        :param end: values before this time (seconds)
+        :type end: int
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
-        :return: data
-        :rtype: #TODO see what influx returns
+        :return: data (see _time_series_read return documentation)
+        :rtype: dict
         """
         return self._time_series_read(user, [measurement], end=end, interval=interval)
 

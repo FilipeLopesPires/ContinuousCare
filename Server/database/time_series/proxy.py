@@ -13,6 +13,8 @@ import influxdb
 import json
 from database.time_series import config
 
+import re
+
 
 class InfluxProxy:
     """
@@ -62,25 +64,26 @@ class InfluxProxy:
             (nanoseconds, microseconds, milliseconds, seconds, minutes, hours, days, weeks)
         :type interval: str
         """
+        assert re.match("[1-9]([0-9]+)?(ns|u|ms|s|m|h|d|w)", interval)
 
         # Parameters on query only work on the where clause
         params = {
             "username": username
         }
 
-        query = "SELECT *" + \
-                "FROM %s" % measurement + \
+        query = "SELECT * " + \
+                "FROM %s " % measurement + \
                 "WHERE username = $username"
 
-        if interval:
-            params["interval"] = interval
+        if interval is not None:
+            #params["interval"] = interval
 
             if begin_time is not None:
-                query += " AND time > $begin_time AND time < $begin_time + $interval"
+                query += " AND time > $begin_time AND time < $begin_time + " + interval
                 params["begin_time"] = begin_time * 1000000000
 
             elif end_time is not None:
-                query += " AND time < $end_time AND time > $end_time - $interval"
+                query += " AND time < $end_time AND time > $end_time - " + interval
                 params["end_time"] = end_time * 1000000000
             else:
                 query += " AND time > now() - $interval"

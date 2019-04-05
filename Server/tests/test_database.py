@@ -57,6 +57,7 @@ class TestDatabaseProxy(unittest.TestCase):
     def test_get_all_supported_devices(self):
         print(self.db.getSupportedDevices())
 
+    @unittest.skip
     def test_get_user_profile(self):
         print(self.db.getProfile("aspedrosa"))
 
@@ -75,6 +76,9 @@ class TestDatabaseProxy(unittest.TestCase):
                 "diseases": "doime cenas muitas vezes"
             }
         )
+
+    def test_influx_read(self):
+        print(self.db._time_series_read("aspedrosa", ["co2"], end=1554461325, interval="1d"))
 
 
 if __name__ == '__main__':

@@ -1,6 +1,4 @@
-CREATE DATABASE db;
 USE db;
-SET default_storage_engine=InnoDB; --default after and including MySQL 5.5.5
 
 -- USERS
 
@@ -29,9 +27,9 @@ create table client (
   birth_date              date,
   weight                  float(24),
   height                  float(24),
-  additional_information  varchar(1000),
+  additional_information  varchar(1000)
 );
---create index client_health_num_idx on client (health_number);
+-- create index client_health_num_idx on client (health_number);
 
 create table medic (
   medic_id                integer       primary key auto_increment,
@@ -77,9 +75,9 @@ create table expired_permissions (
   primary key (client_id, medic_id, begin_date),
   end_date                datetime
 );
---drop index `PRIMARY` on expired_permissions;
---create index exp_perm_client_idx on expired_permissions (client_id);
---create index exp_perm_medic_idx on expired_permissions (client_id);
+-- drop index `PRIMARY` on expired_permissions;
+-- create index exp_perm_client_idx on expired_permissions (client_id);
+-- create index exp_perm_medic_idx on expired_permissions (client_id);
 
 create table status_type (
   id                      integer       primary key auto_increment,
@@ -94,8 +92,8 @@ create table personal_status (
   time                    datetime,
   primary key (client_id, type, time)
 );
---drop index `PRIMARY` on personal_status;
---create index pers_stat_client_idx on personal_status (client_id);
+-- drop index `PRIMARY` on personal_status;
+-- create index pers_stat_client_idx on personal_status (client_id);
 
 create table supported_device (
   id                      integer       primary key auto_increment,
@@ -184,9 +182,15 @@ CREATE PROCEDURE verify_credentials (
 CREATE PROCEDURE get_all_client_devices (
     IN _username VARCHAR(30))
   BEGIN
-    SELECT device.id, device.type_id, device.acess_token
-    FROM (device JOIN client_device ON device.id = client_device.device_id)
-         JOIN client_username ON client_username.client_id = client_device.client_id
+    SELECT device.id,
+           device.type_id,
+           supported_device.type,
+           supported_device.brand,
+           supported_device.model,
+           device.acess_token
+    FROM ((device JOIN client_device ON device.id = client_device.device_id)
+         JOIN client_username ON client_username.client_id = client_device.client_id)
+             JOIN supported_device ON supported_device.id = device.type_id
     WHERE client_username.username = _username;
   END //
 
@@ -284,6 +288,16 @@ CREATE PROCEDURE get_health_status ()
     SELECT *
     FROM metric
     WHERE type = "health_status";
+  END //
+
+CREATE PROCEDURE get_device_info_for_query (
+    IN _device_id INTEGER)
+  BEGIN
+    SELECT supported_device.type,
+           supported_device.brand,
+           supported_device.model
+    FROM device JOIN supported_device ON device.type_id = supported_device.id
+    WHERE device.id = _device_id;
   END //
 
 DELIMITER ;
