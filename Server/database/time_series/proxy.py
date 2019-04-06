@@ -63,6 +63,8 @@ class InfluxProxy:
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
             (nanoseconds, microseconds, milliseconds, seconds, minutes, hours, days, weeks)
         :type interval: str
+        :return: list of maps
+        :rtype: list
         """
         assert re.match("[1-9]([0-9]+)?(ns|u|ms|s|m|h|d|w)", interval)
 
@@ -76,7 +78,6 @@ class InfluxProxy:
                 "WHERE username = $username"
 
         if interval is not None:
-            #params["interval"] = interval
 
             if begin_time is not None:
                 query += " AND time > $begin_time AND time < $begin_time + " + interval

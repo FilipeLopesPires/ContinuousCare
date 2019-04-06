@@ -25,8 +25,8 @@ create table client (
   foreign key (user_id) references user (user_id),
   health_number           integer       unique,
   birth_date              date,
-  weight                  float(24),
-  height                  float(24),
+  weight                  float,
+  height                  float,
   additional_information  varchar(1000)
 );
 -- create index client_health_num_idx on client (health_number);
@@ -40,6 +40,7 @@ create table medic (
   company                 varchar(30)
 );
 
+/*
 create table authentication (
   client_id               integer   primary key,
   foreign key (client_id) references user (user_id),
@@ -47,6 +48,7 @@ create table authentication (
   expiration_date         datetime,
   acess_token             varchar(300)
 );
+*/
 
 create table pending_permissions (
   client_id               integer,
@@ -84,16 +86,16 @@ create table status_type (
   name                    varchar(30)
 );
 
-create table personal_status (
+create table sleep_session (
   client_id               integer,
   foreign key (client_id) references client (client_id),
-  type                    integer,
-  foreign key (type) references status_type (id),
-  time                    datetime,
-  primary key (client_id, type, time)
+  day                     date,
+  begin                   datetime,
+  primary key (client_id, day, begin),
+-- PRIMARY KEY
+  end                     datetime,
+  duration                time
 );
--- drop index `PRIMARY` on personal_status;
--- create index pers_stat_client_idx on personal_status (client_id);
 
 create table supported_device (
   id                      integer       primary key auto_increment,
@@ -107,8 +109,24 @@ create table device (
   id                      integer       primary key auto_increment,
 -- PRIMARY KEY
   type_id                 integer,
-  foreign key (type_id) references supported_device (id),
-  acess_token             varchar(300)
+  foreign key (type_id) references supported_device (id)
+);
+
+create table authentication_field (
+  device_id               integer,
+  foreign key (device_id) references device (id),
+  name                    varchar(30),
+  primary key (device_id, name),
+-- PRIMARY KEY
+  value                   varchar(500)
+);
+
+create table home_device_location (
+  device_id               integer       primary key,
+  foreign key (device_id) references device (id),
+-- PRIMARY KEY
+  latitude                double,
+  longitude               double
 );
 
 create table client_device (
@@ -150,8 +168,8 @@ CREATE PROCEDURE insert_client (
     IN _email varchar(30),
     IN _health_number integer,
     IN _birth_date date,
-    IN _weight float(24),
-    IN _height float(24),
+    IN _weight float,
+    IN _height float,
     IN _additional_information varchar(100))
   BEGIN
     -- Verifications
@@ -187,28 +205,49 @@ CREATE PROCEDURE get_all_client_devices (
            supported_device.type,
            supported_device.brand,
            supported_device.model,
-           device.acess_token
-    FROM ((device JOIN client_device ON device.id = client_device.device_id)
+           authentication_field.name,
+           authentication_field.value,
+           home_device_location.latitude,
+           home_device_location.longitude
+    FROM ((((device JOIN client_device ON device.id = client_device.device_id)
          JOIN client_username ON client_username.client_id = client_device.client_id)
-             JOIN supported_device ON supported_device.id = device.type_id
+         JOIN supported_device ON supported_device.id = device.type_id)
+         JOIN authentication_field ON authentication_field.device_id = device.id)
+         LEFT JOIN home_device_location ON home_device_location.device_id = device.id
     WHERE client_username.username = _username;
   END //
 
 CREATE PROCEDURE insert_device (
     IN _username varchar(30),
-    IN _type_id INTEGER,
-    IN _acess_token VARCHAR(300))
+    IN _type_id INTEGER)
   BEGIN
     DECLARE __client_id, __new_device_id INTEGER;
+    DECLARE __new_device_type enum("bracelet", "home_device");
+
+    SELECT type INTO __new_device_type
+    FROM supported_device
+    WHERE id = _type_id;
 
     SELECT client_id INTO __client_id
     FROM client_username
     WHERE username = _username;
 
-    INSERT INTO device (type_id, acess_token)
+    IF __new_device_type = "bracelet" AND
+      EXISTS (SELECT *
+              FROM (client_device JOIN device ON client_device.device_id = device.id)
+                    JOIN supported_device ON device.type_id = supported_device.id
+              WHERE client_device = __client_id AND supported_device.type = __new_device_type) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Client already has a bracelet associated";
+    END IF;
+
+    INSERT INTO device (type_id)
     VALUES (_type_id, _acess_token);
 
     SET __new_device_id = LAST_INSERT_ID();
+
+    INSERT INTO authentication_field (device_id, name, value)
+    SELECT __new_device_id, tmp_authentication_fields.*
+    FROM tmp_authentication_fields;
 
     INSERT INTO client_device (client_id, device_id)
     VALUES (__client_id, __new_device_id);
@@ -245,8 +284,8 @@ CREATE PROCEDURE update_user_info (
     IN _email varchar(30),
     IN _health_number integer,
     IN _birth_date date,
-    IN _weight float(24),
-    IN _height float(24),
+    IN _weight float,
+    IN _height float,
     IN _additional_information varchar(1000))
   BEGIN
     DECLARE __client_id INTEGER;
@@ -276,29 +315,55 @@ CREATE PROCEDURE update_user_info (
     WHERE client_id = __client_id;
   END //
 
-CREATE PROCEDURE get_environment_metrics ()
+CREATE PROCEDURE insert_sleep_session (
+  IN _username varchar(30),
+  IN _day date,
+  IN _duration time,
+  IN _begin datetime,
+  IN _end datetime)
   BEGIN
-    SELECT name
-    FROM metric
-    where type = "environment";
+    DECLARE __client_id INTEGER;
+
+    SELECT client_id INTO __client_id
+    FROM client_username
+    where username = _username;
+
+    IF EXISTS(SELECT *
+              FROM sleep_session
+              WHERE ((begin < _begin AND begin > _begin)
+                    OR
+                     (end > _end AND end < _end)) AND client_id AND client_id = __client_id) THEN
+	    SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Intervals of several sleep session overlap";
+    END IF;
+
+    INSERT INTO sleep_session (client_id, day, duration, begin, end)
+    VALUES (__client_id, _day, _duration, _begin, _end);
+
   END //
 
-CREATE PROCEDURE get_health_status ()
+CREATE PROCEDURE get_sleep_sessions (
+  IN _username varchar(30),
+  IN _begin date,
+  IN _end date
+)
   BEGIN
-    SELECT *
-    FROM metric
-    WHERE type = "health_status";
-  END //
 
-CREATE PROCEDURE get_device_info_for_query (
-    IN _device_id INTEGER)
-  BEGIN
-    SELECT supported_device.type,
-           supported_device.brand,
-           supported_device.model
-    FROM device JOIN supported_device ON device.type_id = supported_device.id
-    WHERE device.id = _device_id;
+  IF _begin = NULL AND _end = NULL THEN
+    SELECT sleep_session.day, sleep_session.begin, sleep_session.end, sleep_session.duration
+    FROM sleep_session JOIN client_username ON sleep_session.client_id = client_username.client_id
+    WHERE sleep_session.day >= _begin AND sleep_session.day <= _end AND client_username.username = _username;
+  ELSEIF _begin != NULL THEN
+    SELECT sleep_session.day, sleep_session.begin, sleep_session.end, sleep_session.duration
+    FROM sleep_session JOIN client_username ON sleep_session.client_id = client_username.client_id
+    WHERE sleep_session.day >= _begin AND client_username.username = _username;
+  ELSE
+    SELECT sleep_session.day, sleep_session.begin, sleep_session.end, sleep_session.duration
+    FROM sleep_session JOIN client_username ON sleep_session.client_id = client_username.client_id
+    WHERE client_username.username = _username
+    ORDER BY begin DESC
+    LIMIT 1;
+  END IF;
+
   END //
 
 DELIMITER ;
-

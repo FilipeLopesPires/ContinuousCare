@@ -3,6 +3,8 @@
 from database.time_series.proxy import *
 from database.relational.proxy import *
 
+import datetime
+
 """
 This class uses acts as a proxy for the proxies of the different database used.
 This allows the main server only having to use just one class. Also the development of
@@ -72,16 +74,22 @@ class Database:
 
         :param user: username of the client to associate
         :type user: str
-        :param data: keys : [type:int, token:str]
+        :param data: keys : [type:int, authentication:str]
         :type data: dict
         :return: id of the new device created
         :rtype: int
         """
         return self.relational_proxy.register_device(
             user,
-            data["type"],
-            data["token"]
+            data["type"], # TODO may not receive an int here
+            data["authentication_fields"] # TODO may not be this name
         )
+
+    def updateDevice(self, user, data):
+        """"""
+
+    def deleteDevice(self, user, device_id):
+        """"""
 
     def getAllDevices(self, user):
         """
@@ -106,25 +114,14 @@ class Database:
         """
         return self.relational_proxy.get_all_supported_devices()
 
-    def _get_environment_metrics(self):
+    def getData(self, measurement, user, start, end, interval):
         """
-        Obtains all environment metrics.
-        This method is used before a query to get all environment values.
+        Method used to read from the time_series database.
 
-        :return: all supported environment metrics by the system
-        :rtype: list
-        """
-        return self.relational_proxy.get_all_environment_metrics()
-
-    def _time_series_read(self, username, measurements, start=None, end=None, interval=None):
-        """
-        Method used to read from the time_series database. Was created mainly to reduce
-        the redundancy of code on the functions bellow.
-
-        :param username: of the client
-        :type username: str
-        :param measurements: which measurements to get from database
-        :type measurements: list
+        :param measurement: which measurement to get from database
+        :type measurement: str
+        :param user: username of the client
+        :type user: str
         :param start: values after this time (seconds)
         :type start: int
         :param end: values before this time (seconds)
@@ -132,330 +129,65 @@ class Database:
         :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
         :type interval: str
         :return: {
-                    data:{
-                        co2:{
-                            device_id:{
-                                time:[],
-                                value:[],
-                                lat:[],
-                                long:[]
-                            }, ...
-                        }, ...
-                    },
-                    devices: {
-                        device_id:{
-                            type:bracelet
-                            brand:fitbit
-                            model:charge 3
-                        }, ...
-                    }
+                    time:[],
+                    value:[],
+                    lat:[],
+                    long:[],
+                    hearth_rate:[],calories:[],...
                  }
         :rtype: dict
         """
         data = {}
-        present_devices = []
 
-        for metric in measurements:
-            metric_dict = dict()
-            for read in self.time_series_proxy.read(username, metric, start, end, interval):
-                device_id = read["deviceId"]
-                if device_id not in metric_dict:
-                    present_devices.append(device_id)
-                    metric_dict[device_id] = dict()
+        if measurement == "sleep":
+            if not start and not end: #both None last
+                results = self.relational_proxy.get_sleep_sessions(user)
+            elif start: # just end None  from start
+                start_date = datetime.date.fromtimestamp(start)
+                results = self.relational_proxy.get_sleep_sessions(user, start_date)
+            else: # within
+                start_date = datetime.date.fromtimestamp(start)
+                end_date = datetime.date.fromtimestamp(end)
+                results = self.relational_proxy.get_sleep_sessions(user, start_date, end_date)
 
-                target = metric_dict[device_id]
-                for key, value in read.items():
-                    if key == "username" or key == "deviceId":
-                        continue
-                    if key not in target.keys():
-                        target[key] = []
+            return_value = {
+                "sessions_info": [], # list of dicts
+                "sessions_data": [] # list of dicts [{time:[...], level:[...], duration:[...]},{X},...]
+            }
+            for day, sleep_begin, sleep_end, duration in results:
+                return_value["sessions_info"].append({
+                    "day": day,
+                    "begin": sleep_begin,
+                    "end": sleep_end,
+                    "duration": duration
+                })
+                session_data = {}
+                for read in self.time_series_proxy.read(user, measurement, sleep_begin, sleep_end):
+                    for key, value in read.items():
+                        if key == "username":
+                            continue
+                        if key not in session_data.keys():
+                            session_data[key] = []
 
-                    target[key].append(value)
+                        session_data[key].append(value)
+                return_value["sessions_data"].append(session_data)
 
-            data[metric] = metric_dict
+            return return_value
 
-        devices = dict()
-        for device_id in present_devices:
-            devices[device_id] = self.relational_proxy.get_device_info_for_query(device_id)
+        for read in self.time_series_proxy.read(user, measurement, start, end, interval):
 
-        return {"data": data, "devices": devices}
+            for key, value in read.items():
+                if key == "username":
+                    continue
+                if key not in data.keys():
+                    data[key] = []
 
-    def getCurrentEnvironment(self, user):
-        """
-        Gets CURRENT values of ALL ENVIRONMENT MEASUREMENTS
+                data[key].append(value)
 
-        :param user: username of the client
-        :type user: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, self._get_environment_metrics())
+        return data
 
-    def getEnvironmentStartInterval(self, user, start, interval):
-        """
-        Gets ALL ENVIRONMENT MEASUREMENTS values within an interval STARTING from a given time plus a given INTERVAL
-
-        :param user: username of the client
-        :type user: str
-        :param start: values after this time (seconds)
-        :type start: int
-        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
-        :type interval: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, self._get_environment_metrics(), start, interval=interval)
-
-    def getEnvironmentStartEnd(self, user, start, end):
-        """
-        Gets ALL ENVIRONMENT MEASUREMENTS values within an interval STARTING from
-        a given time and ENDING at a given time
-
-        :param user: username of the client
-        :type user: str
-        :param start: values after this time (seconds)
-        :type start: int
-        :param end: values before this time (seconds)
-        :type end: int
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, self._get_environment_metrics(), start, end)
-
-    def getEnvironmentEndInterval(self, user, end, interval):
-        """
-        Gets ALL ENVIRONMENT MEASUREMENTS values within an interval ENDING from
-        a given time minus a given INTERVAL
-
-        :param user: username of the client
-        :type user: str
-        :param end: values before this time (seconds)
-        :type end: int
-        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
-        :type interval: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, self._get_environment_metrics(), end=end, interval=interval)
-
-    def currentEnvironmentSpecific(self, user, measurement):
-        """
-        Gets CURRENT values of a SPECIFIC ENVIRONMENT measurement
-
-        :param user: username of the client
-        :type user: str
-        :param measurement: name of the specific measurement to get form the database
-        :type measurement: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, [measurement])
-
-    def currentEnvironmentSpecificStartInterval(self, user, measurement, start, interval):
-        """
-        Gets values of a SPECIFIC ENVIRONMENT MEASUREMENT within an interval STARTING from a given
-        time plus a given INTERVAL
-
-        :param user: username of the client
-        :type user: str
-        :param measurement: name of the specific measurement to get form the database
-        :type measurement: str
-        :param start: values after this time (seconds)
-        :type start: int
-        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
-        :type interval: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, [measurement], start, interval=interval)
-
-    def currentEnvironmentSpecificStartEnd(self, user, measurement, start, end):
-        """
-        Gets values of a SPECIFIC ENVIRONMENT MEASUREMENT within an interval STARTING from a given
-        time and ENDING on a given time
-
-        :param user: username of the client
-        :type user: str
-        :param measurement: name of the specific measurement to get from the database
-        :type measurement: str
-        :param start: values after this time (seconds)
-        :type start: int
-        :param end: values before this time (seconds)
-        :type end: int
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, [measurement], start, end)
-
-    def currentEnvironmentSpecificEndInterval(self, user, measurement, end, interval):
-        """
-        Gets values of a SPECIFIC ENVIRONMENT MEASUREMENT within an interval STARTING from a given
-        time minus a given INTERVAL
-
-        :param user: username of the client
-        :type user: str
-        :param measurement: name of the specific measurement to get from the database
-        :type measurement: str
-        :param end: values before this time (seconds)
-        :type end: int
-        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
-        :type interval: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, [measurement], end=end, interval=interval)
-
-    def _get_health_status_metrics(self):
-        """
-        Obtains all health status metrics.
-        This method is used before a query to get all health status values.
-
-        :return: all supported health status metrics by the system
-        :rtype: list
-        """
-        return self.relational_proxy.get_all_health_status_metrics()
-
-    def getCurrentHealthStatus(self, user):
-        """
-        Gets CURRENT values of ALL HEALTH STATUS MEASUREMENTS
-
-        :param user: username of the client
-        :type user: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, self._get_health_status_metrics())
-
-    def getCurrentHealthStatusStartInterval(self, user, start, interval):
-        """
-        Gets ALL HEALTH STATUS MEASUREMENTS values within an interval STARTING from a
-        given time plus a given INTERVAL
-
-        :param user: username of the client
-        :type user: str
-        :param start: values after this time (seconds)
-        :type start: int
-        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
-        :type interval: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, self._get_health_status_metrics(), start, interval=interval)
-
-    def getCurrentHealthStatusStartEnd(self, user, start, end):
-        """
-        Gets ALL HEALTH STATUS MEASUREMENTS values within an interval STARTING from
-        a given time and ENDING at a given time
-
-        :param user: username of the client
-        :type user: str
-        :param start: values after this time (seconds)
-        :type start: int
-        :param end: values before this time (seconds)
-        :type end: int
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, self._get_health_status_metrics(), start, end)
-
-    def getCurrentHealthStatusEndInterval(self, user, end, interval):
-        """
-        Gets ALL HEALTH STATUS MEASUREMENTS values within an interval ENDING from
-        a given time minus a given INTERVAL
-
-        :param user: username of the client
-        :type user: str
-        :param end: values before this time (seconds)
-        :type end: int
-        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
-        :type interval: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, self._get_health_status_metrics(), end=end, interval=interval)
-
-    def getCurrentHealthStatusSpecific(self, user, measurement):
-        """
-        Gets CURRENT values of a SPECIFIC HEALTH STATUS measurement
-
-        :param user: username of the client
-        :type user: str
-        :param measurement: name of the specific measurement to get form the database
-        :type measurement: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, [measurement])
-
-    def getCurrentHealthStatusSpecificStartInterval(self, user, measurement, start, interval):
-        """
-        Gets values of a SPECIFIC HEALTH STATUS MEASUREMENT within an interval STARTING from a given
-        time plus a given INTERVAL
-
-        :param user: username of the client
-        :type user: str
-        :param measurement: name of the specific measurement to get form the database
-        :type measurement: str
-        :param start: values after this time (seconds)
-        :type start: int
-        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
-        :type interval: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, [measurement], start, interval=interval)
-
-    def getCurrentHealthStatusSpecificStartEnd(self, user, measurement, start, end):
-        """
-        Gets values of a SPECIFIC HEALTH STATUS MEASUREMENT within an interval STARTING from a given
-        time and ENDING on a given time
-
-        :param user: username of the client
-        :type user: str
-        :param measurement: name of the specific measurement to get from the database
-        :type measurement: str
-        :param start: values after this time (seconds)
-        :type start: int
-        :param end: values before this time (seconds)
-        :type end: int
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, [measurement], start, end=end)
-
-    def getCurrentHealthStatusSpecificEndInterval(self, user, measurement, end, interval):
-        """
-        Gets values of a SPECIFIC HEALTH STATUS MEASUREMENT within an interval STARTING from a given
-        time minus a given INTERVAL
-
-        :param user: username of the client
-        :type user: str
-        :param measurement: name of the specific measurement to get from the database
-        :type measurement: str
-        :param end: values before this time (seconds)
-        :type end: int
-        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
-        :type interval: str
-        :return: data (see _time_series_read return documentation)
-        :rtype: dict
-        """
-        return self._time_series_read(user, [measurement], end=end, interval=interval)
-
-    def personalStatus(self, user):
+    def getData(self): #TODO all db data
         """"""
-        pass
-
-    def personalStatusStartInterval(self, user, start, interval):
-        """"""
-        pass
-
-    def personalStatusStartEnd(self, user, start, end):
-        """"""
-        pass
-
-    def personalStatusEndInterval(self, user, end, interval):
-        """"""
-        pass
 
     def updateProfile(self, user, data):
         """
@@ -473,7 +205,7 @@ class Database:
             data["password"],
             data["name"],
             data["email"],
-            data["phpn"],
+            data["phpn"], # TODO do they send me this?
             (birth_day, birth_month, birth_year),
             data["weight"],
             data["height"],
@@ -495,3 +227,53 @@ class Database:
     def deleteProfile(self, user):
         """"""
         pass
+
+    def insert(self, measurement, data, user):
+        """
+
+        :param measurement:
+        :type measurement: str
+        :param data:
+        :type data: list or dict
+        :param user: username of the client
+        :type user: str
+        """
+
+        if measurement == "sleep":
+            if type(data) != list:
+                raise TypeError("list was expected received ", type(data))
+
+
+            self.relational_proxy.insert_sleep_session(user,
+                                                       data["day"], #TODO may receive, Agree format
+                                                       data["duration"], #TODO agree format
+                                                       data["begin"], #TODO may not be this key. Agree format
+                                                       data["end"]) #TODO may not be this key. Agree format
+
+            to_write = []
+            for point in data["sleep"]:
+                time = point["time"]
+                del point["time"]
+
+                to_write.append(
+                    {
+                        "measurement": measurement,
+                        "time": time,
+                        "tags": {
+                            "username": user,
+                        },
+                        "fields": point
+                    }
+                )
+
+            self.time_series_proxy.write(to_write)
+        else:
+            self.time_series_proxy.write(
+                [{
+                    "measurement": measurement,
+                    "tags": {
+                        "username": user,
+                    },
+                    "fields": data
+                }]
+            )

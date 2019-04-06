@@ -27,9 +27,11 @@ class StoredProcedures:
     GET_ALL_SUPPORTED_DEVICES = "get_all_supported_devices"
     GET_USER_PROFILE_DATA = "get_user_info"
     UPDATE_USER_PROFILE_DATA = "update_user_info"
-    GET_ENVIRONMENT_METRICS = "get_environment_metrics"
-    GET_HEALTH_STATUS_METRICS = "get_health_status_metrics"
-    GET_DEVICE_INFO_FOR_QUERY = "get_device_info_for_query"
+    REGISTER_SLEEP_SESSION = "register_sleep_session"
+    INSERT_SLEEP_SESSION = "insert_sleep_session"
+    GET_SLEEP_SESSIONS = "get_sleep_sessions"
+    #UPDATE_DEVICE_AUTHENTICATION_FIELDS = "update_device_authentication_fields"
+    #DELETE_DEVICE = "delete_device"
 
 
 class MySqlProxy:
@@ -180,7 +182,7 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def register_device(self, username, type_id, token):
+    def register_device(self, username, type_id, authentication_fields):
         """
         Inserts a new device on the database and associates it with the user
 
@@ -188,15 +190,25 @@ class MySqlProxy:
         :type username: str
         :param type_id: type of the device
         :type type_id: int
-        :param token: token to access device's APIs
-        :type token: str
+        :param authentication_fields: fields to access device's APIs
+        :type authentication_fields: list
         :return: id of the new device
         :rtype: int
         """
         try:
             conn, cursor = self._init_connection()
 
-            cursor.callproc(StoredProcedures.INSERT_DEVICE, (username, type_id, token))
+            auth_fields_names = []
+            auth_fields_values = []
+            for name, value in authentication_fields:
+                auth_fields_names.append(name)
+                auth_fields_values.append(value)
+
+            cursor.execute("DROP TEMPORARY TABLE IF EXISTS tmp_authentication_fields")
+            cursor.execute("CREATE TEMPORARY TABLE tmp_authentication_fields(name VARCHAR(30),value VARCHAR(500))")
+            cursor.execute("INSERT INTO tmp_authentication_fields values (%s, %s)", (auth_fields_names,
+                                                                                     auth_fields_values))
+            cursor.callproc(StoredProcedures.INSERT_DEVICE, (username, type_id))
 
             conn.commit()
 
@@ -211,8 +223,9 @@ class MySqlProxy:
 
         :param username: of the client
         :type username: str
-        :return: info of all devices
-        [{device:int, type:int, token:str}, ...]
+        :return: info of all devices. In case of a home device the
+        object will also contain a longitude and latitude field
+        [{device:int, type:int, token:str, uuid:str}, ...]
         :rtype: list
         """
         try:
@@ -220,20 +233,25 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.GET_ALL_CLIENT_DEVICES, [username])
 
-            retval = []
-            for (device_id, type_id, type, brand, model, token) in next(cursor.stored_results()).fetchall():
-                retval.append(
-                    {
-                        "device"  : device_id,
-                        "type_id" : type_id,
-                        "type"    : type,
-                        "brand"   : brand,
-                        "model"   : model,
-                        "token"   : token
+            devices = dict()
+            for (device_id,
+                 type_id,
+                 type,
+                 brand,
+                 model, auth_field_name,
+                        auth_field_value, latitude,
+                                          longitude) in next(cursor.stored_results()).fetchall():
+                if device_id not in devices.keys():
+                    devices[device_id] = {
+                        "type"      : "%s %s" % (brand, model),
+                        "latitude"  : latitude,
+                        "longitude" : longitude,
                     }
-                )
 
-            return retval
+                if auth_field_name is not None:
+                    devices[device_id][auth_field_name] = auth_field_value
+
+            return list(devices.values())
         finally:
             self._close_conenction(conn, cursor)
 
@@ -301,7 +319,7 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def update_user_profile_data(self, username, password, full_name, email, health_number,
+    def update_user_profile_data(self, username, password, full_name, email, health_number, #TODO they may not send this field
                                        birth_date, weight, height, additional_information):
         """
         Updates the profile information for a user. The function receives all information
@@ -345,54 +363,39 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def get_all_environment_metrics(self):
+    def insert_sleep_session(self, username, day, duration, begin, end):
         """
-        Gets all environment metrics names
+        Register a new sleep session on the database. Can fail if the new session
+        overlaps with existing ones in which concerns begin and end time
 
-        :return: all metric names
-        :rtype: list
-        """
-        try:
-            conn, cursor = self._init_connection()
-
-            cursor.callproc(StoredProcedures.GET_ENVIRONMENT_METRICS)
-
-            return [line[0] for line in next(cursor.stored_results()).fetchall()]
-        finally:
-            self._close_conenction(conn, cursor)
-
-    def get_all_health_status_metrics(self):
-        """
-        Gets all health status metrics names
-
-        :return: all metric names
-        :rtype: list
+        :param username: of the client
+        :type username: str
+        :param day: with a format of %d-%m-%y
+        :type day: str
+        :param duration: with a format of %H-%M-%S
+        :type duration: str
+        :param begin: with a format of %d-%m-%y %H-%M-%S
+        :type begin: str
+        :param end: with a format of %d-%m-%y %H-%M-%S
+        :type end: str
         """
         try:
             conn, cursor = self._init_connection()
 
-            cursor.callproc(StoredProcedures.GET_HEALTH_STATUS_METRICS)
+            cursor.callproc(StoredProcedures.INSERT_SLEEP_SESSION, (username, day, duration, begin, end))
 
-            return [line[0] for line in next(cursor.stored_results()).fetchall()]
+            conn.commit()
         finally:
             self._close_conenction(conn, cursor)
 
-    def get_device_info_for_query(self, device_id):
-        """
-
-        :param device_id: id of the device of the client
-        :type device_id: int
-        :return: device info
-        {type:bracelet, brand:fitbit, model:charge 3}
-        :rtype: dict
-        """
+    def get_sleep_sessions(self, username, begin=None, end=None):
+        """"""
         try:
             conn, cursor = self._init_connection()
 
-            cursor.callproc(StoredProcedures.GET_DEVICE_INFO_FOR_QUERY, [device_id])
+            cursor.callproc(StoredProcedures.GET_SLEEP_SESSIONS, (username, begin, end))
 
-            results = next(cursor.stored_results()).fetchone()
-
-            return {key: results[i] for i, key in enumerate(["type", "brand", "model"])}
+            return next(cursor.stored_results()).fetchall()
         finally:
             self._close_conenction(conn, cursor)
+
