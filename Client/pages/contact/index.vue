@@ -1,14 +1,14 @@
 <template>
     <div>
         <!--================ HTML Header =================-->
-        <HeaderHTML page="Settings" />
+        <HeaderHTML page="Contact" />
 
         <body>
             <!--================ Header Menu Area =================-->
             <HeaderMenu activePage="Help" />
 
             <!--================ Banner Area =================-->
-            <PageBanner parent_page="Home" page="Settings" />
+            <PageBanner parent_page="Home" page="Contact Us" />
             
             <!--================ Footer Area =================-->
             <PageFooter />

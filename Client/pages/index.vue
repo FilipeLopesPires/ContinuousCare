@@ -5,7 +5,7 @@
 
     <body>
       <!--================Header Menu Area =================-->
-      <HeaderMenu />
+      <HeaderMenu activePage="Home" />
 
       <!--================ Home Banner Area =================-->
       <HomeBanner />
@@ -23,10 +23,14 @@
           </div>
 
           <div class="row">
-            <ServiceBox icon="lnr lnr-map-marker" title="Environment Analysis based on Geolocation" description="... description here ..."/>
-            <ServiceBox icon="lnr lnr-heart-pulse" title="Real-time Health Status Tracking" description="... description here ..."/>
-            <ServiceBox icon="lnr lnr-picture" title="User Friendly Data Visualization" description="... description here ..."/>
-            <ServiceBox icon="lnr lnr-arrow-right" title="Data Sharing for Medical Consultations" description="... description here ..."/>
+            <ServiceBox icon="lnr lnr-map-marker" title="Environment Analysis based on Geolocation" 
+                        description="... description here ..."/>
+            <ServiceBox icon="lnr lnr-heart-pulse" title="Real-time Health Status Tracking" 
+                        description="... description here ..."/>
+            <ServiceBox icon="lnr lnr-picture" title="User Friendly Data Visualization" 
+                        description="... description here ..."/>
+            <ServiceBox icon="lnr lnr-users" title="Data Sharing for Medical Consultations" 
+                        description="... description here ..."/>
           </div>
         </div>
       </section>
