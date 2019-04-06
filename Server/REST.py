@@ -12,28 +12,7 @@ CORS(app)
 processor=Processor()
 
 
-#TESTS
 
-@app.route('/pollution/lat=<string:lat>/long=<string:longi>', methods = ['GET'])
-def pollution(lat, longi):
-    return processor.getPollutionGPS(lat,longi)
-
-@app.route('/heartRate', methods = ['GET'])
-def heartRate():
-    return processor.getAverageHeartRate()
-
-@app.route('/teste', methods = ['GET','POST'])
-def teste():
-    return processor.teste(request.data)
-
-@app.route('/end', methods = ['GET'])
-def end():
-    return processor.end()
-
-
-
-
-#REAL THING
 
 @app.route('/signup', methods = ['POST'])
 def signup():
@@ -51,71 +30,24 @@ def devices():
     else:
         return processor.addDevice(userToken, request.data)
 
-@app.route('/environment', endpoint="environment", methods = ['GET'])
-@app.route('/environment/<string:datatype>', endpoint="environmentSpecific", methods = ['GET'])
-@app.route('/healthstatus', endpoint="healthStatus", methods = ['GET'])
-@app.route('/healthstatus/<string:datatype>', endpoint="healthStatusSpecific", methods = ['GET'])
-@app.route('/personalstatus', endpoint="personalStatus", methods = ['GET'])
+@app.route('/environment', endpoint="Environment", methods = ['GET'])
+@app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
+@app.route('/personalstatus', endpoint="PersonalStatus", methods = ['GET'])
 @app.route('/download', endpoint="download",methods = ['GET'])
 def getData(datatype=None):
     userToken=request.headers["AuthToken"]
     start=request.args.get('start', default="*", type=str)
+    start=start if start!="*" else None
     end=request.args.get('end', default="*", type=str)
+    end=end if end!="*" else None
     interval=request.args.get('interval', default="*", type=str)
-    if start=="*" and end=="*" and interval=="*":
-        if request.endpoint=="environment":
-            function="getCurrentEnvironment(user)"
-        elif request.endpoint=="environmentSpecific":
-            function="getCurrentEnvironmentSpecific(user, datatype)"
-        elif request.endpoint=="healthStatus":
-            function="getCurrentHealthStatus(user)"
-        elif request.endpoint=="healthStatusSpecific":
-            function="getCurrentHealthStatusSpecific(user, datatype)"
-        elif request.endpoint=="personalStatus":
-            function="getCurrentPersonalStatus(user)"
-        elif request.endpoint=="download":
-            function="getAllData()"
-    elif end=="*":
-        if request.endpoint=="environment":
-            function="getEnvironmentStartInterval(user,start, interval)"
-        elif request.endpoint=="environmentSpecific":
-            function="getEnvironmentSpecificStartInterval(user,datatype, start, interval)"
-        elif request.endpoint=="healthStatus":
-            function="getHealthStatusStartInterval(user,start, interval)"
-        elif request.endpoint=="healthStatusSpecific":
-            function="getHealthStatusSpecificStartInterval(user,datatype, start, interval)"
-        elif request.endpoint=="personalStatus":
-            function="getPersonalStatusStartInterval(user,start, interval)"
-            elif request.endpoint=="download":
-            function="getAllDataStartInterval(user, start, interval)"
-    elif interval=="*":
-        if request.endpoint=="environment":
-            function="getEnvironmentStartEnd(user,start, end)"
-        elif request.endpoint=="environmentSpecific":
-            function="getEnvironmentSpecificStartEnd(user, datatype, start, end)"
-        elif request.endpoint=="healthStatus":
-            function="getHealthStatusStartEnd(user,start, end)"
-        elif request.endpoint=="healthStatusSpecific":
-            function="getHealthStatusSpecificStartEnd(user, datatype, start, end)"
-        elif request.endpoint=="personalStatus":
-            function="getPersonalStatusStartEnd(user,start, end)"
-        elif request.endpoint=="download":
-            function="getAllDataStartEnd(user,start, end)"
-    elif start=="*":
-        if request.endpoint=="environment":
-            function="getEnvironmentEndInterval(user,end, interval)"
-        elif request.endpoint=="environmentSpecific":
-            function="getEnvironmentSpecificEndInterval(user, datatype, end, interval)"
-        elif request.endpoint=="healthStatus":
-            function="getHealthStatusEndInterval(user,end, interval)"
-        elif request.endpoint=="healthStatusSpecific":
-            function="getHealthStatusSpecificEndInterval(user, datatype, end, interval)"
-        elif request.endpoint=="personalStatus":
-            function="getPersonalStatusEndInterval(user,end, interval)"
-        elif request.endpoint=="download":
-            function="getAllDataEndInterval(user,end, interval)"
+    interval=interval if interval!="*" else None
+    function="getData("+request.endpoint+",user,"+start+","+end+","+interval+")"
+    if request.endpoint=="download":
+        function="getData("+start+","+end+","+interval+")"
 
     return processor.getData(userToken, function, datatype, start, end, interval)
+
 
 @app.route('/profile', methods = ['GET', 'POST', 'DELETE'])
 def profile():
@@ -132,10 +64,15 @@ def supportedDevices():
     return processor.getSupportedDevices()
 
 
-@app.route('/gps', methods = ['POST'])
+@app.route('/sleep', methods = ['GET'])
 def userGPSCoordinates():
     userToken=request.headers["AuthToken"]
-    return processor.userGPSCoordinates(userToken, request.data)
+    start=request.args.get('start', default="*", type=str)
+    start=start if start!="*" else None
+    end=request.args.get('end', default="*", type=str)
+    end=end if end!="*" else None
+    function="getData(\"Sleep\",user,"+start+","+end+")"
+    return processor.getData(userToken, function, datatype, start, end, None)
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 context.load_cert_chain("MyRootCA.crt", "MyRootCA.key")

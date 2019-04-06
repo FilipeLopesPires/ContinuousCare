@@ -26,6 +26,12 @@ class Database:
         self.time_series_proxy = InfluxProxy()
         self.relational_proxy = MySqlProxy()
 
+    def getAllUsers(self):
+        return ["joao"]
+
+    def getAllDevices(self, user):
+        return {"type":"FitBit", "token":"123", "device":"123"}
+
     def register(self, data):
         """
         Register a client on the database

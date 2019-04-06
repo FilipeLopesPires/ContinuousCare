@@ -12,24 +12,35 @@ Component responsable for doing all the information gathering and processing
 class Processor:
 
     def __init__(self):
-        self.supportedDevices=json.loads(open("config.json").read().replace("\n", "").replace("\t", "").strip())
+        self.configFile=json.loads(open("config.json").read().replace("\n", "").replace("\t", "").strip())
+        self.supportedDevices=self.configFile["devices"]
+        self.gps=self.configFile["gps"]
+        self.externalAPI=self.configFile["externalAPI"]
         self.database=database.Database()
+       
         self.userThreads={}
         self.userTokens={}
+        self.userURLS={}
         allUsers=self.database.getAllUsers()
         for user in allUsers:
-            urls={}
+            urls={}   #{GPS: {url:url, updateTime, updateTime}, HealthStatus: {FitBit-Heartrate:{url:url, header:header, updatetime:10}, FitBit-Steps:{...}}}, PersonalStatus:{}, Sleep:{}}
             userDevices=self.database.getAllDevices(user)
             for device in userDevices:
                 if device["type"] in  self.supportedDevices:
                     for metric in self.supportedDevices[device["type"]]["metrics"]:
-                        urls[device["type"]+"-"+metric]["url"]=self.supportedDevices[device["type"][metric]["url"]]
-                        urls[device["type"]+"-"+metric]["header"]=self.supportedDevices[device["type"]["header"]]+device["token"]+"\"}"
-                        urls[device["type"]+"-"+metric]["updateTime"]=self.supportedDevices[device["type"][metric]["updateTime"]]
-                        urls[device["type"]+"-"+metric]["savingTime"]=self.supportedDevices[device["type"][metric]["savingTime"]]
+                        if metric["type"] not in urls:
+                            urls[metric["type"]]={}
+                        urls[metric["type"]][device["type"]+"-"+metric]["url"]=self.supportedDevices[device["type"][metric]["url"]].replace("VARIABLE_UUID", device["uuid"])
+                        urls[metric["type"]][device["type"]+"-"+metric]["header"]=self.supportedDevices[device["type"]["header"]].replace("VARIABLE_TOKEN",device["token"])
+                        urls[metric["type"]][device["type"]+"-"+metric]["updateTime"]=self.supportedDevices[device["type"][metric]["updateTime"]]
+                        #urls[metric]["savingTime"]=self.supportedDevices[device["type"][metric]["savingTime"]]
+
+            urls["GPS"]={"url":self.gps["url"], "updateTime":self.gps["updateTime"], "header":self.gps["header"]}
+
+            self.userURLS[user]=urls
+
             self.userThreads[user]=myThread(self, urls,user)
             self.userThreads[user].start()
-
 
 
         #urls["https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json"]=[{"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkRLMlgiLCJzdWIiOiI3Q05RV1oiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJhY3QgcnNldCBybG9jIHJ3ZWkgcmhyIHJudXQgcnBybyByc2xlIiwiZXhwIjoxNTUzODAxNjA5LCJpYXQiOjE1NTM3NzI4MDl9.6_hSXgYG36430e-ZaRfcEYSzDezGJeaMF5R2PiSr4bk"}, 1]
@@ -70,6 +81,9 @@ class Processor:
         return json.dumps({"status":0 , "error":"Successfull operation.", "data":devices}).encode("UTF-8")
 
     def addDevice(self, token, data):
+        #ADD DEVICE TO THE THREAD
+
+
         if token not in self.userTokens:
             return  json.dumps({"status":1, "error":"Invalid Token."}).encode("UTF-8")
 
@@ -78,7 +92,7 @@ class Processor:
             jsonData=json.loads(data.decode("UTF-8"))
             deviceToken=jsonData["token"]
 
-            self.database.addDevice(user, )
+            self.database.addDevice(user, jsonData)
             return json.dumps({"status":0 , "error":"Successfull operation."}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":1, "error":"Database internal error. "+str(e)}).encode("UTF-8")
@@ -129,9 +143,9 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":1, "error":"Database internal error. "+str(e)}).encode("UTF-8")
 
-    def getSupportedDevices(self):
+    def getsupportedDevices(self):
         try:
-            values=self.database.getSupportedDevices()
+            values=self.database.getsupportedDevices()
             return json.dumps({"status":0 , "error":"Successfull operation.", "data":values}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":1, "error":"Database internal error. "+str(e)}).encode("UTF-8")
@@ -146,8 +160,14 @@ class Processor:
         longi=jsonData["longitude"]
         response=requests.get("https://api.waqi.info/feed/geo:"+lat+";"+longi+"/?token=453f8f3898bd238302fe5f84e3526a90c5da9496")
         response=json.loads(response.text)
-        normalData=[[metric, reponse["data"]["iaqi"][metric]["v"]]for metric in reponse["data"]["iaqi"]]
-        normalData+=["aqi", response["data"]["aqi"]]
+        normalData={metric:reponse["data"]["iaqi"][metric]["v"] for metric in reponse["data"]["iaqi"]}
+        normalData["aqi"]=response["data"]["aqi"]
+        normalData["lat"]=lat
+        normalData["longi"]=longi
+
+        #CHECK HOME
+
+
         try:
             self.database.insert("Environment", normalData, user)
             return json.dumps({"status":0 , "error":"Successfull operation."}).encode("UTF-8")
@@ -156,22 +176,24 @@ class Processor:
 
 
 
-    def normalizeData(self, typeData, data):
+    def normalizeData(self, metric, data):
         jsonData=json.loads(data)
-        types=typeData.split("-")
+        types=metric.split("-")
         return eval(self.supportedDevices[types[0]]["metrics"][types[1]]["getData"])
 
-    def process(self, typeData, data, user):
+    def process(self, responses, user):
+        '''
         jsonData=json.loads(data)
-        types=typeData.split("-")
+        types=metric.split("-")
         if eval(self.supportedDevices[types[0]]["metrics"][types[1]]["saveCondition"]):
-            self.save(typeData, data, user)
+            self.save(metric, data, user)
+        '''
 
     
-    def save(self, typeData, data, user):
-        normalData=self.normalizeData(typeData, data)
+    def save(self, metric, data, user):
+        normalData=self.normalizeData(metric, data)
         try:
-            self.database.insert(typeData, normalData, user)
+            self.database.insert(metric, normalData, user)
         except Exception as e:
             raise e
 
@@ -185,25 +207,38 @@ class Processor:
 
 class myThread (threading.Thread):
     def __init__(self, processor, urls, user):
-        #urls= {type:{url: ...,header: ..., updatingTime: ..., savingTime: ...]}
         threading.Thread.__init__(self)
         self.processor=processor
         self.user=user
         self.urls=urls
-        self.deltaTimes=[(timedelta(minutes=urls[metric]["updatingTime"]), timedelta(minutes=urls[metric]["savingTime"]), metric) for metric in urls]
+        metrics=[metric for metric in urls]
+        self.deltaTimes=[(timedelta(minutes=urls[metric]["updateTime"]), metric) for metric in self.getMetrics([m  for m in urls])]
         self.running=True
 
+    def getMetrics(self, metrics):
+        aux=[]
+        for m in metrics:
+            aux+=[m] if m=="GPS" else [m+"/"+n for n in self.urls[m]]
+        return aux
+
+
     def run(self):
-        old_times=[(datetime.now(),datetime.now()) for x in range(len(self.urls))]
+        old_times=[datetime.now() for x in range(len(self.deltaTimes))]
         print("started")
         while self.running:
-            updating=[datetime.now()-old[0] > delta[0] for old,delta in zip(old_times, self.deltaTimes)]
+            updating=[datetime.now()-old > delta[0] for old,delta in zip(old_times, self.deltaTimes)]
             if any(updating):
+                responses=[]
                 for i,v in enumerate(updating):
                     if v:
-                        old_times[i][0]=datetime.now()
-                        response=requests.get(self.urls[self.deltaTimes[i]]["url"], headers=self.urls[self.deltaTimes[i]]["header"])
-                        self.processor.process(response.text, self.user)
+                        old_times[i]=datetime.now()
+                        metric=self.deltaTimes[i].split("/")
+                        url=self.urls[metric[0]]["url"] if len(metric)==1 else self.urls[metric[0]][metric[1]]["url"]
+                        resp=requests.get(url, headers=self.urls[self.deltaTimes[i]]["header"])
+                        responses.append([self.deltaTimes[i], resp.text])
+
+                self.processor.process(responses, self.user)
+            '''
             saving=[datetime.now()-old[1] > delta[1] for old,delta in zip(old_times, self.deltaTimes)]
             if any(saving):
                 for i,v in enumerate(saving):
@@ -211,6 +246,7 @@ class myThread (threading.Thread):
                         old_times[i][1]=datetime.now()
                         response=requests.get(self.urls[self.deltaTimes[i]]["url"], headers=self.urls[self.deltaTimes[i]]["header"])
                         self.processor.save(response.text, self.user)
+            '''
         print("ended")
       
     def end(self):
