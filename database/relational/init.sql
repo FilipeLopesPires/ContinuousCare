@@ -373,4 +373,10 @@ CREATE PROCEDURE get_sleep_sessions (
 
   END //
 
+CREATE PROCEDURE get_all_usernames ()
+  BEGIN
+    SELECT user.username
+    FROM client JOIN user ON client.user_id = user.user_id;
+  END //
+
 DELIMITER ;

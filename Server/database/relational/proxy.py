@@ -21,6 +21,7 @@ import base64
 
 class StoredProcedures:
     REGISTER_CLIENT = "insert_client"
+    GET_ALL_USERNAMES = "get_all_usernames"
     INSERT_DEVICE = "insert_device"
     VERIFY_CREDENTIALS = "verify_credentials"
     GET_ALL_CLIENT_DEVICES = "get_all_client_devices"
@@ -398,6 +399,17 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.GET_SLEEP_SESSIONS, (username, begin, end))
+
+            return next(cursor.stored_results()).fetchall()
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_all_usernames(self):
+        """"""
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_ALL_USERNAMES)
 
             return next(cursor.stored_results()).fetchall()
         finally:

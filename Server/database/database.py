@@ -68,6 +68,10 @@ class Database:
             data["password"]
         )
 
+    def getAllUsers(self):
+        """"""
+        return self.relational_proxy.get_all_usernames()
+
     def addDevice(self, user, data):
         """
         Stores a new device on the database
