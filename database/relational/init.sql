@@ -219,7 +219,9 @@ CREATE PROCEDURE get_all_client_devices (
 
 CREATE PROCEDURE insert_device (
     IN _username varchar(30),
-    IN _type_id INTEGER)
+    IN _type_id INTEGER, -- TODO may/will not receive an int here
+    IN _latitude DOUBLE,
+    IN _longitude DOUBLE)
   BEGIN
     DECLARE __client_id, __new_device_id INTEGER;
     DECLARE __new_device_type enum("bracelet", "home_device");
@@ -251,6 +253,11 @@ CREATE PROCEDURE insert_device (
 
     INSERT INTO client_device (client_id, device_id)
     VALUES (__client_id, __new_device_id);
+
+    IF __new_device_type = "home_device" THEN
+      INSERT INTO home_device_location (device_id, latitude, longitude)
+      VALUES (__new_device_id, _latitude, _longitude);
+    END IF;
 
     select __new_device_id;
   END //

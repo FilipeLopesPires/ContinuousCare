@@ -82,7 +82,9 @@ class Database:
         return self.relational_proxy.register_device(
             user,
             data["type"], # TODO may not receive an int here
-            data["authentication_fields"] # TODO may not be this name
+            data["authentication_fields"], # TODO may not be this name
+            data.get("latitude", None), # TODO may not be this key
+            data.get("longitude", None) # TODO may not be this key
         )
 
     def updateDevice(self, user, data):

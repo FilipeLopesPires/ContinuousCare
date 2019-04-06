@@ -182,7 +182,7 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def register_device(self, username, type_id, authentication_fields):
+    def register_device(self, username, type_id, authentication_fields, latitude=None, longitude=None):
         """
         Inserts a new device on the database and associates it with the user
 
@@ -192,6 +192,10 @@ class MySqlProxy:
         :type type_id: int
         :param authentication_fields: fields to access device's APIs
         :type authentication_fields: list
+        :param latitude: location of the device (only applicable for home devices)
+        :type latitude: float
+        :param longitude: location of the device (only applicable for home devices)
+        :type longitude: float
         :return: id of the new device
         :rtype: int
         """
@@ -208,7 +212,7 @@ class MySqlProxy:
             cursor.execute("CREATE TEMPORARY TABLE tmp_authentication_fields(name VARCHAR(30),value VARCHAR(500))")
             cursor.execute("INSERT INTO tmp_authentication_fields values (%s, %s)", (auth_fields_names,
                                                                                      auth_fields_values))
-            cursor.callproc(StoredProcedures.INSERT_DEVICE, (username, type_id))
+            cursor.callproc(StoredProcedures.INSERT_DEVICE, (username, type_id, latitude, longitude))
 
             conn.commit()
 
