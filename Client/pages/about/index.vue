@@ -1,8 +1,5 @@
 <template>
     <div>
-        <!--================ HTML Header =================-->
-        <HeaderHTML page="About" />
-
         <body>
             <!--================ Header Menu Area =================-->
             <HeaderMenu activePage="About" />
@@ -29,17 +26,13 @@
 </template>
 
 <script>
-import HeaderHTML from '@/components/headers/HeaderHTML.vue'
-import HeaderMenu from '@/components/headers/HeaderMenu.vue'
-import PageBanner from '@/components/banners/PageBanner.vue'
-import PageFooter from '@/components/footers/PageFooter.vue'
 
 export default {
     components: {
-        HeaderHTML,
-        HeaderMenu,
-        PageBanner,
-        PageFooter
+        
+    },
+    head: {
+        title: "About"
     }
 }
 </script>

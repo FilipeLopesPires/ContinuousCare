@@ -13,7 +13,7 @@ module.exports = {
       { hid: 'description', name: 'description', content: pkg.description }
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      { rel: 'icon', type: 'image/x-icon', href: '/logo.ico' }
     ],
     script: [
       { src: '/js/jquery-3.2.1.min.js'},
@@ -32,7 +32,7 @@ module.exports = {
   },
 
   /* Customize the progress-bar color */
-  loading: { color: '#fff' },
+  loading: { color: '#3ea8df', height: '4px', duration: 5000 },
 
   /* Global CSS */
   css: [
@@ -49,22 +49,28 @@ module.exports = {
 
   /* Plugins to load before mounting the App */
   plugins: [
-    { src: '~plugins/js/mail-script.js', ssr: false},
+    '~plugins/core-components.js',
+    { src: '~plugins/vue-js-modal', ssr: false},
+    /* { src: '~plugins/js/mail-script.js', ssr: false},
     { src: '~plugins/js/custom.js', ssr: false},
-    { src: '~plugins/js/jquery.ajaxchimp.min.js', ssr: false},
+    { src: '~plugins/js/jquery.ajaxchimp.min.js', ssr: false}, */
   ],
 
   /* Nuxt.js modules */
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
-    // Doc: https://bootstrap-vue.js.org/docs/
+    // Doc: https://bootstrap-vue.js.org/docs/ 
     'bootstrap-vue/nuxt',
   ],
 
   /* Axios module configuration */
   axios: {
     // See https://github.com/nuxt-community/axios-module#options
+  },
+
+  env: {
+    base_url: "http://192.168.43.136:5000",
   },
 
   /* Build configuration */

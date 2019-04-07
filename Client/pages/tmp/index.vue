@@ -1,24 +1,11 @@
 <template>
   <div>
-    <!--================ HTML Header =================-->
-    <HeaderHTML page="TMP" />
-
-    <body>
-
-      <!--=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!= COMPONENTS =!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=-->
-
+    <body style="overflow-x: none;">
       <!--================Header Menu Area =================-->
       <HeaderMenu activePage="TMP" />
 
       <!--================ Home Banner Area =================-->
       <PageBanner parent_page="Home" page="TMP" />
-
-      <!--================ Tags Area =================-->
-      <div class="row justify-content-center d-flex align-items-center">
-        <div class="col-lg-9">
-          <TagsArea />
-        </div>
-      </div>
 
       <!--================ Basic Table Area =================-->
       <div class="row justify-content-center d-flex align-items-center">
@@ -593,24 +580,6 @@
       </div>
       <!-- End Align Area -->
 
-      <!--================ Procedure Category Area =================-->
-      <section class="procedure_category section_gap">
-        <div class="container">
-          <div class="row justify-content-center section-title-wrap">
-            <div class="col-lg-12">
-              <h1>Procedure Category</h1>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
-            </div>
-          </div>
-          <div class="row">
-            <DeviceBox />
-            <DeviceBox />
-            <DeviceBox />
-          </div>
-        </div>
-      </section>
 
       <!--================ About Myself Area =================-->
       <!-- 
@@ -643,27 +612,6 @@
           </div>
         </div>
       </section> -->
-
-      <!--================ Offered Services Area =================-->
-      <section class="service_area section_gap">
-        <div class="container">
-          <div class="row justify-content-center section-title-wrap">
-            <div class="col-lg-12">
-              <h1>Our Offered Services</h1>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
-            </div>
-          </div>
-
-          <div class="row">
-            <ServiceBox />
-            <ServiceBox />
-            <ServiceBox />
-            <ServiceBox />
-          </div>
-        </div>
-      </section>
 
       <!--================ Appointment Area =================-->
       <section class="appointment-area">
@@ -711,17 +659,10 @@ import ActivityBox from '@/components/boxes/ActivityBox.vue'
 import BasicMap from '@/components/maps/BasicMap.vue'
 import BasicTable from '@/components/tables/BasicTable.vue'
 import ComplexTable from '@/components/tables/ComplexTable.vue'
-import DeviceBox from '@/components//boxes/DeviceBox.vue'
 import Form from '@/components/forms/Form.vue'
-import HeaderHTML from '@/components/headers/HeaderHTML.vue'
-import HeaderMenu from '@/components/headers/HeaderMenu.vue'
 import ImageBox from '@/components/boxes/ImageBox.vue'
-import ServiceBox from '@/components/boxes/ServiceBox.vue'
-import PageBanner from '@/components/banners/PageBanner.vue'
-import PageFooter from '@/components/footers/PageFooter.vue'
 import PaginationBox from '@/components/boxes/PaginationBox.vue'
 import ProfileBox from '@/components/boxes/ProfileBox.vue'
-import TagsArea from '@/components/boxes/TagsArea.vue'
 
 export default { 
   components: {
@@ -729,17 +670,13 @@ export default {
     BasicMap,
     BasicTable,
     ComplexTable,
-    DeviceBox,
     Form,
-    HeaderHTML,
-    HeaderMenu,
     ImageBox,
-    ServiceBox,
-    PageBanner,
-    PageFooter,
     PaginationBox,
     ProfileBox,
-    TagsArea,
+  },
+  head: {
+    title: "Tmp"
   }
 }
 </script>

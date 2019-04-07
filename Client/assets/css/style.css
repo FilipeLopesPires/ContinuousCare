@@ -1063,9 +1063,9 @@ a {
   background: #fff; }
 
 .blog_right_sidebar {
-  border: 1px solid #eeeeee;
-  background: #fafaff;
-  padding: 30px; }
+  border: 1px white;
+  background: white;
+  padding: 30px 30px 0px 30px; }
   .blog_right_sidebar .widget_title {
     font-size: 18px;
     line-height: 25px;
@@ -1113,12 +1113,12 @@ a {
       font-size: 18px;
       line-height: 20px;
       color: #000000;
-      margin-bottom: 5px;
+      margin-bottom: 0px;
       margin-top: 30px; }
     .blog_right_sidebar .author_widget p {
       margin-bottom: 0px; }
     .blog_right_sidebar .author_widget .social_icon {
-      padding: 7px 0px 15px; }
+      padding: 7px 0px 0px; }
       .blog_right_sidebar .author_widget .social_icon a {
         font-size: 14px;
         color: #000000;
@@ -1146,7 +1146,7 @@ a {
   .blog_right_sidebar .popular_post_widget .post_item + .post_item {
     margin-top: 20px; }
   .blog_right_sidebar .post_category_widget .cat-list li {
-    border-bottom: 2px dotted #eee;
+    border-bottom: 0px  #eee;
     transition: all 0.3s ease 0s;
     padding-bottom: 12px; }
     .blog_right_sidebar .post_category_widget .cat-list li a {
@@ -1164,7 +1164,7 @@ a {
   .blog_right_sidebar .newsletter_widget {
     text-align: center; }
     .blog_right_sidebar .newsletter_widget .form-group {
-      margin-bottom: 8px; }
+      margin-bottom: 0px; }
     .blog_right_sidebar .newsletter_widget .input-group-prepend {
       margin-right: -1px; }
     .blog_right_sidebar .newsletter_widget .input-group-text {
@@ -1173,7 +1173,7 @@ a {
       vertical-align: top;
       font-size: 12px;
       line-height: 36px;
-      padding: 0px 0px 0px 15px;
+      padding: 0px 0px 0px 0px;
       border: 1px solid #eeeeee;
       border-right: 0px; }
     .blog_right_sidebar .newsletter_widget .form-control {
@@ -2907,6 +2907,9 @@ h6 {
 
 .mt-10 {
   margin-top: 10px; }
+
+.ml-10 {
+  margin-left: 10px; }
 
 .form-select .nice-select .list .option {
   font-weight: 300;

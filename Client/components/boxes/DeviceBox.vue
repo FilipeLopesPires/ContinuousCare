@@ -1,33 +1,42 @@
 <template>
-    <div class="col-lg-4">
+    <div class="col-lg-4 col-md-4 col-sm-6">
+        <DeviceModal :device="device" />
         <div class="categories_post">
-        <img :src="photo" alt="Procedure" height="200px" width="200px">
-        <div class="categories_details">
-            <div class="categories_text">
-            <div class="border_line"></div>
-            <a href="#">
-                <h5>{{ name }}</h5>
-            </a>
-            <div class="border_line"></div>
+            <img :src="device.photo" alt="Procedure" height="200px" width="200px" >
+            <div class="categories_details" @click="showModal($modal, device.authentication_fields[0])">
+                <div class="categories_text">
+                    <div class="border_line"></div>
+                        <h5 >{{ device.brand }} {{ device.model }}</h5>
+                    <div class="border_line"></div>
+                </div>
             </div>
-        </div>
         </div>
     </div>
 </template>
 
 <script>
+import Vue from 'vue'
+import VModal from 'vue-js-modal/dist/ssr.index'
+Vue.use(VModal)
+import DeviceModal from '@/components/modals/DeviceModal.vue'
+
 export default {
     name: 'DeviceBox',
+    components: {
+        DeviceModal,
+    },
     props: {
-		photo: {
-			type: String,
-			required: true
-		},
-		name: {
-			type: String,
-			required: true
-		}
-	}
+        device: {
+            type: Object,
+            required: true
+        }
+    },
+    methods: {
+        showModal($modal, token) {
+            var device_modal = "device-modal-" + token;
+            $modal.show(device_modal);
+        }
+    }
 }
 </script>
 

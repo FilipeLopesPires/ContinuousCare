@@ -86,8 +86,7 @@
                     <button class="main_btn text-uppercase" type="submit">Register</button>
                 </div>
                 <div class="mt-10 col-lg-8 col-md-9">
-                    <p>Already have an account? <nuxt-link to="" @click="logMeIn">Sign In!</nuxt-link> </p> 
-                    <p>I forgot my password <nuxt-link to="" @click="forgotMyPassword">Help!</nuxt-link> </p> 
+                    <p>Already have an account? <nuxt-link to="/login" @click="logMeIn">Sign In!</nuxt-link> </p>
                 </div>
             </div>
         </form>
@@ -128,9 +127,6 @@ export default {
         logMeIn() {
             console.log("change to login form");
         },
-        forgotMyPassword() {
-            console.log("ask for email");
-        }
     }
 };
 </script>

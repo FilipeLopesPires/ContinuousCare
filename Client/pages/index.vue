@@ -1,9 +1,6 @@
 <template>
-  <div>
-    <!--================ HTML Header =================-->
-    <HeaderHTML page="Home" />
-
-    <body>
+  <div v-if="true">
+    <body style="overflow-x: none;">
       <!--================Header Menu Area =================-->
       <HeaderMenu activePage="Home" />
 
@@ -41,22 +38,59 @@
     </body>
     <nuxt/>
   </div>
+  <div v-else>
+    <body style="overflow-x: none;">
+      <!--================Header Menu Area =================-->
+      <HeaderMenu activePage="Home" />
+
+      <!--================ Banner Area =================-->
+      <PageBanner parent_page="Home" page="Profile" />
+
+      <!--================ Tags Area =================-->
+      <div class="row justify-content-center d-flex align-items-center">
+        <div class="col-lg-9">
+          <TagsArea :areas="tags_area"/>
+        </div>
+      </div>
+
+      <!--================ Footer Area =================-->
+      <PageFooter />
+
+    </body>
+    <nuxt/>
+  </div>
 </template>
 
 <script>
-import HeaderHTML from '@/components/headers/HeaderHTML.vue'
-import HeaderMenu from '@/components/headers/HeaderMenu.vue'
 import HomeBanner from '@/components/banners/HomeBanner.vue'
 import ServiceBox from '@/components/boxes/ServiceBox.vue'
-import PageFooter from '@/components/footers/PageFooter.vue'
+import TagsArea from '@/components/boxes/TagsArea.vue'
 
 export default { 
   components: {
-    HeaderHTML,
-    HeaderMenu,
     HomeBanner,
     ServiceBox,
-    PageFooter
+    TagsArea,
+  },
+  data() {
+    return {
+      tags_area: [
+        {area: {
+          title: "How Are You Feeling Today?",
+          tags: ["Amused","Calm","Cheerful","Dreamy","Excited","Flirty","Good","Happy","Joyful","Loving","Mellow","Optimistic","Peaceful","Silly","Sympathetic","Angry","Annoyed / Irritated","Apathetic","Bad","Cranky / Grumpy","Depressed","Envious","Frustrated","Gloomy","Guilty","Indifferent","Melancholy","Pessimistic","Rejected","Restless","Sad","Stressed","Weird"],
+        }},
+        {area: {
+          title: "Would You Like To Take Note Of Any Complaints?",
+          tags: ["Cold / Respiratory Pain","Insomnia / Difficult Night","Migraine / Headache","Muscle Soreness or Injury","Allergies","Back or Joint Pain","Skin Conditions","Stomache or Intestinal Disconforts","Overstress / Heart Disconfort"]
+        }}
+      ]
+    }
+  },
+  methods: {
+    
+  },
+  head: {
+    title: "ContinuousCare"
   }
 }
 </script>

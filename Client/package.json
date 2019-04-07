@@ -13,11 +13,14 @@
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.3.6",
+    "apexcharts": "^3.6.5",
     "bootstrap": "^4.1.3",
     "bootstrap-vue": "^2.0.0-rc.11",
     "cross-env": "^5.2.0",
     "nuxt": "^2.4.0",
+    "vue-apexcharts": "^1.3.2",
     "vue-date-picker": "^2.4.0",
+    "vue-js-modal": "^1.3.28",
     "vuejs-datepicker": "^1.5.4"
   },
   "devDependencies": {

@@ -1,8 +1,5 @@
 <template>
     <div>
-        <!--================ HTML Header =================-->
-        <HeaderHTML page="Login" />
-
         <body style="overflow-x: none;">
             <!--================ Header Menu Area =================-->
             <HeaderMenu activePage="Login or Register" />
@@ -27,19 +24,14 @@
 </template>
 
 <script>
-import HeaderHTML from '@/components/headers/HeaderHTML.vue'
-import HeaderMenu from '@/components/headers/HeaderMenu.vue'
-import PageBanner from '@/components/banners/PageBanner.vue'
-import PageFooter from '@/components/footers/PageFooter.vue'
 import LoginForm from '@/components/forms/LoginForm.vue'
 
 export default {
     components: {
-        HeaderHTML,
-        HeaderMenu,
-        PageBanner,
-        PageFooter,
         LoginForm
+    },
+    head: {
+        title: "Login"
     }
 }
 </script>

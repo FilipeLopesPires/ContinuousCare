@@ -2,9 +2,8 @@
     <div class="row">
         <DeviceBox v-for="device in devices"
         :key="device.id"
-        :name="device.name"
-        :photo="device.photo"
-        />
+        :device="device.device"
+        /> 
     </div>
 </template>
 
