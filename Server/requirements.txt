@@ -1,7 +1,7 @@
 Flask
 requests
 flask_cors
-
+geopy
 cryptography
 
 # databases drivers

@@ -30,7 +30,7 @@ class Database:
         return ["joao"]
 
     def getAllDevices(self, user):
-        return {"type":"FitBit", "token":"123", "device":"123"}
+        return [{"type":"FitBit Charge 3", "token":"eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkRLMlgiLCJzdWIiOiI3Q05RV1oiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJzZXQgcmFjdCBybG9jIHJ3ZWkgcmhyIHJwcm8gcm51dCByc2xlIiwiZXhwIjoxNTU0NjA0MDY5LCJpYXQiOjE1NTQ1NzUyNjl9.ChMzx6hPB03TwZ_cKEsauUTl7E9PQ5orIVj3FAWDDhA", "device":"123"},{"type":"Foobot ", "token":"123", "device":"234","latitude":50,"longitude":10, "uuid":"10"} ]
 
     def register(self, data):
         """
@@ -86,6 +86,7 @@ class Database:
             data["token"]
         )
 
+    '''
     def getAllDevices(self, user):
         """
         Get all devices associated with the client passed on the arguments
@@ -97,6 +98,7 @@ class Database:
         :rtype: list
         """
         return self.relational_proxy.get_all_devices_of_user(user)
+    '''
 
     def getSupportedDevices(self):
         """

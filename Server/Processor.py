@@ -5,41 +5,93 @@ from random import *
 import threading
 from datetime import datetime, timedelta
 from database import *
+import logging
+import dateutil.parser as dp
+from math import sqrt
+from geopy.distance import vincenty
 
 '''
 Component responsable for doing all the information gathering and processing
 '''
+
+RADIUS=50
+
+
 class Processor:
 
     def __init__(self):
+        self.database=database.Database()
         self.configFile=json.loads(open("config.json").read().replace("\n", "").replace("\t", "").strip())
         self.supportedDevices=self.configFile["devices"]
-        self.gps=self.configFile["gps"]
-        self.externalAPI=self.configFile["externalAPI"]
-        self.database=database.Database()
+        self.gps=self.configFile["GPS"]
+        self.externalAPI={}   #{Environment: {WAQI:{header:header, metrics:{All:{url:url,updatetime:10}}}}, ...}
+        auxAPI=self.configFile["externalAPI"]
+        for api in auxAPI:
+            for metric in auxAPI[api]["metrics"]:
+                metricType=auxAPI[api]["metrics"][metric]["type"]
+                if metricType not in self.externalAPI:
+                    self.externalAPI[metricType]={}
+                if api not in self.externalAPI[metricType]:
+                    self.externalAPI[metricType][api]={"metrics":{}}
+                    self.externalAPI[metricType][api]["header"]=auxAPI[api]["header"]
+                    self.externalAPI[metricType][api]["location"]=auxAPI[api]["metrics"][metric]["location"]
+            
+                self.externalAPI[metricType][api]["metrics"][metric]={}
+                self.externalAPI[metricType][api]["metrics"][metric]["url"]=auxAPI[api]["metrics"][metric]["url"]
+                if "updateTime" in auxAPI[api]["metrics"][metric]:
+                    self.externalAPI[metricType][api]["metrics"][metric]["updatetime"]=auxAPI[api]["metrics"][metric]["updateTime"]
+            
+        
        
         self.userThreads={}
         self.userTokens={}
         self.userURLS={}
         allUsers=self.database.getAllUsers()
         for user in allUsers:
-            urls={}   #{GPS: {url:url, updateTime, updateTime}, HealthStatus: {FitBit-Heartrate:{url:url, header:header, updatetime:10}, FitBit-Steps:{...}}}, PersonalStatus:{}, Sleep:{}}
+            urls={}   #{GPS: {url:url, updateTime, updateTime}, HealthStatus: {FitBit:{header:header, refresh_url:refresh, refresh_header:..., refresh_data:..., metrics:{Heartrate:{url:url, updatetime:10}, Steps:{...}}}}}, PersonalStatus:{}, Sleep:{}}
             userDevices=self.database.getAllDevices(user)
             for device in userDevices:
-                if device["type"] in  self.supportedDevices:
-                    for metric in self.supportedDevices[device["type"]]["metrics"]:
-                        if metric["type"] not in urls:
-                            urls[metric["type"]]={}
-                        urls[metric["type"]][device["type"]+"-"+metric]["url"]=self.supportedDevices[device["type"][metric]["url"]].replace("VARIABLE_UUID", device["uuid"])
-                        urls[metric["type"]][device["type"]+"-"+metric]["header"]=self.supportedDevices[device["type"]["header"]].replace("VARIABLE_TOKEN",device["token"])
-                        urls[metric["type"]][device["type"]+"-"+metric]["updateTime"]=self.supportedDevices[device["type"][metric]["updateTime"]]
-                        #urls[metric]["savingTime"]=self.supportedDevices[device["type"][metric]["savingTime"]]
+                deviceType=device["type"].strip()
+                if deviceType in  self.supportedDevices:
+                    metrics=self.supportedDevices[deviceType]["metrics"]
+                    for metric in metrics:
+                        metricType=metrics[metric]["type"]
+                        if metricType not in urls:
+                            urls[metricType]={}
+                        if deviceType not in urls[metricType]:
+                            urls[metricType][deviceType]={"metrics":{}}
+                            urls[metricType][deviceType]["header"]=self.supportedDevices[deviceType]["header"].replace("VARIABLE_TOKEN",device["token"])
+                            for refreshParam in ["refresh_url", "refresh_header", "refresh_data"]:
+                                if refreshParam in self.supportedDevices[deviceType]:
+                                    urls[metricType][deviceType][refreshParam]=self.supportedDevices[deviceType][refreshParam].replace("VARIABLE_REFRESH_TOKEN", device.get("refresh_token",""))
+
+                        urls[metricType][deviceType]["metrics"][metric]={}        
+                        urls[metricType][deviceType]["metrics"][metric]["url"]=self.supportedDevices[deviceType]["metrics"][metric]["url"].replace("VARIABLE_UUID", device.get("uuid", ""))
+                        urls[metricType][deviceType]["metrics"][metric]["updateTime"]=self.supportedDevices[deviceType]["metrics"][metric]["updateTime"]
+                        
+                        if metricType=="Environment" and self.supportedDevices[deviceType]["metrics"][metric]["location"]:
+                            urls[metricType][deviceType]["location"]=True
+                            urls[metricType][deviceType]["latitude"]=device["latitude"]
+                            urls[metricType][deviceType]["longitude"]=device["longitude"]
+
+                        #urls[metric]["savingTime"]=self.supportedDevices[deviceType[metric]["savingTime"]]
 
             urls["GPS"]={"url":self.gps["url"], "updateTime":self.gps["updateTime"], "header":self.gps["header"]}
 
             self.userURLS[user]=urls
 
-            self.userThreads[user]=myThread(self, urls,user)
+            for key in self.externalAPI:
+                if key in urls:
+                    urls[key]=dict(urls[key], **self.externalAPI[key])
+                else:
+                    urls[key]=self.externalAPI[key]
+
+
+
+            print(urls)
+
+            #passing only the GPS and the HealthStatus to the Thread
+            self.userThreads[user]=myThread(self, {k:v for k, v in urls.items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
             self.userThreads[user].start()
 
 
@@ -52,9 +104,9 @@ class Processor:
         jsonData=json.loads(data.decode("UTF-8"))
         try:
             self.database.register(jsonData)
-            return json.dumps({"status":0 , "error":"Successfull operation."}).encode("UTF-8")
+            return json.dumps({"status":0, "error":"Successfull operation."}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "error":"Database internal error. "+str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "error":"Database internal error. "+str(e)}).encode("UTF-8")
 
 
     def signin(self, data):
@@ -150,6 +202,7 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":1, "error":"Database internal error. "+str(e)}).encode("UTF-8")
 
+    '''
     def userGPSCoordinates(self, token, data):
         if token not in self.userTokens:
             return  json.dumps({"status":1, "error":"Invalid Token."}).encode("UTF-8")
@@ -173,27 +226,77 @@ class Processor:
             return json.dumps({"status":0 , "error":"Successfull operation."}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":1, "error":"Database internal error. "+str(e)}).encode("UTF-8")    
+    '''
 
 
-
-    def normalizeData(self, metric, data):
+    def normalizeData(self, path, data):
         jsonData=json.loads(data)
-        types=metric.split("-")
-        return eval(self.supportedDevices[types[0]]["metrics"][types[1]]["getData"])
+        subpath=[y for y in path.split("-")][1:]
+        try:
+            if len(subpath)==1:
+                return eval(self.configFile[subpath[1]]["getData"])
+            return eval(self.configFile[subpath[0]][subpath[1]]["metrics"][subpath[2]]["getData"])
+        except Exception as e:
+            raise Exception("Error on calculation the relevant data. "+str(e))
 
     def process(self, responses, user):
-        '''
-        jsonData=json.loads(data)
-        types=metric.split("-")
-        if eval(self.supportedDevices[types[0]]["metrics"][types[1]]["saveCondition"]):
-            self.save(metric, data, user)
-        '''
+        normalData={}
+        for resp in responses:
+            metric=resp[0].split("-")[0]
+            if metric not in normalData:
+                normalData[metric]={}
+            try:
+                normalData[metric]=dict(normalData[metric], **self.normalizeData(resp[0], resp[1]))
+            except Exception as e:
+                logging.error(str(e)+"->"+resp[1])
+
+        print(normalData)
+        if "GPS" in normalData:
+            normalData["Environment"]={}
+            for device in self.userURLS["Environment"]:
+                deviceConf=self.userURLS["Environment"][device]
+                if deviceConf["location"]:
+                    distance=round(vincenty(normalData["GPS"], [deviceConf["latitude"], deviceConf["longitude"]]).m)
+                    if distance <= RADIUS:
+                        for metric in deviceConf["metrics"]:
+                            url=deviceConf["metrics"][metric]["url"]
+                            header=deviceConf["metrics"][metric]["header"]
+                            try:
+                                resp=requests.get(url, headers=header)
+                                normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,resp.text))
+                            except Exception as e:
+                                logging.error("Exception caught: "+str(e))
+            if normalizeData["Environment"]=={}:
+                for device in self.userURLS["Environment"]:
+                    deviceConf=self.userURLS["Environment"][device]
+                    if not deviceConf["location"]:
+                        for metric in deviceConf["metrics"]:
+                            url=deviceConf["metrics"][metric]["url"]
+                            header=deviceConf["metrics"][metric]["header"]
+                            try:
+                                resp=requests.get(url, headers=header)
+                                normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,resp.text))
+                            except Exception as e:
+                                logging.error("Exception caught: "+str(e))
+            normalData["Environment"]["latitude"]=normalData["GPS"][0]
+            normalData["Environment"]["longitude"]=normalData["GPS"][1]
+            del normalData["GPS"]
+
+        coords=self.normalizeData("GPS-GPS", requests.get(self.gps["url"], headers=json.loads(self.gps["header"])).text)
+
+        normalData["HealthStatus"]["latitude"]=coords[0]
+        normalData["HealthStatus"]["longitude"]=coords[1]
+
+        self.save(normalData,user)
+
+
+                        
 
     
-    def save(self, metric, data, user):
-        normalData=self.normalizeData(metric, data)
+    def save(self, data, user):
         try:
-            self.database.insert(metric, normalData, user)
+            for key in data:
+                self.database.insert(key, data[key], user)
         except Exception as e:
             raise e
 
@@ -203,6 +306,11 @@ class Processor:
             self.userThreads[k].end()
         return ""
 
+    def getStartPath(self, device):
+        for t in self.configFile:
+            if device in self.configFile[t]:
+                return t
+
     
 
 class myThread (threading.Thread):
@@ -211,32 +319,40 @@ class myThread (threading.Thread):
         self.processor=processor
         self.user=user
         self.urls=urls
-        metrics=[metric for metric in urls]
-        self.deltaTimes=[(timedelta(minutes=urls[metric]["updateTime"]), metric) for metric in self.getMetrics([m  for m in urls])]
+        self.deltaTimes=self.getDeltas([m for m in urls])
         self.running=True
+        print(self.deltaTimes)
 
-    def getMetrics(self, metrics):
+    def getDeltas(self, metrics):
         aux=[]
         for m in metrics:
-            aux+=[m] if m=="GPS" else [m+"/"+n for n in self.urls[m]]
+            print(m)
+            aux+=[(timedelta(minutes=self.urls[m]["updateTime"]), m+"-GPS")] if m=="GPS" else [(timedelta(minutes=self.urls[m][n]["metrics"][o]["updateTime"]), m+"-"+self.processor.getStartPath(n)+"-"+n+"-"+o) for n in self.urls[m] for o in self.urls[m][n]["metrics"]]
         return aux
 
 
     def run(self):
-        old_times=[datetime.now() for x in range(len(self.deltaTimes))]
+        now=datetime.now()
+        old_times=[now for x in range(len(self.deltaTimes))]
         print("started")
         while self.running:
-            updating=[datetime.now()-old > delta[0] for old,delta in zip(old_times, self.deltaTimes)]
+            now1=datetime.now()
+            updating=[now1-old >= delta[0] for old,delta in zip(old_times, self.deltaTimes)]
             if any(updating):
+                print(updating)
                 responses=[]
                 for i,v in enumerate(updating):
                     if v:
-                        old_times[i]=datetime.now()
-                        metric=self.deltaTimes[i].split("/")
-                        url=self.urls[metric[0]]["url"] if len(metric)==1 else self.urls[metric[0]][metric[1]]["url"]
-                        resp=requests.get(url, headers=self.urls[self.deltaTimes[i]]["header"])
-                        responses.append([self.deltaTimes[i], resp.text])
-
+                        old_times[i]=now1
+                        metric=self.deltaTimes[i][1].split("-")
+                        url=self.urls[metric[0]]["url"] if len(metric)==1 else self.urls[metric[0]][metric[2]]["metrics"][metric[3]]["url"]
+                        header=json.loads(self.urls[metric[0]]["header"] if len(metric)==1 else self.urls[metric[0]][metric[2]]["header"])
+                        try:
+                            resp=requests.get(url, headers=header)
+                            responses.append([self.deltaTimes[i][1], resp.text])
+                        except Exception as e:
+                            logging.error("Exception caught: "+str(e))
+                        
                 self.processor.process(responses, self.user)
             '''
             saving=[datetime.now()-old[1] > delta[1] for old,delta in zip(old_times, self.deltaTimes)]
@@ -254,44 +370,7 @@ class myThread (threading.Thread):
 
 
 
-
-
 '''
-def getAverageHeartRate(self):
-    #FitBit
-    url="https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json"
-    header={"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkRLMlgiLCJzdWIiOiI3Q05RV1oiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJhY3QgcnNldCBybG9jIHJ3ZWkgcmhyIHJudXQgcnBybyByc2xlIiwiZXhwIjoxNTUzODAxNjA5LCJpYXQiOjE1NTM3NzI4MDl9.6_hSXgYG36430e-ZaRfcEYSzDezGJeaMF5R2PiSr4bk"}
-
-    response=requests.get(url, headers=header)
-    jsondata=json.loads(response.text)
-    return str(jsondata["activities-heart"][0]["value"]["restingHeartRate"])
-
-def getHomePollution(self):
-    #FooBot
-    header={"Accept":"application/json;charset=UTF-8","X-API-KEY-TOKEN":"eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiam9hby5wQHVhLnB0IiwiaWF0IjoxNTUyMDY2Njc5LCJ2YWxpZGl0eSI6LTEsImp0aSI6IjRiNmY2NzhiLWJjNTYtNDYxNi1hYmMyLTRiNjlkMTNkMjUzOSIsInBlcm1pc3Npb25zIjpbInVzZXI6cmVhZCIsImRldmljZTpyZWFkIl0sInF1b3RhIjoyMDAsInJhdGVMaW1pdCI6NX0.aeLLsrhh1-DVXSwl-Z_qDx1Xbr9oIid1IKsOyGQxwqQ"}
-    url="http://api.foobot.io/v2/device/240D676D40002482/datapoint/10/last/0/"
-    response=requests.get(url, headers=header)
-    return response.text
-
-def getPollutionGPS(self,lat,longi):
-    #https://api.breezometer.com/air-quality/v2/current-conditions?lat=40.6&lon=-8.6&key=407f495d1f744a8c86c700e5fe83a752&features=breezometer_aqi,local_aqi,health_recommendations,sources_and_effects,pollutants_concentrations,pollutants_aqi_information
-    #https://api.waqi.info/feed/geo:40.6;-8.6/?token=453f8f3898bd238302fe5f84e3526a90c5da9496
-    #http://api.openweathermap.org/data/2.5/weather?lat=40&lon=8&appid=a5168e6057120df470e1dcd0b02d9b38
-    response=requests.get("https://api.breezometer.com/air-quality/v2/current-conditions?lat="+lat+"&lon="+longi+"&key=407f495d1f744a8c86c700e5fe83a752&features=breezometer_aqi,local_aqi,health_recommendations,sources_and_effects,pollutants_concentrations,pollutants_aqi_information")
-    jsondata=json.loads(response.text)
-    out={}
-    for k in jsondata["data"]["pollutants"]:
-        out[jsondata["data"]["pollutants"][k]["full_name"]]=jsondata["data"]["pollutants"][k]["aqi_information"]["baqi"]["aqi_display"]
-
-    out[jsondata["data"]["indexes"]["baqi"]["display_name"]]=jsondata["data"]["indexes"]["baqi"]["aqi_display"]
-
-    self.database.insert(out, lat, longi, "teste1", "1234")
-    return str(out)
-
-def teste(self, data):
-    print(data)
-    return json.dumps({"resposta":"sim"}).encode("UTF-8")
-
 
 refresh FITBIT Token
 
