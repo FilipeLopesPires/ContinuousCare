@@ -124,7 +124,7 @@ class Processor:
         jsonData=json.loads(data.decode("UTF-8"))
         if self.database.verifyUser(jsonData):
             self.userTokens[token]=jsonData["username"]
-            return json.dumps({"status":0 , "error":"Successfull operation.", "data":{"token":"\""+token+"\""}}).encode("UTF-8")
+            return json.dumps({"status":0 , "error":"Successfull operation.", "data":{"token":token}}).encode("UTF-8")
         return json.dumps({"status":1, "error":"Incorrect username or password."}).encode("UTF-8")
 
     def getAllDevices(self, token):

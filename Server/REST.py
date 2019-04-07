@@ -41,9 +41,9 @@ def getData(datatype=None):
     end=end if end!="*" else None
     interval=request.args.get('interval', default="*", type=str)
     interval=interval if interval!="*" else None
-    function="getData("+request.endpoint+",user,"+start+","+end+","+interval+")"
+    function="getData(\""+request.endpoint+"\",user,"+str(start)+","+str(end)+","+str(interval)+")"
     if request.endpoint=="download":
-        function="getData(None, None,"+start+","+end+","+interval+")"
+        function="getData(None, None,"+str(start)+","+str(end)+","+str(interval)+")"
 
     return processor.getData(userToken, function, datatype, start, end, interval)
 
@@ -73,6 +73,7 @@ def userGPSCoordinates():
     function="getData(\"Sleep\",user,"+start+","+end+")"
     return processor.getData(userToken, function, datatype, start, end, None)
 
-context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-context.load_cert_chain("MyRootCA.crt", "MyRootCA.key")
-app.run(host='0.0.0.0',port='5000', debug = False/True, ssl_context=context)
+#context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+#context.load_cert_chain("MyRootCA.crt", "MyRootCA.key")
+#app.run(host='0.0.0.0',port='5000', debug = False/True, ssl_context=context)
+app.run(host='0.0.0.0',port='5000')

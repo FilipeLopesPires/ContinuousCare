@@ -9,7 +9,7 @@
 		"url":"http://localhost:5555/gps/VARIABLE_USER",
 		"header":"{}",
 		"getData":"{\"latitude\":jsonData[\"data\"][\"latitude\"],\"longitude\":jsonData[\"data\"][\"longitude\"]}",
-		"updateTime":0.3,
+		"updateTime":100,
 		"erroHandling":""
 	},
 	"externalAPI":{

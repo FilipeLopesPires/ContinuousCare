@@ -99,6 +99,7 @@ class InfluxProxy:
 
         else:
             query += " ORDER BY time DESC LIMIT 1"
+            
 
         result = self._get_connection.query(query, {"params": json.dumps(params)})
         return list(result.get_points(measurement))
