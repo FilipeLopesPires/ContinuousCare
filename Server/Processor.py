@@ -12,10 +12,12 @@ from math import sqrt
 from geopy.distance import vincenty
 
 '''
-Component responsable for doing all the information gathering and processing
+Component responsable for doing all the information gathering and processing, scheduling all necessary operations.
+Is this component that is also responsable for answering all the requests that may come form the API.
 '''
 
-RADIUS=50
+
+RADIUS=50       #variable that defines the distance from the personal home device the system should consider its information instead of the external one
 
 
 class Processor:
@@ -258,7 +260,7 @@ class Processor:
         try:
             if len(subpath)==1:
                 return eval(self.configFile[subpath[0]]["getData"])
-            return eval(self.configFile[subpath[0]][subpath[1]]["metrics"][subpath[2]]["getData"])
+            return eval(self.configFile[subpath[0]][subpath[1]]["metrics"][subpath[2]]["getData"], {"jsonData":jsonData, "dp":dp})
         except Exception as e:
             raise Exception("Error on calculating the relevant data. "+str(e))
 
@@ -384,38 +386,39 @@ class Processor:
                     else:
                         normalData[metric]=refreshData[metric]
             except Exception as ex:
-                logging.error("Couldn't refresh tokens. "+str(e))
+                logging.error("Couldn't refresh tokens. "+str(ex))
 
 
         if "GPS" in normalData:
             normalData["Environment"]={}
-            for device in self.userURLS["Environment"]:
-                deviceConf=self.userURLS["Environment"][device]
+            for device in self.userURLS[user]["Environment"]:
+                deviceConf=self.userURLS[user]["Environment"][device]
                 if deviceConf["location"]:
-                    distance=round(vincenty(normalData["GPS"], [deviceConf["latitude"], deviceConf["longitude"]]).m)
+                    distance=round(vincenty([float(normalData["GPS"]["latitude"]), float(normalData["GPS"]["longitude"])], [float(deviceConf["latitude"]), float(deviceConf["longitude"])]).m)
                     if distance <= RADIUS:
                         for metric in deviceConf["metrics"]:
                             url=deviceConf["metrics"][metric]["url"]
-                            header=deviceConf["metrics"][metric]["header"]
+                            header=deviceConf["header"]
                             try:
-                                resp=requests.get(url, headers=header)
-                                normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,resp.text))
+                                jsonData=requests.get(url, headers=json.loads(header))
+                                normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,jsonData.text))
                             except Exception as e:
                                 logging.error("Exception caught: "+str(e))
-            if normalizeData["Environment"]=={}:
-                for device in self.userURLS["Environment"]:
-                    deviceConf=self.userURLS["Environment"][device]
+            if normalData["Environment"]=={}:
+                for device in self.userURLS[user]["Environment"]:
+                    deviceConf=self.userURLS[user]["Environment"][device]
                     if not deviceConf["location"]:
                         for metric in deviceConf["metrics"]:
-                            url=deviceConf["metrics"][metric]["url"]
-                            header=deviceConf["metrics"][metric]["header"]
+                            url=deviceConf["metrics"][metric]["url"].replace("VARIABLE_LATITUDE", str(normalData["GPS"]["latitude"])).replace("VARIABLE_LONGITUDE", str(normalData["GPS"]["longitude"]))
+                            header=deviceConf["header"]
                             try:
-                                resp=requests.get(url, headers=header)
-                                normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,resp.text))
+                                jsonData=requests.get(url, headers=json.loads(header))
+                                normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,jsonData.text))
                             except Exception as e:
                                 logging.error("Exception caught: "+str(e))
-            normalData["Environment"]["latitude"]=normalData["GPS"][0]
-            normalData["Environment"]["longitude"]=normalData["GPS"][1]
+            #print(normalData["GPS"])
+            normalData["Environment"]["latitude"]=normalData["GPS"]["latitude"]
+            normalData["Environment"]["longitude"]=normalData["GPS"]["longitude"]
             del normalData["GPS"]
 
         coords=self.normalizeData("GPS-GPS", requests.get(self.userURLS[user]["GPS"]["url"], headers=json.loads(self.userURLS[user]["GPS"]["header"])).text)
@@ -424,11 +427,11 @@ class Processor:
             if time not in normalData[metric]:
                 normalData[metric]["time"]=int(time.time())
             if metric!="Environment":
-                normalData[metric]["latitude"]=coords[0]
-                normalData[metric]["longitude"]=coords[1]
+                normalData[metric]["latitude"]=coords["latitude"]
+                normalData[metric]["longitude"]=coords["longitude"]
 
         print(normalData)
-        #self.save(normalData,user)
+        self.save(normalData,user)
 
 
                         
@@ -486,8 +489,8 @@ class myThread (threading.Thread):
                     if v:
                         old_times[i]=now1
                         metric=self.deltaTimes[i][1].split("-")
-                        url=self.urls[metric[0]]["url"] if len(metric)==1 else self.urls[metric[0]][metric[2]]["metrics"][metric[3]]["url"]
-                        header=json.loads(self.urls[metric[0]]["header"] if len(metric)==1 else self.urls[metric[0]][metric[2]]["header"])
+                        url=self.urls[metric[1]]["url"] if len(metric)==2 else self.urls[metric[0]][metric[2]]["metrics"][metric[3]]["url"]
+                        header=json.loads(self.urls[metric[1]]["header"] if len(metric)==2 else self.urls[metric[0]][metric[2]]["header"])
                         try:
                             resp=requests.get(url, headers=header)
                             responses.append([self.deltaTimes[i][1], resp.text])

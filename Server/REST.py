@@ -5,13 +5,12 @@ from flask_cors import CORS
 import ssl
 '''
 Component responsable for defining and supporting the interface to the system.
+The API supports https and on authorized operations should receive the personal token on the header.
 '''
 
 app = Flask(__name__)
 CORS(app)
 processor=Processor()
-
-
 
 
 @app.route('/signup', methods = ['POST'])
@@ -44,7 +43,7 @@ def getData(datatype=None):
     interval=interval if interval!="*" else None
     function="getData("+request.endpoint+",user,"+start+","+end+","+interval+")"
     if request.endpoint=="download":
-        function="getData("+start+","+end+","+interval+")"
+        function="getData(None, None,"+start+","+end+","+interval+")"
 
     return processor.getData(userToken, function, datatype, start, end, interval)
 

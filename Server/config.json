@@ -8,8 +8,8 @@
 		"type":"GPS",
 		"url":"http://localhost:5555/gps/VARIABLE_USER",
 		"header":"{}",
-		"getData":"[jsonData[\"data\"][\"latitude\"],jsonData[\"data\"][\"longitude\"]]",
-		"updateTime":10,
+		"getData":"{\"latitude\":jsonData[\"data\"][\"latitude\"],\"longitude\":jsonData[\"data\"][\"longitude\"]}",
+		"updateTime":0.3,
 		"erroHandling":""
 	},
 	"externalAPI":{
@@ -90,7 +90,7 @@
 					"url":"http://api.foobot.io/v2/device/VARIABLE_UUID/datapoint/10/last/0/",
 					"updateTime":0,
 					"savingTime":0,
-					"getData":"{metric:value for metric, value in zip(jsonData[\"sensors\"], jsonData[\"datapoints\"][0])]}",
+					"getData":"{ metric : value for metric, value in zip(jsonData[\"sensors\"], jsonData[\"datapoints\"][0])}",
 					"saveCondition":"",
 					"erroHandling":""
 				}

@@ -13,11 +13,12 @@ def userGPSCoordinates(user):
         lat=coords["lat"]
         longi=coords["longi"]
         userLocations[user]={"lat":lat, "longi":longi}
-        return json.dumps({"status":0, "message":"All Good"}).encode("UTF-8")
+        return json.dumps({"status":0, "message":"All Good"})
     else:
+        return json.dumps({"data":{"latitude":40, "longitude":-8}})
         if user not in userLocations:
-            return json.dumps({"status":1, "message":"User Unknown"}).encode("UTF-8")
-        return json.dumps({"status":0, "message":"All Good", "data":userLocations[user].encode("UTF-8")}).encode("UTF-8")
+            return json.dumps({"status":1, "message":"User Unknown"})
+        return json.dumps({"status":0, "message":"All Good", "data":userLocations[user]})
 
 
 app.run(host='0.0.0.0',port='5555')
