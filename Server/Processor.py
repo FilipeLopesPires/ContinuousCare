@@ -6,6 +6,7 @@ import threading
 from datetime import datetime, timedelta
 from database import *
 import logging
+import time
 import dateutil.parser as dp
 from math import sqrt
 from geopy.distance import vincenty
@@ -76,7 +77,7 @@ class Processor:
 
                         #urls[metric]["savingTime"]=self.supportedDevices[deviceType[metric]["savingTime"]]
 
-            urls["GPS"]={"url":self.gps["url"], "updateTime":self.gps["updateTime"], "header":self.gps["header"]}
+            urls["GPS"]={"url":self.gps["url"].replace("VARIABLE_USER", user), "updateTime":self.gps["updateTime"], "header":self.gps["header"]}
 
             self.userURLS[user]=urls
 
@@ -133,9 +134,6 @@ class Processor:
         return json.dumps({"status":0 , "error":"Successfull operation.", "data":devices}).encode("UTF-8")
 
     def addDevice(self, token, data):
-        #ADD DEVICE TO THE THREAD
-
-
         if token not in self.userTokens:
             return  json.dumps({"status":1, "error":"Invalid Token."}).encode("UTF-8")
 
@@ -143,6 +141,31 @@ class Processor:
         try:
             jsonData=json.loads(data.decode("UTF-8"))
             deviceToken=jsonData["token"]
+
+            if jsonData["type"] not in [submetric for metric in self.userURLS[user] for submetric in self.userURLS[user][metric]]:
+                deviceType=jsonData["type"].strip()
+                if deviceType in  self.supportedDevices:
+                    metrics=self.supportedDevices[deviceType]["metrics"]
+                    for metric in metrics:
+                        metricType=metrics[metric]["type"]
+                        if metricType not in urls:
+                            self.userURLS[metricType]={}
+                        if deviceType not in urls[metricType]:
+                            self.userURLS[metricType][deviceType]={"metrics":{}}
+                            self.userURLS[metricType][deviceType]["header"]=self.supportedDevices[deviceType]["header"].replace("VARIABLE_TOKEN",jsonData["token"])
+                            for refreshParam in ["refresh_url", "refresh_header", "refresh_data"]:
+                                if refreshParam in self.supportedDevices[deviceType]:
+                                    self.userURLS[metricType][deviceType][refreshParam]=self.supportedDevices[deviceType][refreshParam].replace("VARIABLE_REFRESH_TOKEN", jsonData.get("refresh_token",""))
+
+                        self.userURLS[metricType][deviceType]["metrics"][metric]={}        
+                        self.userURLS[metricType][deviceType]["metrics"][metric]["url"]=self.supportedDevices[deviceType]["metrics"][metric]["url"].replace("VARIABLE_UUID", jsonData.get("uuid", ""))
+                        self.userURLS[metricType][deviceType]["metrics"][metric]["updateTime"]=self.supportedDevices[deviceType]["metrics"][metric]["updateTime"]
+                        
+                        if metricType=="Environment" and self.supportedDevices[deviceType]["metrics"][metric]["location"]:
+                            self.userURLS[metricType][deviceType]["location"]=True
+                            self.userURLS[metricType][deviceType]["latitude"]=jsonData["latitude"]
+                            self.userURLS[metricType][deviceType]["longitude"]=jsonData["longitude"]
+
 
             self.database.addDevice(user, jsonData)
             return json.dumps({"status":0 , "error":"Successfull operation."}).encode("UTF-8")
@@ -234,23 +257,136 @@ class Processor:
         subpath=[y for y in path.split("-")][1:]
         try:
             if len(subpath)==1:
-                return eval(self.configFile[subpath[1]]["getData"])
+                return eval(self.configFile[subpath[0]]["getData"])
             return eval(self.configFile[subpath[0]][subpath[1]]["metrics"][subpath[2]]["getData"])
         except Exception as e:
-            raise Exception("Error on calculation the relevant data. "+str(e))
+            raise Exception("Error on calculating the relevant data. "+str(e))
+
+
+    def refreshTokens(self, errors, user):
+        refreshData={}
+        for metric in errors:
+            if metric=="GPS":
+                deviceConf=self.userURLS[user][metric]
+                if "refresh_url" in deviceConf:
+                    try:
+                        jsonData=json.loads(requests.get(deviceConf["refresh_url"], headers=deviceConf.get("refresh_header", ""), data=deviceConf.get("refresh_data", "")).text)
+                        result=eval(self.configFile[metric]("getRefreshData"))
+                        deviceConf["header"]=self.configFile[metric]["header"].replace("VARIABLE_TOKEN",result["access_token"])
+                        for refreshParam in ["refresh_url", "refresh_header", "refresh_data"]:
+                            if refreshParam in deviceConf:
+                                deviceConf[refreshParam]=self.configFile[metric][refreshParam].replace("VARIABLE_REFRESH_TOKEN", result.get("refresh_token",""))
+
+                        url=deviceConf["url"]
+                        header=deviceConf["header"]
+                        refreshData[metric]=self.normalizeData(metric+"-"+errors[metric], requests.get(url, headers=header).text)
+                    except Exception as e:
+                        raise Exception("Error while refreshing. "+str(e))
+                raise Exception("Impossible to refresh. No URL.")
+            else:
+                for path in errors[metric]:
+                    for subpath in errors[metric][path]:
+                        deviceConf=self.userURLS[user][path][subpath]
+                        if "refresh_url" in deviceConf:
+                            try:
+                                jsonData=json.loads(requests.get(deviceConf["refresh_url"], headers=deviceConf.get("refresh_header", ""), data=deviceConf.get("refresh_data", "")).text)
+                                result=eval(self.configFile[path][subpath]("getRefreshData"))
+                                deviceConf["header"]=self.configFile[path][subpath]["header"].replace("VARIABLE_TOKEN",result["access_token"])
+                                for refreshParam in ["refresh_url", "refresh_header", "refresh_data"]:
+                                    if refreshParam in deviceConf:
+                                        deviceConf[refreshParam]=self.configFile[path][subpath][refreshParam].replace("VARIABLE_REFRESH_TOKEN", result.get("refresh_token",""))
+
+                                header=deviceConf["header"]
+                                refreshData[metric]={}
+                                for submetric in errors[metric][path][subpath]:
+                                    url=deviceConf["metrics"][submetric]["url"]
+                                    refreshData[metric]=dict(refreshData[metric], **self.normalizeData(metric+"-"+path+"-"+subpath+"-"+submetric, requests.get(url, headers=header).text))
+                            except Exception as e:
+                                raise Exception("Error while refreshing. "+str(e))
+                        raise Exception("Impossible to refresh. No URL.")
+        return refreshData
+
+        '''
+        subpaths=path.split("-")[1:]
+        if len(subpaths)==1:
+            deviceConf=self.userURLS[user][subpaths[0]]
+            if "refresh_url" in deviceConf:
+                try:
+                    jsonData=json.loads(requests.get(deviceConf["refresh_url"], headers=deviceConf.get("refresh_header", ""), data=deviceConf.get("refresh_data", "")).text)
+                    result=eval(self.configFile[subpaths[0]]("getRefreshData"))
+                    deviceConf["header"]=self.configFile[subpaths[0]]["header"].replace("VARIABLE_TOKEN",result["access_token"])
+                    for refreshParam in ["refresh_url", "refresh_header", "refresh_data"]:
+                        if refreshParam in deviceConf:
+                            deviceConf[refreshParam]=self.configFile[subpaths[0]][refreshParam].replace("VARIABLE_REFRESH_TOKEN", result.get("refresh_token",""))
+
+                    url=deviceConf["url"]
+                    header=deviceConf["header"]
+                except Exception as e:
+                    raise Exception("Error while refreshing. "+str(e))
+
+            raise Exception("Impossible to refresh. No URL.")
+        else:
+            deviceConf=self.userURLS[user][subpaths[0]][subpaths[1]]
+            if "refresh_url" in deviceConf:
+                try:
+                    jsonData=json.loads(requests.get(deviceConf["refresh_url"], headers=deviceConf.get("refresh_header", ""), data=deviceConf.get("refresh_data", "")).text)
+                    result=eval(self.configFile[subpaths[0]][subpaths[1]]("getRefreshData"))
+                    deviceConf["header"]=self.configFile[subpaths[0]][subpaths[1]]["header"].replace("VARIABLE_TOKEN",result["access_token"])
+                    for refreshParam in ["refresh_url", "refresh_header", "refresh_data"]:
+                        if refreshParam in deviceConf:
+                            deviceConf[refreshParam]=self.configFile[subpaths[0]][subpaths[1]][refreshParam].replace("VARIABLE_REFRESH_TOKEN", result.get("refresh_token",""))
+
+                    url=deviceConf["metrics"][subpaths[2]]["url"]
+                    header=deviceConf["header"]
+                except Exception as e:
+                    raise Exception("Error while refreshing. "+str(e))
+            raise Exception("Impossible to refresh. No URL.")
+
+
+        try:
+            return requests.get(url, headers=header)
+        except Exception as e:
+            raise Exception("Error after refreshing, on the retry fetch. "+str(e))
+        '''
+        
 
     def process(self, responses, user):
         normalData={}
+        errors={}
         for resp in responses:
-            metric=resp[0].split("-")[0]
+            subpaths=resp[0].split("-")
+            metric=subpaths[0]
             if metric not in normalData:
                 normalData[metric]={}
             try:
                 normalData[metric]=dict(normalData[metric], **self.normalizeData(resp[0], resp[1]))
             except Exception as e:
                 logging.error(str(e)+"->"+resp[1])
+                if subpaths[0]=="GPS":
+                    errors["GPS"]="GPS"
+                else:
+                    if subpaths[0] not in errors:
+                        errors[subpaths[0]]={}
+                    if subpaths[1] not in errors[subpaths[0]]:
+                        errors[subpaths[0]][subpaths[1]]={}
+                    if subpaths[2] not in errors[subpaths[0]][subpaths[1]]:
+                        errors[subpaths[0]][subpaths[1]][subpaths[2]]=[]
+                    errors[subpaths[0]][subpaths[1]][subpaths[2]].append(subpaths[3])
 
-        print(normalData)
+
+        if len(errors)!=0:
+            logging.error("Trying to refresh tokens")
+            try:
+                refreshData=self.refreshTokens(errors, user)
+                for metric in refreshData:
+                    if metric in normalData:
+                        normalData[metric]=dict(normalData[metric], refreshData[metric])
+                    else:
+                        normalData[metric]=refreshData[metric]
+            except Exception as ex:
+                logging.error("Couldn't refresh tokens. "+str(e))
+
+
         if "GPS" in normalData:
             normalData["Environment"]={}
             for device in self.userURLS["Environment"]:
@@ -282,12 +418,17 @@ class Processor:
             normalData["Environment"]["longitude"]=normalData["GPS"][1]
             del normalData["GPS"]
 
-        coords=self.normalizeData("GPS-GPS", requests.get(self.gps["url"], headers=json.loads(self.gps["header"])).text)
+        coords=self.normalizeData("GPS-GPS", requests.get(self.userURLS[user]["GPS"]["url"], headers=json.loads(self.userURLS[user]["GPS"]["header"])).text)
 
-        normalData["HealthStatus"]["latitude"]=coords[0]
-        normalData["HealthStatus"]["longitude"]=coords[1]
+        for metric in normalData:
+            if time not in normalData[metric]:
+                normalData[metric]["time"]=int(time.time())
+            if metric!="Environment":
+                normalData[metric]["latitude"]=coords[0]
+                normalData[metric]["longitude"]=coords[1]
 
-        self.save(normalData,user)
+        print(normalData)
+        #self.save(normalData,user)
 
 
                         
@@ -332,11 +473,11 @@ class myThread (threading.Thread):
 
 
     def run(self):
-        now=datetime.now()
+        now=datetime.now().replace(microsecond=0)
         old_times=[now for x in range(len(self.deltaTimes))]
         print("started")
         while self.running:
-            now1=datetime.now()
+            now1=datetime.now().replace(microsecond=0)
             updating=[now1-old >= delta[0] for old,delta in zip(old_times, self.deltaTimes)]
             if any(updating):
                 print(updating)

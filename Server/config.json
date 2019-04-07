@@ -6,9 +6,9 @@
 	important data as well as the time interval each metric should obey.",
 	"GPS":{	
 		"type":"GPS",
-		"url":"localhost:5555",
+		"url":"http://localhost:5555/gps/VARIABLE_USER",
 		"header":"{}",
-		"getData":"[jsonData[\"data\"][\"lat\"],jsonData[\"data\"][\"longi\"]]",
+		"getData":"[jsonData[\"data\"][\"latitude\"],jsonData[\"data\"][\"longitude\"]]",
 		"updateTime":10,
 		"erroHandling":""
 	},
@@ -33,6 +33,7 @@
 			"refresh_url":"https://api.fitbit.com/oauth2/token",
 			"refresh_data":"{\"grant_type\":\"refresh_token\", \"refresh_token\": \"VARIABLE_REFRESH_TOKEN\"}",
 			"refresh_header":"{\"Authorization\": \"Basic MjJESzJYOjUyNDRmZjEwNzliMTZlODQ4ZGE1YWI1NTc3ZDg5YzVl\", \"Content-Type\": \"application/x-www-form-urlencoded\"}",
+			"getRefreshData":"{\"access_token\":jsonData[\"access_token\"],\"refresh_token\":jsonData[\"refresh_token\"]}",
 			"metrics":{
 				"HeartRate":{
 					"type":"HealthStatus",
