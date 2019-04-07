@@ -30,6 +30,12 @@ class Database:
         self.time_series_proxy = InfluxProxy()
         self.relational_proxy = MySqlProxy()
 
+    def getAllUsers(self):
+        return ["joao"]
+
+    def getAllDevices(self, user):
+        return [{"type":"FitBit Charge 3", "token":"eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkRLMlgiLCJzdWIiOiI3Q05RV1oiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJhY3QgcnNldCBybG9jIHJ3ZWkgcmhyIHJwcm8gcm51dCByc2xlIiwiZXhwIjoxNTU0NjY3NDUxLCJpYXQiOjE1NTQ2Mzg2NTF9.gpfMfYc2qXry9__uoSO1Q_gm4J4tMqPNZhsbXKXms1k", "refresh_token": "a30345a6d6809a05f65db20e5ed510fbdfa3d3d69b2cc97dac794d6032ae12fd","device":"123"},{"type":"Foobot ", "token":"eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiam9hby5wQHVhLnB0IiwiaWF0IjoxNTUyMDY2Njc5LCJ2YWxpZGl0eSI6LTEsImp0aSI6IjRiNmY2NzhiLWJjNTYtNDYxNi1hYmMyLTRiNjlkMTNkMjUzOSIsInBlcm1pc3Npb25zIjpbInVzZXI6cmVhZCIsImRldmljZTpyZWFkIl0sInF1b3RhIjoyMDAsInJhdGVMaW1pdCI6NX0.aeLLsrhh1-DVXSwl-Z_qDx1Xbr9oIid1IKsOyGQxwqQ", "device":"234","latitude":40,"longitude":-8, "uuid":"240D676D40002482"} ]
+
     def register(self, data):
         """
         Register a client on the database
