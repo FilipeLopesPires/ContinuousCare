@@ -12,50 +12,81 @@ class TestDatabaseProxy(unittest.TestCase):
         self.db = database.Database()
 
     @unittest.skip
-    def test_insert_user(self):
+    def test_register(self):
         self.db.register({
             "username": "zonnax",
             "password": "ola",
             "name": "André Pedrosa",
             "email": "asdf@ua",
             "phpn": 111111113,
-            "birth_date": "2019-03-04",
+            "birth_date": "14-03-1998",
             "weight": 1.4,
             "height": 3.1,
-            "diseases": "doime cenas muitas vezes"
+            "additional_information": "doime cenas muitas vezes"
         })
 
     @unittest.skip
-    def test_verify_credentials(self):
+    def test_verifyUser(self):
         result = self.db.verifyUser({
-            "username": "aspedrosa",
+            "username": "zonnax",
             "password": "ola"
         })
         self.assertTrue(result, "password ola")
 
         result = self.db.verifyUser({
-            "username": "aspedrosa",
+            "username": "zonnax",
             "password": "olb"
         })
         self.assertFalse(result, "password olb")
 
     @unittest.skip
-    def test_insert_device(self):
-        self.db.addDevices(
-            "aspedrosa",
+    def test_getAllUsers(self):
+        print(self.db.getAllUsers())
+
+    @unittest.skip
+    def test_addDevice(self):
+        self.db.addDevice(
+            "zonnax",
+            {
+                "type": 2,
+                "authentication_fields": {
+                    "token":"cenas",
+                    "refresh_token":"outras cenas"
+                }
+            }
+        )
+        self.db.addDevice(
+            "zonnax",
             {
                 "type": 1,
-                "token": "asdffghj"
+                "authentication_fields": {
+                    "token": "asdflah34ohaohw",
+                    "uuid": "112331",
+                    "refresh_token": "asldfklksdjf34r34"
+                },
+                "latitude": 40.0344452345,
+                "longitude": -8.23452345
             }
         )
 
     @unittest.skip
-    def test_get_all_client_devices(self):
-        print(self.db.getAllDevices("aspedrosa"))
+    def test_getAllDevices(self):
+        print(self.db.getAllDevices("zonnax"))
 
     @unittest.skip
-    def test_get_all_supported_devices(self):
+    def test_getSupportedDevices(self):
         print(self.db.getSupportedDevices())
+
+    def test_getData_args(self):
+        print(self.db.getData("health_status", "zonnax", None, 1554662636, None))
+
+    @unittest.skip
+    def test_insert(self):
+        print(self.db.insert("health_status", {
+            "hearth_rate": 60,
+            "calories": 50,
+            "steps": 10000
+        }, "zonnax"))
 
     @unittest.skip
     def test_get_user_profile(self):
@@ -76,9 +107,6 @@ class TestDatabaseProxy(unittest.TestCase):
                 "diseases": "doime cenas muitas vezes"
             }
         )
-
-    def test_influx_read(self):
-        print(self.db._time_series_read("aspedrosa", ["co2"], end=1554461325, interval="1d"))
 
 
 if __name__ == '__main__':

@@ -203,16 +203,11 @@ class MySqlProxy:
         try:
             conn, cursor = self._init_connection()
 
-            auth_fields_names = []
-            auth_fields_values = []
-            for name, value in authentication_fields:
-                auth_fields_names.append(name)
-                auth_fields_values.append(value)
+            auth_fields = [(name, value) for name, value in authentication_fields.items()]
 
             cursor.execute("DROP TEMPORARY TABLE IF EXISTS tmp_authentication_fields")
             cursor.execute("CREATE TEMPORARY TABLE tmp_authentication_fields(name VARCHAR(30),value VARCHAR(500))")
-            cursor.execute("INSERT INTO tmp_authentication_fields values (%s, %s)", (auth_fields_names,
-                                                                                     auth_fields_values))
+            cursor.executemany("INSERT INTO tmp_authentication_fields values (%s, %s)", auth_fields)
             cursor.callproc(StoredProcedures.INSERT_DEVICE, (username, type_id, latitude, longitude))
 
             conn.commit()
@@ -247,13 +242,15 @@ class MySqlProxy:
                         auth_field_value, latitude,
                                           longitude) in next(cursor.stored_results()).fetchall():
                 if device_id not in devices.keys():
-                    devices[device_id] = {
-                        "type"      : "%s %s" % (brand, model),
-                        "latitude"  : latitude,
-                        "longitude" : longitude,
+                    device = {
+                        "type": "%s %s" % (brand, model),
                     }
+                    if latitude: # if one exist both exist
+                        device["latitude"] = latitude
+                        device["longitude"] = longitude
+                    devices[device_id] = device
 
-                if auth_field_name is not None:
+                if auth_field_name:
                     devices[device_id][auth_field_name] = auth_field_value
 
             return list(devices.values())
@@ -286,7 +283,7 @@ class MySqlProxy:
                         "metrics": []
                     }
 
-                retval[device_id]["metrics"].append({
+                retval[device_id]["metrics"].append({ # TODO maybe append tuple instead of dict
                     "name": metric_name,
                     "unit": metric_unit
                 })
@@ -411,7 +408,7 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.GET_ALL_USERNAMES)
 
-            return next(cursor.stored_results()).fetchall()
+            return [username[0] for username in next(cursor.stored_results()).fetchall()]
         finally:
             self._close_conenction(conn, cursor)
 

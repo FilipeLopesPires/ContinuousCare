@@ -194,7 +194,7 @@ CREATE PROCEDURE verify_credentials (
     IN _username varchar(30),
     IN _password char(88))
   BEGIN
-    SELECT EXISTS(SELECT * FROM user WHERE username = _username and passoword = _password);
+    SELECT EXISTS(SELECT * FROM user WHERE username = _username and password = _password);
   END //
 
 CREATE PROCEDURE get_all_client_devices (
@@ -238,12 +238,12 @@ CREATE PROCEDURE insert_device (
       EXISTS (SELECT *
               FROM (client_device JOIN device ON client_device.device_id = device.id)
                     JOIN supported_device ON device.type_id = supported_device.id
-              WHERE client_device = __client_id AND supported_device.type = __new_device_type) THEN
+              WHERE client_device.client_id = __client_id AND supported_device.type = __new_device_type) THEN
       SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Client already has a bracelet associated";
     END IF;
 
     INSERT INTO device (type_id)
-    VALUES (_type_id, _acess_token);
+    VALUES (_type_id);
 
     SET __new_device_id = LAST_INSERT_ID();
 

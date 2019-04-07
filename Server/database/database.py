@@ -46,12 +46,12 @@ class Database:
             data["username"],
             data["password"],
             data["name"],
-            (birth_day, birth_month, birth_year),
+            data["email"],
             data["phpn"],
-            data["birth_date"],
+            (birth_day, birth_month, birth_year),
             data["weight"],
             data["height"],
-            data["diseases"]
+            data["additional_information"]
         )
 
     def verifyUser(self, data):
@@ -67,6 +67,46 @@ class Database:
             data["username"],
             data["password"]
         )
+
+    def updateProfile(self, user, data):
+        """
+        Updates the profile data of a client with the username received from the arguments
+
+        :param user: username of the client to update
+        :type user: str
+        :param data: keys : [password:str, name:str, email:str, phpn:int,
+                             birth_date:str dd-mm-yyyy, weight:float, height:float, diseases:str]
+        :type data: dict
+        """
+        birth_day, birth_month, birth_year = data["birth_date"].split("-")
+        self.relational_proxy.update_user_profile_data(
+            user,
+            data["password"],
+            data["name"],
+            data["email"],
+            data["phpn"], # TODO do they send me this?
+            (birth_day, birth_month, birth_year),
+            data["weight"],
+            data["height"],
+            data["diseases"]
+        )
+
+    def getProfile(self, user):
+        """
+        Gets all profile data associated with the username (user) in the arguments
+
+        :param user: username of the client
+        :type user: str
+        :return: all profile data
+        {client_id:int, full_name:str, email:str, health_number:int, birth_date:datetime, weight:float, height:float}
+        :rtype: dict
+        """
+        return self.relational_proxy.get_user_profile_data(user)
+
+    def deleteProfile(self, user):
+        """"""
+        pass
+
 
     def getAllUsers(self):
         """"""
@@ -192,47 +232,8 @@ class Database:
 
         return data
 
-    def getData(self): #TODO all db data
-        """"""
-
-    def updateProfile(self, user, data):
-        """
-        Updates the profile data of a client with the username received from the arguments
-
-        :param user: username of the client to update
-        :type user: str
-        :param data: keys : [password:str, name:str, email:str, phpn:int,
-                             birth_date:str dd-mm-yyyy, weight:float, height:float, diseases:str]
-        :type data: dict
-        """
-        birth_day, birth_month, birth_year = data["birth_date"].split("-")
-        self.relational_proxy.update_user_profile_data(
-            user,
-            data["password"],
-            data["name"],
-            data["email"],
-            data["phpn"], # TODO do they send me this?
-            (birth_day, birth_month, birth_year),
-            data["weight"],
-            data["height"],
-            data["diseases"]
-        )
-
-    def getProfile(self, user):
-        """
-        Gets all profile data associated with the username (user) in the arguments
-
-        :param user: username of the client
-        :type user: str
-        :return: all profile data
-        {client_id:int, full_name:str, email:str, health_number:int, birth_date:datetime, weight:float, height:float}
-        :rtype: dict
-        """
-        return self.relational_proxy.get_user_profile_data(user)
-
-    def deleteProfile(self, user):
-        """"""
-        pass
+    #def getData(self): #TODO all db data
+    #    """"""
 
     def insert(self, measurement, data, user):
         """
