@@ -77,15 +77,32 @@ class TestDatabaseProxy(unittest.TestCase):
     def test_getSupportedDevices(self):
         print(self.db.getSupportedDevices())
 
+    @unittest.skip
     def test_getData_args(self):
-        print(self.db.getData("health_status", "zonnax", None, 1554662636, None))
+        print(self.db.getData("health_status", "zonnax", None, 1554714227, None))
+
+    @unittest.skip
+    def test_getData_sleep(self):
+        print(self.db.getData("sleep", "zonnax", None, 1554662636, None))
 
     @unittest.skip
     def test_insert(self):
         print(self.db.insert("health_status", {
-            "hearth_rate": 60,
-            "calories": 50,
-            "steps": 10000
+            "hearth_rate2": 60,
+            "calories2": 50,
+            "steps2": 10000
+        }, "zonnax"))
+
+    def test_insert_sleep(self):
+        print(self.db.insert("sleep", {
+            "day": 60,
+            "duration": 50,
+            "begin": 10000,
+            "end": 10000,
+            "sleep": {
+                "time": [],
+
+            }
         }, "zonnax"))
 
     @unittest.skip

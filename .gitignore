@@ -4,3 +4,6 @@ venv
 
 # PyCharm
 .idea
+
+# File manager
+desktop.ini

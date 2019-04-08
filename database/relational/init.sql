@@ -142,7 +142,6 @@ create table metric (
 -- PRIMARY KEY
   name                    varchar(30),
   unit                    varchar(10),
-  type                    enum("environment", "health_status")
 );
 
 create table supported_metric (
@@ -380,3 +379,40 @@ CREATE PROCEDURE get_all_usernames ()
   END //
 
 DELIMITER ;
+
+-- INSERT DATA
+
+INSERT INTO metric (name, unit) values ("Heart Rate", "bpm"),
+                                       ("Sleep", "hours"),
+                                       ("Calories", "kcal"),
+                                       ("Sedentary time", "minutes"),
+                                       ("Lightly Active time", "minutes"),
+                                       ("Fairly Active time", "minutes"),
+                                       ("Very Active time", "minutes"),
+                                       ("Steps", "units"),
+                                       -- FitBit ^^
+                                       ("Particulate Matter (pm)", "µg/m3"),
+                                       ("Temperature", "Celcius"),
+                                       ("Humidity", "PC"),
+                                       ("Carbon dioxide", "ppm"),
+                                       ("Volatile Organic Compound", "ppb"),
+                                       ("Relative polution", "Percentage (%)"),
+                                       -- Foobot ^^;
+
+INSERT INTO supported_device (type, brand, model) values ("bracelet", "FitBit", "Charge 3"),
+                                                         ("home_device", "Foobot", "");
+
+INSERT INTO supported_metric (metric_id, device_id) values (1 , 1),
+                                                           (2 , 1),
+                                                           (3 , 1),
+                                                           (4 , 1),
+                                                           (5 , 1),
+                                                           (6 , 1),
+                                                           (7 , 1),
+                                                           (8 , 1),
+                                                           (9 , 2),
+                                                           (10, 2),
+                                                           (11, 2),
+                                                           (12, 2),
+                                                           (13, 2),
+                                                           (14, 2);

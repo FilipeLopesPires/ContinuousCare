@@ -220,15 +220,25 @@ class Database:
 
             return return_value
 
+        none_count = {}
+        values_count = 0
         for read in self.time_series_proxy.read(user, measurement, start, end, interval):
+            values_count += 1
 
             for key, value in read.items():
                 if key == "username":
                     continue
                 if key not in data.keys():
                     data[key] = []
+                    none_count[key] = 0
 
                 data[key].append(value)
+                if not value:
+                    none_count[key] += 1
+
+        for key, count in none_count.items():
+            if count == values_count:
+                del data[key]
 
         return data
 
