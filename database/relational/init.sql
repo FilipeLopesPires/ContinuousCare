@@ -229,6 +229,10 @@ CREATE PROCEDURE insert_device (
     FROM supported_device
     WHERE concat(brand, " ", model) = _type;
 
+    IF __supported_device_id IS NULL THEN
+	    SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Not such supported device";
+    END IF;
+
     SELECT client_id INTO __client_id
     FROM client_username
     WHERE username = _username;
@@ -354,11 +358,11 @@ CREATE PROCEDURE get_sleep_sessions (
 )
   BEGIN
 
-  IF _begin = NULL AND _end = NULL THEN
+  IF _begin IS NULL AND _end IS NULL THEN
     SELECT sleep_session.day, sleep_session.begin, sleep_session.end, sleep_session.duration
     FROM sleep_session JOIN client_username ON sleep_session.client_id = client_username.client_id
     WHERE sleep_session.day >= _begin AND sleep_session.day <= _end AND client_username.username = _username;
-  ELSEIF _begin != NULL THEN
+  ELSEIF _begin IS NOT NULL THEN
     SELECT sleep_session.day, sleep_session.begin, sleep_session.end, sleep_session.duration
     FROM sleep_session JOIN client_username ON sleep_session.client_id = client_username.client_id
     WHERE sleep_session.day >= _begin AND client_username.username = _username;
