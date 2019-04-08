@@ -10,9 +10,10 @@ userLocations={}
 def userGPSCoordinates(user):
     if request.method=='POST':
         coords=json.loads(request.data.decode("UTF-8"))
-        lat=coords["lat"]
-        longi=coords["longi"]
-        userLocations[user]={"lat":lat, "longi":longi}
+        lat=coords["latitude"]
+        longi=coords["longitude"]
+        userLocations[user]={"latitude":lat, "longitude":longi}
+        print(userLocations)
         return json.dumps({"status":0, "message":"All Good"})
     else:
         return json.dumps({"data":{"latitude":40, "longitude":-8}})

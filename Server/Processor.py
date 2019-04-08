@@ -99,7 +99,7 @@ class Processor:
 
 
         #urls["https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json"]=[{"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkRLMlgiLCJzdWIiOiI3Q05RV1oiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJhY3QgcnNldCBybG9jIHJ3ZWkgcmhyIHJudXQgcnBybyByc2xlIiwiZXhwIjoxNTUzODAxNjA5LCJpYXQiOjE1NTM3NzI4MDl9.6_hSXgYG36430e-ZaRfcEYSzDezGJeaMF5R2PiSr4bk"}, 1]
-        #urls["http://api.foobot.io/v2/device/240D676D40002482/datapoint/10/last/0/"]=[{"Accept":"application/json;charset=UTF-8","X-API-KEY-TOKEN":"eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiam9hby5wQHVhLnB0IiwiaWF0IjoxNTUyMDY2Njc5LCJ2YWxpZGl0eSI6LTEsImp0aSI6IjRiNmY2NzhiLWJjNTYtNDYxNi1hYmMyLTRiNjlkMTNkMjUzOSIsInBlcm1pc3Npb25zIjpbInVzZXI6cmVhZCIsImRldmljZTpyZWFkIl0sInF1b3RhIjoyMDAsInJhdGVMaW1pdCI6NX0.aeLLsrhh1-DVXSwl-Z_qDx1Xbr9oIid1IKsOyGQxwqQ"},1]
+        #urls["http://api.foobot.io/v2/device/240D676D40002482/datapoint/10/last/0/"]=[{"Accept":"application/json;charset=UTF-8","X-API-KEY-TOKEN":"   "},1]
 
     #REAL THING
 
@@ -142,31 +142,42 @@ class Processor:
         user=self.userTokens[token]
         try:
             jsonData=json.loads(data.decode("UTF-8"))
-            deviceToken=jsonData["token"]
+            deviceToken=jsonData["authentication_fields"]["token"]
 
-            if jsonData["type"] not in [submetric for metric in self.userURLS[user] for submetric in self.userURLS[user][metric]]:
+            jsonData["type"]=jsonData["brand"]+" "+jsonData["model"]
+            del jsonData["brand"]
+            del jsonData["model"]
+            if jsonData["type"] not in [device for metric in self.userURLS[user] for device in self.userURLS[user][metric]]:
                 deviceType=jsonData["type"].strip()
-                if deviceType in  self.supportedDevices:
+                if deviceType in self.supportedDevices:
+                    if user not in self.userURLS:
+                        self.userURLS[user]={}
                     metrics=self.supportedDevices[deviceType]["metrics"]
                     for metric in metrics:
                         metricType=metrics[metric]["type"]
-                        if metricType not in urls:
-                            self.userURLS[metricType]={}
-                        if deviceType not in urls[metricType]:
-                            self.userURLS[metricType][deviceType]={"metrics":{}}
-                            self.userURLS[metricType][deviceType]["header"]=self.supportedDevices[deviceType]["header"].replace("VARIABLE_TOKEN",jsonData["token"])
+                        if metricType not in self.userURLS[user]:
+                            self.userURLS[user][metricType]={}
+                        if deviceType not in self.userURLS[user][metricType]:
+                            self.userURLS[user][metricType][deviceType]={"metrics":{}}
+                            self.userURLS[user][metricType][deviceType]["header"]=self.supportedDevices[deviceType]["header"].replace("VARIABLE_TOKEN",jsonData["authentication_fields"]["token"])
                             for refreshParam in ["refresh_url", "refresh_header", "refresh_data"]:
                                 if refreshParam in self.supportedDevices[deviceType]:
-                                    self.userURLS[metricType][deviceType][refreshParam]=self.supportedDevices[deviceType][refreshParam].replace("VARIABLE_REFRESH_TOKEN", jsonData.get("refresh_token",""))
+                                    self.userURLS[user][metricType][deviceType][refreshParam]=self.supportedDevices[deviceType][refreshParam].replace("VARIABLE_REFRESH_TOKEN", jsonData["authentication_fields"].get("refresh_token",""))
 
-                        self.userURLS[metricType][deviceType]["metrics"][metric]={}        
-                        self.userURLS[metricType][deviceType]["metrics"][metric]["url"]=self.supportedDevices[deviceType]["metrics"][metric]["url"].replace("VARIABLE_UUID", jsonData.get("uuid", ""))
-                        self.userURLS[metricType][deviceType]["metrics"][metric]["updateTime"]=self.supportedDevices[deviceType]["metrics"][metric]["updateTime"]
+                        self.userURLS[user][metricType][deviceType]["metrics"][metric]={}        
+                        self.userURLS[user][metricType][deviceType]["metrics"][metric]["url"]=self.supportedDevices[deviceType]["metrics"][metric]["url"].replace("VARIABLE_UUID", jsonData["authentication_fields"].get("uuid", ""))
+                        self.userURLS[user][metricType][deviceType]["metrics"][metric]["updateTime"]=self.supportedDevices[deviceType]["metrics"][metric]["updateTime"]
                         
                         if metricType=="Environment" and self.supportedDevices[deviceType]["metrics"][metric]["location"]:
-                            self.userURLS[metricType][deviceType]["location"]=True
-                            self.userURLS[metricType][deviceType]["latitude"]=jsonData["latitude"]
-                            self.userURLS[metricType][deviceType]["longitude"]=jsonData["longitude"]
+                            self.userURLS[user][metricType][deviceType]["location"]=True
+                            self.userURLS[user][metricType][deviceType]["latitude"]=jsonData["latitude"]
+                            self.userURLS[user][metricType][deviceType]["longitude"]=jsonData["longitude"]
+
+
+                if user in self.userThreads:
+                    self.userThreads[user].end()
+                self.userThreads[user]=myThread(self, {k:v for k, v in self.userURLS[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+                self.userThreads[user].start()
 
 
             self.database.addDevice(user, jsonData)
@@ -220,9 +231,9 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":1, "error":"Database internal error. "+str(e)}).encode("UTF-8")
 
-    def getsupportedDevices(self):
+    def getSupportedDevices(self):
         try:
-            values=self.database.getsupportedDevices()
+            values=self.database.getSupportedDevices()
             return json.dumps({"status":0 , "error":"Successfull operation.", "data":values}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":1, "error":"Database internal error. "+str(e)}).encode("UTF-8")
@@ -377,7 +388,7 @@ class Processor:
 
 
         if len(errors)!=0:
-            logging.error("Trying to refresh tokens")
+            logging.warning("Trying to refresh tokens")
             try:
                 refreshData=self.refreshTokens(errors, user)
                 for metric in refreshData:
@@ -390,35 +401,41 @@ class Processor:
 
 
         if "GPS" in normalData:
-            normalData["Environment"]={}
-            for device in self.userURLS[user]["Environment"]:
-                deviceConf=self.userURLS[user]["Environment"][device]
-                if deviceConf["location"]:
-                    distance=round(vincenty([float(normalData["GPS"]["latitude"]), float(normalData["GPS"]["longitude"])], [float(deviceConf["latitude"]), float(deviceConf["longitude"])]).m)
-                    if distance <= RADIUS:
-                        for metric in deviceConf["metrics"]:
-                            url=deviceConf["metrics"][metric]["url"]
-                            header=deviceConf["header"]
-                            try:
-                                jsonData=requests.get(url, headers=json.loads(header))
-                                normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,jsonData.text))
-                            except Exception as e:
-                                logging.error("Exception caught: "+str(e))
-            if normalData["Environment"]=={}:
-                for device in self.userURLS[user]["Environment"]:
-                    deviceConf=self.userURLS[user]["Environment"][device]
-                    if not deviceConf["location"]:
-                        for metric in deviceConf["metrics"]:
-                            url=deviceConf["metrics"][metric]["url"].replace("VARIABLE_LATITUDE", str(normalData["GPS"]["latitude"])).replace("VARIABLE_LONGITUDE", str(normalData["GPS"]["longitude"]))
-                            header=deviceConf["header"]
-                            try:
-                                jsonData=requests.get(url, headers=json.loads(header))
-                                normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,jsonData.text))
-                            except Exception as e:
-                                logging.error("Exception caught: "+str(e))
-            #print(normalData["GPS"])
-            normalData["Environment"]["latitude"]=normalData["GPS"]["latitude"]
-            normalData["Environment"]["longitude"]=normalData["GPS"]["longitude"]
+            if normalData["GPS"]["latitude"]!=None and normalData["GPS"]["longitude"]!=None:
+                if float(normalData["GPS"]["latitude"])>-90 and float(normalData["GPS"]["latitude"])<90 and float(normalData["GPS"]["longitude"])>-180 and float(normalData["GPS"]["longitude"])<180: 
+                    normalData["Environment"]={}
+                    for device in self.userURLS[user]["Environment"]:
+                        deviceConf=self.userURLS[user]["Environment"][device]
+                        if deviceConf["location"]:
+                            distance=round(vincenty([float(normalData["GPS"]["latitude"]), float(normalData["GPS"]["longitude"])], [float(deviceConf["latitude"]), float(deviceConf["longitude"])]).m)
+                            if distance <= RADIUS:
+                                for metric in deviceConf["metrics"]:
+                                    url=deviceConf["metrics"][metric]["url"]
+                                    header=deviceConf["header"]
+                                    try:
+                                        jsonData=requests.get(url, headers=json.loads(header))
+                                        normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,jsonData.text))
+                                    except Exception as e:
+                                        logging.error("Exception caught while refetching the data: "+str(e))
+                    if normalData["Environment"]=={}:
+                        for device in self.userURLS[user]["Environment"]:
+                            deviceConf=self.userURLS[user]["Environment"][device]
+                            if not deviceConf["location"]:
+                                for metric in deviceConf["metrics"]:
+                                    url=deviceConf["metrics"][metric]["url"].replace("VARIABLE_LATITUDE", str(normalData["GPS"]["latitude"])).replace("VARIABLE_LONGITUDE", str(normalData["GPS"]["longitude"]))
+                                    header=deviceConf["header"]
+                                    try:
+                                        jsonData=requests.get(url, headers=json.loads(header))
+                                        normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+metric,jsonData.text))
+                                    except Exception as e:
+                                        logging.error("Exception caught: "+str(e))
+                    #print(normalData["GPS"])
+                    normalData["Environment"]["latitude"]=normalData["GPS"]["latitude"]
+                    normalData["Environment"]["longitude"]=normalData["GPS"]["longitude"]
+
+            else:
+                logging.error("Couldn't process GPS: "+ str(normalData["GPS"]))
+
             del normalData["GPS"]
 
         coords=self.normalizeData("GPS-GPS", requests.get(self.userURLS[user]["GPS"]["url"], headers=json.loads(self.userURLS[user]["GPS"]["header"])).text)

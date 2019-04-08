@@ -9,7 +9,7 @@
 		"url":"http://localhost:5555/gps/VARIABLE_USER",
 		"header":"{}",
 		"getData":"{\"latitude\":jsonData[\"data\"][\"latitude\"],\"longitude\":jsonData[\"data\"][\"longitude\"]}",
-		"updateTime":100,
+		"updateTime":10,
 		"erroHandling":""
 	},
 	"externalAPI":{
@@ -20,7 +20,7 @@
 					"type":"Environment",
 					"location":false,
 					"url":"https://api.waqi.info/feed/geo:VARIABLE_LATITUDE;VARIABLE_LONGITUDE/?token=453f8f3898bd238302fe5f84e3526a90c5da9496",
-					"getData":"dict({metric:jsonData[\"data\"][\"iaqi\"][metric][\"v\"] for metric in jsonData[\"data\"][\"iaqi\"]}, **{\"aqi\":jsonData[\"data\"][\"aqi\"]})",
+					"getData":"dict({metric:float(jsonData[\"data\"][\"iaqi\"][metric][\"v\"]) for metric in jsonData[\"data\"][\"iaqi\"]}, **{\"aqi\":float(jsonData[\"data\"][\"aqi\"])})",
 					"saveCondition":"",
 					"erroHandling":""
 				}
@@ -38,7 +38,7 @@
 				"HeartRate":{
 					"type":"HealthStatus",
 					"url":"https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json",
-					"updateTime":0.15,
+					"updateTime":5,
 					"savingTime":120,
 					"getData":"{\"heartRate\":jsonData[\"activities-heart\"][0][\"value\"][\"restingHeartRate\"]}",
 					"saveCondition":"jsonData[\"restingHeartRate\"]>100 or jsonData[\"activities-heart\"][0][\"value\"][\"restingHeartRate\"]<60"	
@@ -46,25 +46,25 @@
 				"Sleep":{
 					"type":"Sleep",
 					"url":"https://api.fitbit.com/1.2/user/-/sleep/date/today.json",
-					"updateTime":0.3,
+					"updateTime":10000,
 					"savingTime":1440,
-					"getData":"{\"duration\":jsonData[\"sleep\"][0][\"duration\"], \"startTime\":int(dp.parse(jsonData[\"sleep\"][0][\"startTime\"]+\"Z\").strftime(\"%s\")), \"endTime\":int(dp.parse(jsonData[\"sleep\"][0][\"endTime\"]+\"Z\").strftime(\"%s\")), \"sleep\":[{k if k!=\"dateTime\" else \"time\" : v if k!=\"dateTime\" else int(dp.parse(v+\"Z\").strftime(\"%s\")) for k,v in e.items()} for e in jsonData[\"sleep\"][0][\"levels\"][\"data\"]]}",
+					"getData":"{\"duration\":round(jsonData[\"sleep\"][0][\"duration\"]/1000), \"day\":jsonData[\"sleep\"][0][\"dateOfSleep\"], \"begin\":int(dp.parse(jsonData[\"sleep\"][0][\"startTime\"]+\"Z\").strftime(\"%s\")), \"end\":int(dp.parse(jsonData[\"sleep\"][0][\"endTime\"]+\"Z\").strftime(\"%s\")), \"sleep\":[{k if k!=\"dateTime\" else \"time\" : v if k!=\"dateTime\" else int(dp.parse(v+\"Z\").strftime(\"%s\")) for k,v in e.items()} for e in jsonData[\"sleep\"][0][\"levels\"][\"data\"]]}",
 					"saveCondition":"",
 					"erroHandling":""
 				},
 				"Calories":{
 					"type":"HealthStatus",
-					"url":"https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json",
-					"updateTime":0.15,
+					"url":"https://api.fitbit.com/1/user/-/activities/date/today.json",
+					"updateTime":5,
 					"savingTime":720,
-					"getData":"{\"calories\":sum([zone[\"caloriesOut\"] for zone in jsonData[\"activities-heart\"][0][\"value\"][\"heartRateZones\"]])}",
+					"getData":"{\"calories\":jsonData[\"summary\"][\"caloriesOut\"]}",
 					"saveCondition":"",
 					"erroHandling":""
 				},
 				"Activity":{
 					"type":"HealthStatus",
 					"url":"https://api.fitbit.com/1/user/-/activities/date/today.json",
-					"updateTime":0.15,
+					"updateTime":5,
 					"savingTime":720,
 					"getData":"{\"fairlyActiveMinutes\":jsonData[\"summary\"][\"fairlyActiveMinutes\"], \"lightlyActiveMinutes\":jsonData[\"summary\"][\"lightlyActiveMinutes\"], \"sedentaryMinutes\":jsonData[\"summary\"][\"sedentaryMinutes\"], \"veryActiveMinutes\":jsonData[\"summary\"][\"veryActiveMinutes\"]}",
 					"saveCondition":"",
@@ -73,7 +73,7 @@
 				"Steps":{
 					"type":"HealthStatus",
 					"url":"https://api.fitbit.com/1/user/-/activities/date/today.json",
-					"updateTime":0.15,
+					"updateTime":5,
 					"savingTime":720,
 					"getData":"{\"steps\":jsonData[\"summary\"][\"steps\"]}",
 					"saveCondition":"",
@@ -90,7 +90,7 @@
 					"url":"http://api.foobot.io/v2/device/VARIABLE_UUID/datapoint/10/last/0/",
 					"updateTime":0,
 					"savingTime":0,
-					"getData":"{ metric : value for metric, value in zip(jsonData[\"sensors\"], jsonData[\"datapoints\"][0])}",
+					"getData":"{ metric : float(value) for metric, value in zip([\"time\",\"pm10\",\"t\",\"h\",\"co2\",\"voc\",\"aqi\"], jsonData[\"datapoints\"][0])}",
 					"saveCondition":"",
 					"erroHandling":""
 				}
