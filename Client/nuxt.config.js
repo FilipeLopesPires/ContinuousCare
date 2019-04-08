@@ -2,7 +2,7 @@ const pkg = require('./package')
 
 
 module.exports = {
-  mode: 'spa',
+  mode: 'universal',
 
   /* Headers of the page */
   head: {
@@ -72,6 +72,7 @@ module.exports = {
 
   env: {
     baseURL: "http://192.168.43.136:5000",
+    sessionToken: "",
   },
 
   /* Build configuration */

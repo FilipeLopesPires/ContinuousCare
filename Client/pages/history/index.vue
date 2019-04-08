@@ -14,9 +14,8 @@
 
             <!--================ Graphics Area =================-->
                 <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
-                    <div class="blog_right_sidebar" v-if="showChart" >
-                        <!-- <div :key="showChart"> {{ environment }} </div> -->
-                        <apexchart  id="apexchart-line" width="700" height="450" type="line" :options="chartOptions" :series="series"></apexchart>
+                    <div class="blog_right_sidebar">
+                        <apexchart v-if="showChart" id="apexchart-line" width="700" height="450" type="line" :options="chartOptions" :series="series"></apexchart>
                         <!-- <button class="genric-btn info" @click="updateChart">Update!</button> -->
                         <PaginationBox />
                     </div>
@@ -51,32 +50,57 @@ export default {
         var environment = answer.data; */
 
         var showChart = false;
+        /* var charts = []; */
+
         /* var environment = {"data": {"time":["2019-04-07T20:28:47Z","2019-04-07T20:28:57Z"],"aqi":[40,50]}}; */
-        var environment = {"data": {"time":[],"aqi":[]}};
+        /* var environment = {"time":[], "latitude": [], "longitude": [], 
+                        "aqi": [], "no2": [], "o3": [], "p": [], "pm10": [], "pm25": [], "so2": [], "t": []}; */
+        var environment = {}
 
         return {
             showChart,
+            /* charts, */
             environment,
+
             chartOptions: {
                 xaxis: {
-                    type: 'seconds',
-                    categories: environment.data.time,
+                    /* type: 'seconds',
+                    categories: environment.time, */
                 },
             },
             series: [{
-                name: 'AQI',
-                data: environment.data.aqi,
+                /* name: 'AQI',
+                data: environment.aqi, */
             }]
         }
     },
     async mounted() {
         //this.$axios.$get("https://reqres.in/api/users?page=2")
 
-        console.log("1)" + this.showChart);
-        await this.getEnvironment('1554730287','DhnDC211XZJG8H5jZpx7UiEbHWzzLZ')
+        await this.getEnvironment('1554745367','DhnDC211XZJG8H5jZpx7UiEbHWzzLZ')
         this.showChart = true;
-        console.log("2)" + this.showChart);
-        console.log(this.environment);
+
+        var chartOptions = {
+            xaxis: {
+                type: 'seconds',
+                categories: this.environment.time,
+            },
+        };
+
+        var series = []
+
+        for(var metric in this.environment) {
+            if(metric!='time' & metric!='latitude' & metric!='longitude') {
+                series.push({
+                    name: metric,
+                    data: this.environment[metric],
+                })
+            }
+        }
+        
+
+        this.chartOptions = chartOptions;
+        this.series = series;
     },
     methods: {
         async getEnvironment(start,AuthToken) {
@@ -86,7 +110,7 @@ export default {
             }
             console.log("inside)" + this.showChart);
 
-            this.environment = await this.$axios.$get("/environment",config)
+            this.environment = await this.$axios.$get("/healthstatus",config)
                                 .then(res => {
                                     return res.data;
                                 });

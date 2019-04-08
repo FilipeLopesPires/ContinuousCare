@@ -13,7 +13,7 @@
             <!-- Submit -->
             <div class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-4 col-md-3">
-                    <button class="main_btn text-uppercase" type="submit">Register</button>
+                    <button class="main_btn text-uppercase" type="submit">Log In</button>
                 </div>
                 <div class="mt-10 col-lg-8 col-md-9">
                     <p>Not registered yet? <nuxt-link to="/register">Start Now!</nuxt-link> </p> 
@@ -41,9 +41,26 @@ export default {
     methods: {
         onSubmit() {
             console.log(this.filledform);
+            var result = this.checkLogin(this.filledform.username, this.filledform.password);
+            if(result.status==0){
+                sessionToken = result.data.token
+            }
         },
         forgotMyPassword() {
             console.log("ask for email");
+        },
+        async checkLogin(username,password) {
+            const config = {
+                'username': username,
+                'password':password
+            }
+            console.log("inside)" + this.showChart);
+
+            return await this.$axios.$post("/signin",config)
+                                .then(res => {
+                                    console.log(res)
+                                    return res;
+                                });
         }
     }
 };
