@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import unittest
+import datetime
 
 from database import *
-
 
 class TestDatabaseProxy(unittest.TestCase):
 
@@ -58,7 +58,7 @@ class TestDatabaseProxy(unittest.TestCase):
         self.db.addDevice(
             "zonnax",
             {
-                "type": 1,
+                "type": "Foobot ",
                 "authentication_fields": {
                     "token": "asdflah34ohaohw",
                     "uuid": "112331",
@@ -69,7 +69,6 @@ class TestDatabaseProxy(unittest.TestCase):
             }
         )
 
-    @unittest.skip
     def test_getAllDevices(self):
         print(self.db.getAllDevices("zonnax"))
 
@@ -93,16 +92,30 @@ class TestDatabaseProxy(unittest.TestCase):
             "steps2": 10000
         }, "zonnax"))
 
+    @unittest.skip
     def test_insert_sleep(self):
         print(self.db.insert("sleep", {
-            "day": 60,
-            "duration": 50,
-            "begin": 10000,
-            "end": 10000,
-            "sleep": {
-                "time": [],
-
-            }
+            "day": "2019-04-07",
+            "duration": datetime.time(second=39600),
+            "begin": 1554679800,
+            "end": 1554710400,
+            "sleep": [
+                {
+                    "time": 1554679800,
+                    "level": "awake",
+                    "duration": 120
+                },
+                {
+                    "time": 1554679920,
+                    "level": "rest",
+                    "duration": 39420
+                },
+                {
+                    "time": 1554719340,
+                    "level": "restless",
+                    "duration": 60
+                }
+            ]
         }, "zonnax"))
 
     @unittest.skip

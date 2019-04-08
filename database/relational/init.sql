@@ -3,7 +3,7 @@ USE db;
 -- USERS
 
 CREATE USER pi2019cc_flaskapp IDENTIFIED BY "T)[-keLSh.9UFZcN58.+";
-GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, DROP, CREATE TEMPORARY TABLES
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
   ON db.*
   TO pi2019cc_flaskapp;
 
@@ -141,7 +141,7 @@ create table metric (
   id                      integer       primary key auto_increment,
 -- PRIMARY KEY
   name                    varchar(30),
-  unit                    varchar(10),
+  unit                    varchar(20)
 );
 
 create table supported_metric (
@@ -218,16 +218,16 @@ CREATE PROCEDURE get_all_client_devices (
 
 CREATE PROCEDURE insert_device (
     IN _username varchar(30),
-    IN _type_id INTEGER, -- TODO may/will not receive an int here
+    IN _type varchar(61), 
     IN _latitude DOUBLE,
     IN _longitude DOUBLE)
-  BEGIN
-    DECLARE __client_id, __new_device_id INTEGER;
+ BEGIN
+    DECLARE __supported_device_id, __client_id, __new_device_id INTEGER;
     DECLARE __new_device_type enum("bracelet", "home_device");
 
-    SELECT type INTO __new_device_type
+    SELECT id, type INTO __supported_device_id, __new_device_type
     FROM supported_device
-    WHERE id = _type_id;
+    WHERE concat(brand, " ", model) = _type;
 
     SELECT client_id INTO __client_id
     FROM client_username
@@ -242,7 +242,7 @@ CREATE PROCEDURE insert_device (
     END IF;
 
     INSERT INTO device (type_id)
-    VALUES (_type_id);
+    VALUES (__supported_device_id);
 
     SET __new_device_id = LAST_INSERT_ID();
 
@@ -396,8 +396,8 @@ INSERT INTO metric (name, unit) values ("Heart Rate", "bpm"),
                                        ("Humidity", "PC"),
                                        ("Carbon dioxide", "ppm"),
                                        ("Volatile Organic Compound", "ppb"),
-                                       ("Relative polution", "Percentage (%)"),
-                                       -- Foobot ^^;
+                                       ("Relative polution", "Percentage (%)");
+                                       -- Foobot ^^
 
 INSERT INTO supported_device (type, brand, model) values ("bracelet", "FitBit", "Charge 3"),
                                                          ("home_device", "Foobot", "");

@@ -125,8 +125,8 @@ class Database:
         """
         return self.relational_proxy.register_device(
             user,
-            data["type"], # TODO may not receive an int here
-            data["authentication_fields"], # TODO may not be this name
+            data["type"],
+            data["authentication_fields"],
             data.get("latitude", None), # TODO may not be this key
             data.get("longitude", None) # TODO may not be this key
         )
@@ -257,9 +257,6 @@ class Database:
         """
 
         if measurement == "sleep":
-            if type(data) != list:
-                raise TypeError("list was expected received ", type(data))
-
 
             self.relational_proxy.insert_sleep_session(user,
                                                        data["day"], #TODO may receive, Agree format
