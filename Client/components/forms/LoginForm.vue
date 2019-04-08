@@ -16,7 +16,7 @@
                     <button class="main_btn text-uppercase" type="submit">Register</button>
                 </div>
                 <div class="mt-10 col-lg-8 col-md-9">
-                    <p>Not registered yet? <nuxt-link to="/register" @click="registerMe">Start Now!</nuxt-link> </p> 
+                    <p>Not registered yet? <nuxt-link to="/register">Start Now!</nuxt-link> </p> 
                     <p>I forgot my password <nuxt-link to="" @click="forgotMyPassword">Help!</nuxt-link> </p> 
                 </div>
             </div>
@@ -41,9 +41,6 @@ export default {
     methods: {
         onSubmit() {
             console.log(this.filledform);
-        },
-        registerMe() {
-            console.log("change to register form");
         },
         forgotMyPassword() {
             console.log("ask for email");

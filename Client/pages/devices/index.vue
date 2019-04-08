@@ -25,6 +25,7 @@
                         :key="device.id"
                         :device="device.device"
                         /> 
+                        <!-- {{ loaded_devices }} -->
                     </div>
                 </div>
             </section>
@@ -34,7 +35,7 @@
                     <h1>Our Partners</h1>
                 </div>
                 <div class="mb-20 container">
-                    <h3 class="text-heading title_color">Fitbit Charge 3</h3>
+                    <h3 class="text-heading title_color">Fitbit</h3>
                     <p class="sample-text">
                         ... [ information about the device here ] ...
                     </p>
@@ -65,6 +66,7 @@ export default {
     },
     data() {
         return {
+            /* loaded_devices: [], */
             loaded_devices: [
                 {device: {brand: "Fitbit", model: "Charge 3", 
                     type: "bracelet", authentication_fields: [["Token","0001"]],
@@ -83,6 +85,19 @@ export default {
     },
     methods: {
 
+    },
+    mounted() {
+        /* var self = this;
+        this.$axios.$get("https://reqres.in/api/users?page=2")
+        //this.$axios.$get("/devices")
+        .then( function(response) { 
+            console.log(response);
+            console.log(response.data);
+            self.loaded_devices = response.data;
+        })
+        .catch( function(error) {
+            // throw internal error exception
+        }); */
     },
     head: {
         title: "Devices"

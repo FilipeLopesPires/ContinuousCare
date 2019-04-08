@@ -2,7 +2,7 @@ const pkg = require('./package')
 
 
 module.exports = {
-  mode: 'universal',
+  mode: 'spa',
 
   /* Headers of the page */
   head: {
@@ -51,8 +51,8 @@ module.exports = {
   plugins: [
     '~plugins/core-components.js',
     { src: '~plugins/vue-js-modal', ssr: false},
-    /* { src: '~plugins/js/mail-script.js', ssr: false},
     { src: '~plugins/js/custom.js', ssr: false},
+    /* { src: '~plugins/js/mail-script.js', ssr: false},
     { src: '~plugins/js/jquery.ajaxchimp.min.js', ssr: false}, */
   ],
 
@@ -67,10 +67,11 @@ module.exports = {
   /* Axios module configuration */
   axios: {
     // See https://github.com/nuxt-community/axios-module#options
+    baseURL: "http://192.168.43.136:5000",
   },
 
   env: {
-    base_url: "http://192.168.43.136:5000",
+    baseURL: "http://192.168.43.136:5000",
   },
 
   /* Build configuration */

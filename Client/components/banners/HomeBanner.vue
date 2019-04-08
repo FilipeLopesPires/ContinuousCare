@@ -6,11 +6,12 @@
                     <div class="col-lg-12">
                         <h1>ContinuousCare</h1>
                         <p>Our Health Monitoring System aims to aid users to keep track of their health status and help medical personel to make better decisions.</p>
-                        <a class="main_btn mr-10" href="#">register</a>
+                        <nuxt-link class="main_btn mr-10" to="/register">register</nuxt-link>
                     </div>
                 </div>
             </div>
         </div>
+        <nuxt/>
     </section>
 </template>
 

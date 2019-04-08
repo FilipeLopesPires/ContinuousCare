@@ -25,12 +25,12 @@
     });
 
     //-------- Counter js --------//
-    $(window).on("load", function() {
+    /* $(window).on("load", function() {
         $('.counter').counterUp({
             delay: 10,
             time: 1000
         });
-    });
+    }); */
 
     //------- Mailchimp js --------//  
     /*

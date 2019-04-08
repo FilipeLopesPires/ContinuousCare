@@ -14,9 +14,10 @@
 
             <!--================ Graphics Area =================-->
                 <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
-                    <div class="blog_right_sidebar">
-                        <apexchart width="700" height="450" type="line" :options="chartOptions" :series="series"></apexchart>
-                        <button class="genric-btn info" @click="updateChart">Update!</button>
+                    <div class="blog_right_sidebar" v-if="showChart" >
+                        <!-- <div :key="showChart"> {{ environment }} </div> -->
+                        <apexchart  id="apexchart-line" width="700" height="450" type="line" :options="chartOptions" :series="series"></apexchart>
+                        <!-- <button class="genric-btn info" @click="updateChart">Update!</button> -->
                         <PaginationBox />
                     </div>
                 </div>
@@ -42,40 +43,58 @@ export default {
         PaginationBox,
     },
     data() {
+        /* var answer = {"status": 0, "error": "Successfull operation.", 
+                    "data": { "time":["2019-04-07T20:28:47Z","2019-04-07T20:28:57Z","2019-04-07T20:28:67Z","2019-04-07T20:28:77Z","2019-04-07T20:28:87Z"],  
+                            "latitude": [40,40], "longitude": [-8,-8], 
+                            "aqi": [16,20,null,21,22], "no2": [4.2,4.2,4.2,4.2,4.2], "o3": [20.8,20.8], "p": [1013.2,1013.2], "pm10": [5,5], "pm25": [7,7], "so2": [1.6,1.6], "t": [10.5,10.5]
+                    }}; 
+        var environment = answer.data; */
+
+        var showChart = false;
+        /* var environment = {"data": {"time":["2019-04-07T20:28:47Z","2019-04-07T20:28:57Z"],"aqi":[40,50]}}; */
+        var environment = {"data": {"time":[],"aqi":[]}};
+
         return {
-            //jsonData: []
+            showChart,
+            environment,
             chartOptions: {
-            xaxis: {
-                type: 'datetime',
-                categories: ['01/01/2003', '02/01/2003','03/01/2003','04/01/2003','05/01/2003','06/01/2003','07/01/2003','08/01/2003'],
+                xaxis: {
+                    type: 'seconds',
+                    categories: environment.data.time,
                 },
             },
             series: [{
-                name: 'Series A',
-                data: [30, 40, 45, 50, 49, 60, 70, 91]
-            }, {
-                name: 'Series B',
-                data: [23, 43, 54, 12, 44, 52, 32, 11]
+                name: 'AQI',
+                data: environment.data.aqi,
             }]
         }
     },
-    mounted() {
-        /* var self = this;
-        axios.get("https://reqres.in/api/users?page=2")
-        //axios.get(process.env.base_url + "/pollution/lat=40/long=-8")
-        .then( function(response) { 
-            console.log(response.data);
-            self.jsonData = response.data;
-        })
-        .catch( function(error) {
-            self.jsonData = "An error occurred.\n" + error;
-        }); */
+    async mounted() {
+        //this.$axios.$get("https://reqres.in/api/users?page=2")
+
+        console.log("1)" + this.showChart);
+        await this.getEnvironment('1554730287','DhnDC211XZJG8H5jZpx7UiEbHWzzLZ')
+        this.showChart = true;
+        console.log("2)" + this.showChart);
+        console.log(this.environment);
     },
     methods: {
+        async getEnvironment(start,AuthToken) {
+            const config = {
+                params: {'start': start},
+                headers: {'AuthToken': AuthToken}
+            }
+            console.log("inside)" + this.showChart);
+
+            this.environment = await this.$axios.$get("/environment",config)
+                                .then(res => {
+                                    return res.data;
+                                });
+        }
         /* onGoBack() {
             this.$router.push("/")
         } */
-        generateDayWiseTimeSeries(baseval, count, yrange) {
+        /* generateDayWiseTimeSeries(baseval, count, yrange) {
             var i = 0;
             var series = [];
             while (i < count) {
@@ -102,7 +121,7 @@ export default {
                 data: this.generateDayWiseTimeSeries(new Date('11 Feb 2017').getTime(), 20, {min: 10, max: 15})
             }]
             this.series = series
-        }
+        } */
     },
     head: {
         title: "History"

@@ -7,9 +7,6 @@ Vue.component('HeaderMenu', HeaderMenu)
 Vue.component('PageBanner', PageBanner)
 Vue.component('PageFooter', PageFooter)
 
-/* import axios from "axios"
-Vue.component('axios', axios) */
-
 /* import VModal from 'vue-js-modal/dist/ssr.index'
 Vue.component('modal', VModal) */
 
