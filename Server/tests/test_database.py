@@ -58,7 +58,7 @@ class TestDatabaseProxy(unittest.TestCase):
         self.db.addDevice(
             "zonnax",
             {
-                "type": "Foobot ",
+                "type": "Foobot df",
                 "authentication_fields": {
                     "token": "asdflah34ohaohw",
                     "uuid": "112331",
@@ -69,6 +69,7 @@ class TestDatabaseProxy(unittest.TestCase):
             }
         )
 
+    @unittest.skip
     def test_getAllDevices(self):
         print(self.db.getAllDevices("zonnax"))
 
@@ -82,7 +83,7 @@ class TestDatabaseProxy(unittest.TestCase):
 
     @unittest.skip
     def test_getData_sleep(self):
-        print(self.db.getData("sleep", "zonnax", None, 1554662636, None))
+        print(self.db.getData("sleep", "zonnax", 1554662636, None, None))
 
     @unittest.skip
     def test_insert(self):
@@ -96,7 +97,7 @@ class TestDatabaseProxy(unittest.TestCase):
     def test_insert_sleep(self):
         print(self.db.insert("sleep", {
             "day": "2019-04-07",
-            "duration": datetime.time(second=39600),
+            "duration": 39600,
             "begin": 1554679800,
             "end": 1554710400,
             "sleep": [

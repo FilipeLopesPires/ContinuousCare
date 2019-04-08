@@ -200,7 +200,7 @@ class Database:
                 "sessions_info": [], # list of dicts
                 "sessions_data": [] # list of dicts [{time:[...], level:[...], duration:[...]},{X},...]
             }
-            for day, sleep_begin, sleep_end, duration in results:
+            for day, sleep_begin, sleep_end, duration in results: # TODO maybe filipe wants this other way
                 return_value["sessions_info"].append({
                     "day": day,
                     "begin": sleep_begin,
@@ -208,7 +208,8 @@ class Database:
                     "duration": duration
                 })
                 session_data = {}
-                for read in self.time_series_proxy.read(user, measurement, sleep_begin, sleep_end):
+                for read in self.time_series_proxy.read(user, measurement, sleep_begin.timestamp(),
+                                                                           sleep_end.timestamp()):
                     for key, value in read.items():
                         if key == "username":
                             continue
