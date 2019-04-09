@@ -16,7 +16,7 @@ def userGPSCoordinates(user):
         print(userLocations)
         return json.dumps({"status":0, "message":"All Good"})
     else:
-        #return json.dumps({"data":{"latitude":40, "longitude":-8}})
+        #return json.dumps({"data":{"latitude":40.0, "longitude":-8.0}})
         if user not in userLocations:
             return json.dumps({"status":1, "message":"User Unknown"})
         return json.dumps({"status":0, "message":"All Good", "data":userLocations[user]})

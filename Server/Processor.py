@@ -29,23 +29,23 @@ class Processor:
         self.gps=self.configFile["GPS"]
         self.externalAPI={}   #{Environment: {WAQI:{header:header, metrics:{All:{url:url,updatetime:10}}}}, ...}
         auxAPI=self.configFile["externalAPI"]
-        apiID="-1"
+        apiID="0"
         for api in auxAPI:
             for metric in auxAPI[api]["metrics"]:
                 metricType=auxAPI[api]["metrics"][metric]["type"]
                 if metricType not in self.externalAPI:
-                    self.externalAPI[metricType]={apiID:{}}
+                    self.externalAPI[metricType]={}
                 if api not in self.externalAPI[metricType]:
-                    self.externalAPI[metricType][apiID][api]={"metrics":{}}
-                    self.externalAPI[metricType][apiID][api]["header"]=auxAPI[api]["header"]
-                    self.externalAPI[metricType][apiID][api]["location"]=auxAPI[api]["metrics"][metric]["location"]
+                    self.externalAPI[metricType][api]={apiID:{}}
+                    self.externalAPI[metricType][api][apiID]={"metrics":{}}
+                    self.externalAPI[metricType][api][apiID]["header"]=auxAPI[api]["header"]
+                    self.externalAPI[metricType][api][apiID]["location"]=auxAPI[api]["metrics"][metric]["location"]
             
-                self.externalAPI[metricType][apiID][api]["metrics"][metric]={}
-                self.externalAPI[metricType][apiID][api]["metrics"][metric]["url"]=auxAPI[api]["metrics"][metric]["url"]
+                self.externalAPI[metricType][api][apiID]["metrics"][metric]={}
+                self.externalAPI[metricType][api][apiID]["metrics"][metric]["url"]=auxAPI[api]["metrics"][metric]["url"]
                 if "updateTime" in auxAPI[api]["metrics"][metric]:
-                    self.externalAPI[metricType][apiID][api]["metrics"][metric]["updatetime"]=auxAPI[api]["metrics"][metric]["updateTime"]
-            
-            apiID=str(int(apiID)-1)
+                    self.externalAPI[metricType][api][apiID]["metrics"][metric]["updatetime"]=auxAPI[api]["metrics"][metric]["updateTime"]
+                
        
         self.userThreads={}
         self.userTokens={}
@@ -112,6 +112,20 @@ class Processor:
         jsonData=json.loads(data.decode("UTF-8"))
         try:
             self.database.register(jsonData)
+            user=jsonData["username"]
+            if user not in self.userURLS:
+                self.userURLS[user]={}
+
+                for key in self.externalAPI:
+                    if key in urls:
+                        urls[key]=dict(urls[key], **self.externalAPI[key])
+                    else:
+                        urls[key]=self.externalAPI[key]
+
+
+                self.userURLS[user]["GPS"]={"url":self.gps["url"].replace("VARIABLE_USER", user), "updateTime":self.gps["updateTime"], "header":self.gps["header"]}
+                self.userThreads[user]=myThread(self, {k:v for k, v in self.userURLS[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+                self.userThreads[user].start()
             return json.dumps({"status":0, "msg":"Successfull operation."}).encode("UTF-8")
         except Exception as e:
             return json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
@@ -262,6 +276,7 @@ class Processor:
     def normalizeData(self, path, data):
         jsonData=json.loads(data)
         subpath=[y for y in path.split("-")][1:]
+        print(subpath)
         try:
             if len(subpath)==1:
                 return eval(self.configFile[subpath[0]]["getData"])
@@ -392,7 +407,8 @@ class Processor:
                                         header=deviceConf["header"]
                                         try:
                                             jsonData=requests.get(url, headers=json.loads(header))
-                                            normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+id+"-"+device+"-"+metric,jsonData.text))
+                                            print(device, id)
+                                            normalData["Environment"]=dict(normalData["Environment"], **self.normalizeData("Environment-"+self.getStartPath(device)+"-"+device+"-"+id+"-"+metric,jsonData.text))
                                         except Exception as e:
                                             logging.error("Exception caught: "+str(e))
                     #print(normalData["GPS"])
