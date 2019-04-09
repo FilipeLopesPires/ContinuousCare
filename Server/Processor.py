@@ -199,7 +199,9 @@ class Processor:
                         if metricType not in self.userURLS[user]:
                             self.userURLS[user][metricType]={}
                         if deviceType not in self.userURLS[user][metricType]:
-                            self.userURLS[user][metricType][deviceType]={id:{"metrics":{}}}
+                            self.userURLS[user][metricType][deviceType]={}
+                        if id not in self.userURLS[user][metricType][deviceType]:
+                            self.userURLS[user][metricType][deviceType][id]={"metrics":{}}
                             self.userURLS[user][metricType][deviceType][id]["header"]=self.supportedDevices[deviceType]["header"].replace("VARIABLE_TOKEN",jsonData["authentication_fields"]["token"])
                             for refreshParam in ["refresh_url", "refresh_header", "refresh_data"]:
                                 if refreshParam in self.supportedDevices[deviceType]:
