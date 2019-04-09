@@ -184,10 +184,6 @@ class Processor:
             jsonData=json.loads(data.decode("UTF-8"))
 
             deviceToken=jsonData["authentication_fields"]["token"]
-
-            jsonData["type"]=jsonData["brand"]+" "+jsonData["model"]
-            del jsonData["brand"]
-            del jsonData["model"]
             
             id=str(self.database.addDevice(user, jsonData))
 
