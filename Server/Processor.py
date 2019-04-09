@@ -45,7 +45,7 @@ class Processor:
                 self.externalAPI[metricType][api][apiID]["metrics"][metric]["url"]=auxAPI[api]["metrics"][metric]["url"]
                 if "updateTime" in auxAPI[api]["metrics"][metric]:
                     self.externalAPI[metricType][api][apiID]["metrics"][metric]["updatetime"]=auxAPI[api]["metrics"][metric]["updateTime"]
-                
+
        
         self.userThreads={}
         self.userTokens={}
@@ -118,9 +118,9 @@ class Processor:
 
                 for key in self.externalAPI:
                     if key in urls:
-                        urls[key]=dict(urls[key], **self.externalAPI[key])
+                        self.userURLS[user][key]=dict(self.userURLS[user][key], **self.externalAPI[key])
                     else:
-                        urls[key]=self.externalAPI[key]
+                        self.userURLS[user][key]=self.externalAPI[key]
 
 
                 self.userURLS[user]["GPS"]={"url":self.gps["url"].replace("VARIABLE_USER", user), "updateTime":self.gps["updateTime"], "header":self.gps["header"]}
