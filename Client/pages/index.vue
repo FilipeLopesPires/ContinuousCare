@@ -1,5 +1,5 @@
 <template>
-  <div v-if="true">
+  <div v-if="!loggedIn()">
     <body style="overflow-x: none;">
       <!--================Header Menu Area =================-->
       <HeaderMenu activePage="Home" />
@@ -87,7 +87,18 @@ export default {
     }
   },
   methods: {
-    
+    loggedIn() {
+      //console.log("Token:")
+      //console.log(this.$store.getters.sessionToken);
+      if(this.$store.getters.sessionToken == null) {
+        //console.log("not logged in")
+        this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
+        return false
+      }
+      //console.log("logged in")
+      this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
+      return true
+    }
   },
   head: {
     title: "ContinuousCare"

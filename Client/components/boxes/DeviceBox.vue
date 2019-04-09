@@ -1,12 +1,12 @@
 <template>
     <div class="col-lg-4 col-md-4 col-sm-6">
-        <DeviceModal :device="device" />
+        <!-- <DeviceModal :device="device" /> -->
         <div class="categories_post">
             <img :src="device.photo" alt="Procedure" height="200px" width="200px" >
-            <div class="categories_details" @click="showModal($modal, device.authentication_fields[0])">
+            <div class="categories_details"> <!-- @click="showModal($modal, device.authentication_fields[0])"> -->
                 <div class="categories_text">
                     <div class="border_line"></div>
-                        <h5 >{{ device.brand }} {{ device.model }}</h5>
+                        <h5>{{ device.type }}</h5>
                     <div class="border_line"></div>
                 </div>
             </div>
@@ -29,7 +29,7 @@ export default {
         device: {
             type: Object,
             required: true
-        }
+        },
     },
     methods: {
         showModal($modal, token) {

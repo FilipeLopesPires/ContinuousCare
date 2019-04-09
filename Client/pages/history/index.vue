@@ -16,6 +16,7 @@
                 <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
                     <div class="blog_right_sidebar">
                         <apexchart v-if="showChart" id="apexchart-line" width="700" height="450" type="line" :options="chartOptions" :series="series"></apexchart>
+                        <div v-else><h1>Unable to load information.</h1></div>
                         <!-- <button class="genric-btn info" @click="updateChart">Update!</button> -->
                         <PaginationBox />
                     </div>
@@ -49,18 +50,16 @@ export default {
                     }}; 
         var environment = answer.data; */
 
-        var showChart = false;
-        /* var charts = []; */
-
-        /* var environment = {"data": {"time":["2019-04-07T20:28:47Z","2019-04-07T20:28:57Z"],"aqi":[40,50]}}; */
         /* var environment = {"time":[], "latitude": [], "longitude": [], 
                         "aqi": [], "no2": [], "o3": [], "p": [], "pm10": [], "pm25": [], "so2": [], "t": []}; */
-        var environment = {}
-
+        
+        var requestError = false;
+        var showChart = false;
+        var serverData = {}
         return {
             showChart,
-            /* charts, */
-            environment,
+            requestError,
+            serverData,
 
             chartOptions: {
                 xaxis: {
@@ -77,42 +76,47 @@ export default {
     async mounted() {
         //this.$axios.$get("https://reqres.in/api/users?page=2")
 
-        await this.getEnvironment('1554745367','DhnDC211XZJG8H5jZpx7UiEbHWzzLZ')
-        this.showChart = true;
-
-        var chartOptions = {
-            xaxis: {
-                type: 'seconds',
-                categories: this.environment.time,
-            },
-        };
-
-        var series = []
-
-        for(var metric in this.environment) {
-            if(metric!='time' & metric!='latitude' & metric!='longitude') {
-                series.push({
-                    name: metric,
-                    data: this.environment[metric],
-                })
+        await this.getServerData('1554745367', this.$store.getters.sessionToken, "/healthstatus")
+        if(!this.requestError) {
+            console.log("no error")
+            this.showChart = true;
+            var chartOptions = {
+                xaxis: {
+                    type: 'seconds',
+                    categories: this.serverData.time,
+                },
+            };
+            var series = []
+            for(var metric in this.serverData) {
+                if(metric!='time' & metric!='latitude' & metric!='longitude') {
+                    series.push({
+                        name: metric,
+                        data: this.serverData[metric],
+                    })
+                }
             }
+            this.chartOptions = chartOptions;
+            this.series = series;
         }
-        
-
-        this.chartOptions = chartOptions;
-        this.series = series;
     },
     methods: {
-        async getEnvironment(start,AuthToken) {
+        async getServerData(start,AuthToken,restPath) {
             const config = {
                 params: {'start': start},
                 headers: {'AuthToken': AuthToken}
             }
-            console.log("inside)" + this.showChart);
-
-            this.environment = await this.$axios.$get("/healthstatus",config)
+            //console.log("inside)" + this.showChart);
+            this.serverData = await this.$axios.$get(restPath,config)
                                 .then(res => {
+                                    if(res.status != 0) {
+                                        this.requestError = true;
+                                        return {};
+                                    }
                                     return res.data;
+                                })
+                                .catch(e => {
+                                    this.requestError = true;
+                                    return {};
                                 });
         }
         /* onGoBack() {

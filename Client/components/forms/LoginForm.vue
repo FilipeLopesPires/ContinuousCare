@@ -39,28 +39,31 @@ export default {
         }
     },
     methods: {
-        onSubmit() {
-            console.log(this.filledform);
-            var result = this.checkLogin(this.filledform.username, this.filledform.password);
+        async onSubmit() {
+            //console.log(this.filledform);
+            var result = await this.checkLogin(this.filledform);
             if(result.status==0){
-                sessionToken = result.data.token
+                this.$store.dispatch('setSessionToken', result.data.token);
+                //console.log(this.$store.getters.sessionToken)
+                this.$router.push("/");
+            } else {
+                // warn that login fields are invalid
             }
         },
         forgotMyPassword() {
             console.log("ask for email");
         },
-        async checkLogin(username,password) {
-            const config = {
-                'username': username,
-                'password':password
-            }
-            console.log("inside)" + this.showChart);
 
+        async checkLogin(filledform) {
+            const config = {
+                'username': filledform.username,
+                'password': filledform.password
+            }
             return await this.$axios.$post("/signin",config)
-                                .then(res => {
-                                    console.log(res)
-                                    return res;
-                                });
+                        .then(res => {
+                            console.log(res)
+                            return res;
+                        });
         }
     }
 };

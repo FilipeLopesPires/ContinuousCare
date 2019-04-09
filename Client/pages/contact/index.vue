@@ -2,7 +2,7 @@
     <div>
         <body>
             <!--================ Header Menu Area =================-->
-            <HeaderMenu activePage="Help" />
+            <HeaderMenu activePage="Contact" />
 
             <!--================ Banner Area =================-->
             <PageBanner parent_page="Home" page="Contact Us" />

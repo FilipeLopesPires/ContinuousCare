@@ -1,12 +1,12 @@
 <template>
-    <html lang="en">
+    <div lang="en">
         <nuxt/>
-    </html>
+    </div>
 </template>
 
 <script>
 export default {
-
+    middleware: "log",
 }
 </script>
 

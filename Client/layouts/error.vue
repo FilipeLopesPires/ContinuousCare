@@ -1,8 +1,8 @@
 <template>
-  <html lang="en">
+  <div lang="en">
     <h1>An error occurred, we're sorry!</h1>
     <nuxt/>
-  </html>
+  </div>
 </template>
 
 <script>

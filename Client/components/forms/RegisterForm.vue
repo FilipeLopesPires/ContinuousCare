@@ -78,7 +78,7 @@
             </div>
             <!-- Aditional Info -->
             <div class="mt-10">
-                <textarea class="single-textarea" v-bind="$attrs" v-on="$listeners" v-model="filledform.aditional_info" placeholder="Aditional Information" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Aditional Information'"></textarea>
+                <textarea class="single-textarea" v-bind="$attrs" v-on="$listeners" v-model="filledform.additional_info" placeholder="Additional Information" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Additional Information'"></textarea>
             </div>
             <!-- Submit -->
             <div class="row justify-content-center d-flex align-items-center">
@@ -86,7 +86,7 @@
                     <button class="main_btn text-uppercase" type="submit">Register</button>
                 </div>
                 <div class="mt-10 col-lg-8 col-md-9">
-                    <p>Already have an account? <nuxt-link to="/login" @click="logMeIn">Sign In!</nuxt-link> </p>
+                    <p>Already have an account? <nuxt-link to="/login">Sign In!</nuxt-link> </p>
                 </div>
             </div>
         </form>
@@ -113,20 +113,87 @@ export default {
                 phpn: "",
                 password: "",
                 password_confirmation: "",
-                birdthdate: new Date,
+                //birdthdate: new Date,
                 weight: "",
                 height: "",
-                aditional_info: ""
+                additional_info: ""
             }
         }
     },
     methods: {
-        onSubmit() {
-            console.log(this.filledform);
+        async onSubmit() {
+            /* Fields Validation */
+            //console.log(this.filledform);
+            /* var validation = this.validateFormFields(this.filledform);
+            if (validation != 0) {
+                // do something 
+            } */
+
+            /* Server Validation */
+            var result = await this.checkRegistration(this.filledform);
+            if(result.status==0){
+                result = await this.checkLogin(this.filledform);
+                if(result.status==0){
+                    this.$store.dispatch('setSessionToken', result.data.token);
+                    //console.log(this.$store.getters.sessionToken)
+                    this.$router.push("/");
+                } else {
+                    // this should never happen
+                }
+            } else {
+                // warn that registration fields are invalid
+            }
         },
-        logMeIn() {
-            console.log("change to login form");
+
+        async checkRegistration(filledform) {
+            const config = {
+                'name': filledform.first_name + " " + filledform.last_name,
+                'username': filledform.username,
+                'email': filledform.email,
+                'phpn': filledform.phpn,
+                'password': filledform.password,
+                'birth_date':"25-06-1998", //filledform.birthdate,
+                'weight': filledform.weight,
+                'height': filledform.height,
+                'additional_information': filledform.additional_info,
+            }
+            console.log(filledform)
+            return await this.$axios.$post("/signup",config)
+                        .then(res => {
+                            console.log(res)
+                            return res;
+                        });
         },
+        async checkLogin(filledform) {
+            const config = {
+                'username': filledform.username,
+                'password': filledform.password
+            }
+            return await this.$axios.$post("/signin",config)
+                        .then(res => {
+                            console.log(res)
+                            return res;
+                        });
+        },
+        validateFormFields(filledform) {
+            if(filledform.password != filledform.password_confirmation) {
+                // warn that password != password_confirmation
+                return 1
+            }
+            if(isNaN(filledform.phpn)) {
+                // warn that phpn must be a number
+                return 2
+            }
+            if(isNaN(filledform.weight)) {
+                // warn that weight must be a number
+                return 3
+            }
+            if(isNaN(filledform.height)) {
+                // warn that height must be a number
+                return 4
+            }
+            return 0
+        }
     }
 };
 </script>

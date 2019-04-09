@@ -2,7 +2,7 @@
     <div style="overflow-x: none;">
         <body>
             <!--================ Header Menu Area =================-->
-            <HeaderMenu activePage="Help" />
+            <HeaderMenu activePage="Settings" />
 
             <!--================ Banner Area =================-->
             <PageBanner parent_page="Home" page="Settings" />

@@ -2,7 +2,7 @@ const pkg = require('./package')
 
 
 module.exports = {
-  mode: 'universal',
+  mode: 'spa',
 
   /* Headers of the page */
   head: {
@@ -50,6 +50,7 @@ module.exports = {
   /* Plugins to load before mounting the App */
   plugins: [
     '~plugins/core-components.js',
+    { src: '~/plugins/localStorage.js', ssr: false },
     { src: '~plugins/vue-js-modal', ssr: false},
     { src: '~plugins/js/custom.js', ssr: false},
     /* { src: '~plugins/js/mail-script.js', ssr: false},
@@ -67,12 +68,12 @@ module.exports = {
   /* Axios module configuration */
   axios: {
     // See https://github.com/nuxt-community/axios-module#options
-    baseURL: "http://192.168.43.136:5000",
+    //baseURL: "http://192.168.43.136:5000",
+    baseURL: "http://mednat.ieeta.pt:8342",
   },
 
   env: {
-    baseURL: "http://192.168.43.136:5000",
-    sessionToken: "",
+    //baseURL: "http://192.168.43.136:5000",
   },
 
   /* Build configuration */
