@@ -1,0 +1,6 @@
+README*
+.*
+Dockerfile
+plugins/*
+!plugins/js
+!plugins/core-components.js
