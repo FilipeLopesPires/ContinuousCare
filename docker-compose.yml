@@ -1,13 +1,13 @@
-version: 3
+version: "3"
 services:
   front_end:
     build: ./Client
-    image: FrontEnd
+    image: frontend
     ports:
       - "8081:3000"
   back_end:
     build: ./Server
-    image: BackEnd
+    image: backend
     ports:
       - "8082:5000"
     depends_on:
@@ -15,20 +15,20 @@ services:
       - db_time_series
   gps_module:
     build: GPS
-    image: GPSmodule
+    image: gpsmodule
     ports:
       - "8083:5555"
   db_relational:
     build: ./database/relational
-    image: DBrelational
+    image: dbrelational
     expose:
-      - "33060"
+      - "3306"
     volumes:
-      - $HOME/database/relational/data:/var/lib/mysql
+      - $HOME/database/relational:/var/lib/mysql
   db_time_series:
     build: ./database/time_series
-    image: DBtime_series
+    image: dbtime_series
     expose:
       - "8086"
     volumes:
-      - $HOME/database/time_series/data:/var/lib/influxdb
+      - $HOME/database/time_series:/var/lib/influxdb
