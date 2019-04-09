@@ -1,0 +1,5 @@
+README.*
+tests
+venv
+__pycache__
+Dockerfile
