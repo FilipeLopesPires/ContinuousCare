@@ -31,7 +31,7 @@ class StoredProcedures:
     REGISTER_SLEEP_SESSION = "register_sleep_session"
     INSERT_SLEEP_SESSION = "insert_sleep_session"
     GET_SLEEP_SESSIONS = "get_sleep_sessions"
-    #UPDATE_DEVICE_AUTHENTICATION_FIELDS = "update_device_authentication_fields"
+    UPDATE_DEVICE = "update_device"
     #DELETE_DEVICE = "delete_device"
 
 
@@ -201,9 +201,9 @@ class MySqlProxy:
         :rtype: int
         """
         try:
-            conn, cursor = self._init_connection()
-
             auth_fields = [(name, value) for name, value in authentication_fields.items()]
+
+            conn, cursor = self._init_connection()
 
             cursor.execute("CREATE TEMPORARY TABLE IF NOT EXISTS tmp_authentication_fields(name VARCHAR(30)," +
                                                                                           "value VARCHAR(500))")
@@ -244,6 +244,7 @@ class MySqlProxy:
                                           longitude) in next(cursor.stored_results()).fetchall():
                 if device_id not in devices.keys():
                     device = {
+                        "id": device_id,
                         "type": "%s %s" % (brand, model),
                     }
                     if latitude: # if one exist both exist
@@ -403,7 +404,13 @@ class MySqlProxy:
             self._close_conenction(conn, cursor)
 
     def get_all_usernames(self):
-        """"""
+        """
+        Used by the main server to get all username so he can start to
+        quety data from devices/external api's
+
+        :return: list of all usernames OF CLIENTS
+        :rtype: list
+        """
         try:
             conn, cursor = self._init_connection()
 
@@ -413,3 +420,35 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
+    def updtate_device(self, username, device_id, data):
+        """
+
+        :param username: of the client
+        :type username: str
+        :param device_id: of the device owned by the client
+            to change data
+        :type device_id: int
+        :param data: fields to change (authentication fields and/or longitude, latitude)
+        :type data: dict
+        """
+        try:
+            latitude, longitude = None, None
+            if "latitude" in data.keys(): # assume that if latitude is in dict, longitude is also
+                latitude = data["latitude"]
+                longitude = data["longitude"]
+                del data["latitude"]
+                del data["longitude"]
+
+            auth_fields = [(name, value) for name, value in data.items()]
+
+            conn, cursor = self._init_connection()
+
+            cursor.execute("CREATE TEMPORARY TABLE IF NOT EXISTS tmp_authentication_fields(name VARCHAR(30)," +
+                           "value VARCHAR(500))")
+            cursor.execute("DELETE FROM tmp_authentication_fields")
+            cursor.executemany("INSERT INTO tmp_authentication_fields values (%s, %s)", auth_fields)
+            cursor.callproc(StoredProcedures.UPDATE_DEVICE, (username, device_id, latitude, longitude))
+
+            conn.commit()
+        finally:
+            self._close_conenction(conn, cursor)

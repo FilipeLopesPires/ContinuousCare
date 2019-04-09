@@ -47,10 +47,10 @@ class Database:
             data["password"],
             data["name"],
             data["email"],
-            data["phpn"],
+            int(data["phpn"]),
             (birth_day, birth_month, birth_year),
-            data["weight"],
-            data["height"],
+            float(data["weight"]),
+            float(data["height"]),
             data["additional_information"]
         )
 
@@ -132,7 +132,20 @@ class Database:
         )
 
     def updateDevice(self, user, data):
-        """"""
+        """
+        Only used to change the authentications fields of some device of
+        a client, the type can never change.
+
+        :param user: username of the client
+        :type user: str
+        :param data: new data to associate with an existing device
+        {id:int, token:asdf, ...}
+        :type data: dict
+        """
+        device_id = data["id"]
+        del data["id"]
+
+        self.relational_proxy.updtate_device(user, device_id, data)
 
     def deleteDevice(self, user, device_id):
         """"""
@@ -283,9 +296,14 @@ class Database:
 
             self.time_series_proxy.write(to_write)
         else:
+            time = data["time"]
+            del data["time"]
+            if data == {}:
+                return
             self.time_series_proxy.write(
                 [{
                     "measurement": measurement,
+                    "time":time,
                     "tags": {
                         "username": user,
                     },

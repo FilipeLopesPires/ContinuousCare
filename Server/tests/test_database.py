@@ -69,6 +69,15 @@ class TestDatabaseProxy(unittest.TestCase):
             }
         )
 
+    def test_updateDevice(self):
+        self.db.updateDevice("zonnax", {
+            "id": 3,
+            "refresh_token": "outrascenas",
+            "token": "outrascenas3",
+            "latitude": 1,
+            "longitude": 1,
+        })
+
     @unittest.skip
     def test_getAllDevices(self):
         print(self.db.getAllDevices("zonnax"))

@@ -382,6 +382,63 @@ CREATE PROCEDURE get_all_usernames ()
     FROM client JOIN user ON client.user_id = user.user_id;
   END //
 
+CREATE PROCEDURE update_device (
+    IN _username VARCHAR(30),
+    IN _device_id INTEGER,
+    IN _latitude DOUBLE,
+    IN _longitude DOUBLE)
+  BEGIN
+    DECLARE __client_id INTEGER;
+    
+    DECLARE __auth_field_name VARCHAR(30);
+    DECLARE __auth_field_value VARCHAR(500);
+
+    DECLARE __done INT DEFAULT FALSE;
+    DECLARE __cursor CURSOR FOR SELECT * FROM tmp_authentication_fields;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET __done = TRUE;
+
+    SELECT client_id INTO __client_id
+    FROM client_username
+    WHERE username = _username;
+
+    IF NOT EXISTS(SELECT *
+                  FROM client_device
+                  WHERE client_id = __client_id AND device_id = _device_id) THEN
+	    SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "This users doesn't own the device with this id";
+    END IF;
+
+    OPEN __cursor;
+
+    read_loop: LOOP
+      FETCH __cursor INTO __auth_field_name, __auth_field_value;
+      IF __done THEN
+        LEAVE read_loop;
+      END IF;
+
+      IF NOT EXISTS(SELECT * FROM authentication_field WHERE name = __auth_field_name
+                                                         AND device_id = _device_id) THEN
+	      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "One of the authentication fields received doen't exist";
+      END IF;
+
+      UPDATE authentication_field
+      SET authentication_field.value = __auth_field_value
+      WHERE device_id = _device_id
+        AND authentication_field.name = __auth_field_name;
+    END LOOP;
+
+    CLOSE __cursor;
+
+    IF _latitude IS NOT NULL AND _longitude IS NOT NULL AND (SELECT supported_device.type
+                                                                 FROM device JOIN supported_device ON device.type_id = supported_device.id
+                                                                 WHERE device.id = _device_id) = "home_device" THEN
+      UPDATE home_device_location
+      SET latitude = _latitude,
+          longitude = _longitude
+      WHERE device_id = _device_id;
+    END IF;
+
+  END //
+
 DELIMITER ;
 
 -- INSERT DATA
