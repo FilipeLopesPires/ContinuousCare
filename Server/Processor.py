@@ -163,6 +163,18 @@ class Processor:
         devices=self.database.getAllDevices(user)
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":devices}).encode("UTF-8")
 
+    def updateDevice(self, token, data):
+        if token not in self.userTokens:
+            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+
+        user=self.userTokens[token]
+
+        try:
+            result=self.database.updateDevice(user, json.loads(data.decode("UTF-8")))
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data": profile}).encode("UTF-8")
+        except Exception as e:
+            return  json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
+
     def addDevice(self, token, data):
         if token not in self.userTokens:
             return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")

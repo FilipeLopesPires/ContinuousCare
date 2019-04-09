@@ -26,13 +26,15 @@ def logout():
     userToken=request.headers["AuthToken"]
     return processor.logout(userToken)
 
-@app.route('/devices', methods = ['GET', 'POST'])
+@app.route('/devices', methods = ['GET', 'POST', 'PUT'])
 def devices():
     userToken=request.headers["AuthToken"]
     if request.method == 'GET':
         return processor.getAllDevices(userToken)
-    else:
+    elif request.method == 'POST':
         return processor.addDevice(userToken, request.data)
+    else:
+        return processor.updateDevice(userToken, request.data)
 
 @app.route('/environment', endpoint="Environment", methods = ['GET'])
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
