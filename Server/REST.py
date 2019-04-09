@@ -21,6 +21,11 @@ def signup():
 def signin():
     return processor.signin(request.data)
 
+@app.route('/logout', methods = ['GET'])
+def logout():
+    userToken=request.headers["AuthToken"]
+    return processor.logout(userToken)
+
 @app.route('/devices', methods = ['GET', 'POST'])
 def devices():
     userToken=request.headers["AuthToken"]

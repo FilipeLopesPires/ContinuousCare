@@ -6,10 +6,10 @@
 	important data as well as the time interval each metric should obey.",
 	"GPS":{	
 		"type":"GPS",
-		"url":"http://localhost:5555/gps/VARIABLE_USER",
+		"url":"http://mednat.ieeta.pt:8343/gps/VARIABLE_USER",
 		"header":"{}",
 		"getData":"{\"latitude\":jsonData[\"data\"][\"latitude\"],\"longitude\":jsonData[\"data\"][\"longitude\"]}",
-		"updateTime":10,
+		"updateTime":0.60,
 		"erroHandling":""
 	},
 	"externalAPI":{
@@ -38,9 +38,9 @@
 				"HeartRate":{
 					"type":"HealthStatus",
 					"url":"https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json",
-					"updateTime":5,
+					"updateTime":0.30,
 					"savingTime":120,
-					"getData":"{\"heartRate\":jsonData[\"activities-heart\"][0][\"value\"][\"restingHeartRate\"]}",
+					"getData":"{\"heartRate\":jsonData[\"activities-heart\"][0][\"value\"][\"restingHeartRate\"] if \"restingHeartRate\" in jsonData[\"activities-heart\"][0][\"value\"] else None}",
 					"saveCondition":"jsonData[\"restingHeartRate\"]>100 or jsonData[\"activities-heart\"][0][\"value\"][\"restingHeartRate\"]<60"	
 				},
 				"Sleep":{
@@ -55,7 +55,7 @@
 				"Calories":{
 					"type":"HealthStatus",
 					"url":"https://api.fitbit.com/1/user/-/activities/date/today.json",
-					"updateTime":5,
+					"updateTime":0.30,
 					"savingTime":720,
 					"getData":"{\"calories\":jsonData[\"summary\"][\"caloriesOut\"]}",
 					"saveCondition":"",
@@ -64,7 +64,7 @@
 				"Activity":{
 					"type":"HealthStatus",
 					"url":"https://api.fitbit.com/1/user/-/activities/date/today.json",
-					"updateTime":5,
+					"updateTime":50,
 					"savingTime":720,
 					"getData":"{\"fairlyActiveMinutes\":jsonData[\"summary\"][\"fairlyActiveMinutes\"], \"lightlyActiveMinutes\":jsonData[\"summary\"][\"lightlyActiveMinutes\"], \"sedentaryMinutes\":jsonData[\"summary\"][\"sedentaryMinutes\"], \"veryActiveMinutes\":jsonData[\"summary\"][\"veryActiveMinutes\"]}",
 					"saveCondition":"",
@@ -73,7 +73,7 @@
 				"Steps":{
 					"type":"HealthStatus",
 					"url":"https://api.fitbit.com/1/user/-/activities/date/today.json",
-					"updateTime":5,
+					"updateTime":50,
 					"savingTime":720,
 					"getData":"{\"steps\":jsonData[\"summary\"][\"steps\"]}",
 					"saveCondition":"",
