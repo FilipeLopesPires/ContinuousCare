@@ -106,12 +106,12 @@ export default {
         /* } */
     },
     async mounted() {
-        console.log("mounted is running")
+        //console.log("mounted is running")
         await this.getDevices(this.$store.getters.sessionToken)
         if(!this.requestError) {
-            console.log("no error");
+            //console.log("no error");
             //this.insertPhotos();
-            console.log(this.loaded_devices)
+            //console.log(this.loaded_devices)
             this.$store.dispatch('setDevices', this.loaded_devices);
         }
     },

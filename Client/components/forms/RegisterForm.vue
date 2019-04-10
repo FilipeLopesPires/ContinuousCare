@@ -162,6 +162,9 @@ export default {
                         .then(res => {
                             console.log(res)
                             return res;
+                        })
+                        .catch(e => {
+                            // error ...
                         });
         },
         async checkLogin(filledform) {

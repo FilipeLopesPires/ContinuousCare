@@ -15,8 +15,8 @@
             <div v-if="device.type=='Add Device'" class="mt-10">
                 <h5>Type:</h5>
                 <div class="form-select" id="service-select">
-                    <select @change="activateChosenType($event)" v-bind="$attrs" v-on="$listeners" v-model="filledmodal.type" class="nice-select list">
-                        <option class="option" value="" selected></option>
+                    <select @change="activateChosenType($event)" v-bind="$attrs" v-on="$listeners" v-model="type" class="nice-select list">
+                        <option class="option" value="" selected>Choose Type</option>
                         <option class="option" v-for="option in allOptions" :key="option.id" :value="option">{{ option }}</option>
                     </select>
                 </div>
@@ -30,18 +30,18 @@
             <div v-else>
                 <div class="mt-10" v-for="field in chosenDeviceFields" :key="field.id" :field="field"> 
                     <h5 >{{ field }}:</h5>
-                    <input type="text" placeholder="" class="single-input"> 
+                    <input type="text" placeholder="" :name="field" class="single-input"> 
                 </div>
             </div>
             <div class="mt-10 row justify-content-center d-flex align-items-center">
                 <div class="col-lg-6 col-md-6 row justify-content-center">
                 </div>
                 <div class="col-lg-3 col-md-3 row justify-content-right">
-                    <button v-if="device.type!='Add Device'" class="genric-btn primary radius text-uppercase" @click="onRemove" >Remove</button>
+                    <button v-if="device.type!='Add Device'" class="genric-btn primary radius text-uppercase" @click="onRemove" type="button" >Remove</button>
                 </div>
                 <div class="col-lg-3 col-md-3 row justify-content-right">
-                    <button v-if="device.type!='Add Device'" class="genric-btn info radius text-uppercase" @click="onUpdate" >Update</button>
-                    <button v-else class="genric-btn info radius text-uppercase" @click="onAdd" >Add</button>
+                    <button v-if="device.type!='Add Device'" class="genric-btn info radius text-uppercase" @click="onUpdate" type="button" >Update</button>
+                    <button v-else class="genric-btn info radius text-uppercase" @click="onAdd" type="button" >Add</button>
                 </div>
             </div>
         </form>
@@ -85,18 +85,12 @@ export default {
     data() {
         var allOptions = ["FitBit Charge 3", "Foobot "];
         var chosenDeviceFields = [];
+        var type = "";
 
         return {
             allOptions,
             chosenDeviceFields,
-            filledmodal: {
-                type: "",
-                token: "",
-                refresh_token: "",
-                uuid: "",
-                latitude: "",
-                longitude: ""
-            }
+            type,
         }
     },
     methods: {
@@ -109,6 +103,8 @@ export default {
                 this.chosenDeviceFields = ["token","refresh_token"];
             } else if(event.target.value==this.allOptions[1]) {
                 this.chosenDeviceFields = ["token","uuid","latitude","longitude"];
+            } else {
+                // error ...
             }
         },
         async onAdd() {
@@ -116,12 +112,12 @@ export default {
             // do something ...
 
             /* Server Validation */
-            var result = await this.sendDevice(this.filledmodal, this.$store.getters.sessionToken);
+            var result = await this.sendDevice(this.type, this.$store.getters.sessionToken);
             if(result.status==0){
                 console.log("success");
-                //this.$router.push("/devices");
+                this.$router.push("/devices");
             } else {
-                // warn that device fields are invalid
+                // error ... warn that device fields are invalid
             }
         },
         onUpdate() {
@@ -130,19 +126,38 @@ export default {
         onRemove() {
             // to do ...
         },
-        async sendDevice(filledmodal,AuthToken) {
-            console.log(AuthToken)
+        async sendDevice(type,AuthToken) {
             const config = {
                 headers: {'AuthToken': AuthToken},
-                'type': filledmodal.type,
-                'authentication_fields': {'token': filledmodal.token, 'refresh_token': filledmodal.refresh_token, 'uuid': filledmodal.uuid},
-                'latitude': filledmodal.latitude,
-                'longitude': filledmodal.longitude
             }
-            return await this.$axios.$post("/devices",config)
+            var data = {}
+            if(type == this.allOptions[0]) {
+                data = {
+                    'type': type,
+                    'authentication_fields': {
+                        'token': document.querySelector("input[name=token]").value, 
+                        'refresh_token': document.querySelector("input[name=refresh_token]").value },
+                }
+            } else if (type == this.allOptions[1]) {
+                 data = {
+                    'type': type,
+                    'authentication_fields': {
+                        'uuid': document.querySelector("input[name=uuid]").value,
+                        'token': document.querySelector("input[name=token]").value},
+                    'latitude': parseFloat(document.querySelector("input[name=latitude]").value),
+                    'longitude': parseFloat(document.querySelector("input[name=longitude]").value)
+                }
+            } else {
+                // error ...
+            }
+            console.log(data);
+            return await this.$axios.$post("/devices", data, config)
                         .then(res => {
                             console.log(res)
                             return res;
+                        })
+                        .catch(e => {
+                            // error ...
                         });
         },
     },

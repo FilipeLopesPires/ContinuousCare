@@ -13,14 +13,47 @@
             </div> -->
 
             <!--================ Graphics Area =================-->
-                <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
-                    <div class="blog_right_sidebar">
-                        <apexchart v-if="showChart" id="apexchart-line" width="700" height="450" type="line" :options="chartOptions" :series="series"></apexchart>
-                        <div v-else><h1>Unable to load information.</h1></div>
-                        <!-- <button class="genric-btn info" @click="updateChart">Update!</button> -->
-                        <PaginationBox />
-                    </div>
+            
+            <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
+                <div class="blog_right_sidebar">
+                    <form class="form-wrap" @submit.prevent="onLoadChart">
+                        <!-- <div class="row justify-content-center d-flex align-items-center">
+                            <div class="mt-10 col-lg-6 col-md-6 single-team " >
+                                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password" type="password" name="password" placeholder="Password *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password *'">
+                            </div>
+                            <div class="mt-10 col-lg-6 col-md-6 single-team ">
+                                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password_confirmation" type="password" name="password_confirmation" placeholder="Confirm Password *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm Password *'">
+                            </div>
+                        </div> -->
+                        <!-- Start -->
+                        <div class="mt-10">
+                            <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.start" type="text" name="start" placeholder="Start Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Start Time'">
+                        </div>
+                        <!-- End -->
+                        <div class="mt-10">
+                            <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.end" type="text" name="end" placeholder="End Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'End Time'">
+                        </div>
+                        <!-- Interval -->
+                        <div class="mt-10">
+                            <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.interval" type="text" name="interval" placeholder="Time Interval" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Time Interval'">
+                        </div>
+                        <!-- Submit -->
+                        <div class="row justify-content-center d-flex align-items-center">
+                            <div class="mt-10 col-lg-6">
+                                <button class="genric-btn success medium text-uppercase" type="submit">Load Chart</button>
+                            </div>
+                            <div class="mt-10 col-lg-6">
+                                <button class="genric-btn primary medium text-uppercase" type="button" @click="changeChartSource">Change Source</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div><p></p></div>
+                    <apexchart v-if="showChart" id="apexchart-line" width="700" height="450" type="line" :options="chartOptions" :series="series"></apexchart>
+                    <div v-else><h1>Unable to load information.</h1></div>
+                    <!-- <button class="genric-btn info" @click="updateChart">Update!</button> -->
+                    <PaginationBox />
                 </div>
+            </div>
 
             <!--================ Footer Area =================-->
             <PageFooter />
@@ -53,13 +86,23 @@ export default {
         /* var environment = {"time":[], "latitude": [], "longitude": [], 
                         "aqi": [], "no2": [], "o3": [], "p": [], "pm10": [], "pm25": [], "so2": [], "t": []}; */
         
+        var chartSource = "/healthstatus";
+        
         var requestError = false;
         var showChart = false;
         var serverData = {}
         return {
+            chartSource,
+
             showChart,
             requestError,
             serverData,
+
+            filledform: {
+                start: null,
+                end: null,
+                interval: null,
+            },
 
             chartOptions: {
                 xaxis: {
@@ -75,8 +118,8 @@ export default {
     },
     async mounted() {
         //this.$axios.$get("https://reqres.in/api/users?page=2")
-
-        await this.getServerData('1554745367', this.$store.getters.sessionToken, "/healthstatus")
+        this.onLoadChart()
+        /* await this.getServerData(this.filledform.start, this.filledform.end, this.filledform.interval, this.$store.getters.sessionToken, "/healthstatus")
         if(!this.requestError) {
             console.log("no error")
             this.showChart = true;
@@ -97,12 +140,36 @@ export default {
             }
             this.chartOptions = chartOptions;
             this.series = series;
-        }
+        } */
     },
     methods: {
-        async getServerData(start,AuthToken,restPath) {
+        async onLoadChart() {
+            console.log(this.chartSource)
+            await this.getServerData(this.filledform.start, this.filledform.end, this.filledform.interval, this.$store.getters.sessionToken, this.chartSource)
+            if(!this.requestError) {
+                this.showChart = true;
+                var chartOptions = {
+                    xaxis: {
+                        type: 'seconds',
+                        categories: this.serverData.time,
+                    },
+                };
+                var series = []
+                for(var metric in this.serverData) {
+                    if(metric!='time' & metric!='latitude' & metric!='longitude') {
+                        series.push({
+                            name: metric,
+                            data: this.serverData[metric],
+                        })
+                    }
+                }
+                this.chartOptions = chartOptions;
+                this.series = series;
+            }
+        },
+        async getServerData(start,end,interval,AuthToken,restPath) {
             const config = {
-                params: {'start': start},
+                params: {'start': start, 'end': end, 'interval': interval},
                 headers: {'AuthToken': AuthToken}
             }
             //console.log("inside)" + this.showChart);
@@ -118,6 +185,14 @@ export default {
                                     this.requestError = true;
                                     return {};
                                 });
+        },
+        changeChartSource() {
+            if(this.chartSource == "/healthstatus") {
+                this.chartSource = "/environment";
+            } else {
+                this.chartSource = "/healthstatus";
+            }
+            this.onLoadChart();
         }
         /* onGoBack() {
             this.$router.push("/")
