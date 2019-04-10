@@ -117,7 +117,7 @@ class Processor:
                 self.userURLS[user]={}
 
                 for key in self.externalAPI:
-                    if key in self.userURLS[user][key]:
+                    if key in self.userURLS[user]:
                         self.userURLS[user][key]=dict(self.userURLS[user][key], **self.externalAPI[key])
                     else:
                         self.userURLS[user][key]=self.externalAPI[key]
