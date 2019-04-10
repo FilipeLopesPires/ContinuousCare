@@ -117,7 +117,7 @@ class Processor:
                 self.userURLS[user]={}
 
                 for key in self.externalAPI:
-                    if key in urls:
+                    if key in self.userURLS[user][key]:
                         self.userURLS[user][key]=dict(self.userURLS[user][key], **self.externalAPI[key])
                     else:
                         self.userURLS[user][key]=self.externalAPI[key]
@@ -182,6 +182,7 @@ class Processor:
         user=self.userTokens[token]
         try:
             jsonData=json.loads(data.decode("UTF-8"))
+
 
             deviceToken=jsonData["authentication_fields"]["token"]
             
