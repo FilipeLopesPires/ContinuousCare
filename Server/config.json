@@ -6,7 +6,7 @@
 	important data as well as the time interval each metric should obey.",
 	"GPS":{	
 		"type":"GPS",
-		"url":"http://mednat.ieeta.pt:8343/gps/VARIABLE_USER",
+		"url":"http://gps_module:5555/gps/VARIABLE_USER",
 		"header":"{}",
 		"getData":"{\"latitude\":jsonData[\"data\"][\"latitude\"],\"longitude\":jsonData[\"data\"][\"longitude\"]}",
 		"updateTime":0.60,

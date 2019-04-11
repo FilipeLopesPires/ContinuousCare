@@ -66,7 +66,8 @@ class InfluxProxy:
         :return: list of maps
         :rtype: list
         """
-        assert not interval or re.match("[1-9]([0-9]+)?(ns|u|ms|s|m|h|d|w)", interval)
+        if not interval or re.match("[1-9]([0-9]+)?(ns|u|ms|s|m|h|d|w)", interval):
+            raise ValueError("Interval argument must follow the regex  -> [1-9]([0-9]+)?(ns|u|ms|s|m|h|d|w)")
 
         # Parameters on query only work on the where clause
         params = {
@@ -81,21 +82,21 @@ class InfluxProxy:
 
             if begin_time is not None:
                 query += " AND time >= $begin_time AND time <= $begin_time + " + interval
-                params["begin_time"] = begin_time * 1000000000
+                params["begin_time"] = int(str(begin_time).ljust(19, "0"))
 
             elif end_time is not None:
                 query += " AND time <= $end_time AND time >= $end_time - " + interval
-                params["end_time"] = end_time * 1000000000
+                params["end_time"] = int(str(end_time).ljust(19, "0"))
             else:
-                query += " AND time >= now() - $interval"
+                query += " AND time >= now() - " + interval
 
         elif begin_time is not None:
             query += " AND time >= $begin_time"
-            params["begin_time"] = begin_time * 1000000000
+            params["begin_time"] = int(str(begin_time).ljust(19, "0"))
 
         elif end_time is not None:
             query += " AND time <= $end_time"
-            params["end_time"] = end_time * 1000000000
+            params["end_time"] = int(str(end_time).ljust(19, "0"))
 
         else:
             query += " ORDER BY time DESC LIMIT 1"

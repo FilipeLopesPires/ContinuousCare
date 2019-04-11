@@ -5,11 +5,15 @@ services:
     image: frontend
     ports:
       - "8081:3000"
+    networks:
+      - all
   back_end:
     build: ./Server
     image: backend
     ports:
       - "8082:5000"
+    networks:
+      - all
     depends_on:
       - db_relational
       - db_time_series
@@ -18,17 +22,30 @@ services:
     image: gpsmodule
     ports:
       - "8083:5555"
+    networks:
+      - all
   db_relational:
     build: ./database/relational
     image: dbrelational
-    expose:
-      - "3306"
     volumes:
       - $HOME/database/relational:/var/lib/mysql
+    expose:
+      - "3306"
+    networks:
+      - all
   db_time_series:
     build: ./database/time_series
     image: dbtime_series
-    expose:
-      - "8086"
     volumes:
       - $HOME/database/time_series:/var/lib/influxdb
+    expose:
+      - "8086"
+    networks:
+      - all
+
+networks:
+  all:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.1.0.0/16

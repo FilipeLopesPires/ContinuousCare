@@ -239,13 +239,15 @@ class MySqlProxy:
                  type_id,
                  type,
                  brand,
-                 model, auth_field_name,
+                 model,
+                 photo, auth_field_name,
                         auth_field_value, latitude,
                                           longitude) in next(cursor.stored_results()).fetchall():
                 if device_id not in devices.keys():
                     device = {
                         "id": device_id,
                         "type": "%s %s" % (brand, model),
+                        "photo": photo
                     }
                     if latitude: # if one exist both exist
                         device["latitude"] = latitude

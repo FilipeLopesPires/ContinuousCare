@@ -102,7 +102,8 @@ create table supported_device (
 -- PRIMARY KEY
   type                    enum("bracelet", "home_device"), -- TODO doesn't allow extensability
   brand                   varchar(30),
-  model                   varchar(30)
+  model                   varchar(30),
+  photo                   varchar(200)
 );
 
 create table device (
@@ -204,6 +205,7 @@ CREATE PROCEDURE get_all_client_devices (
            supported_device.type,
            supported_device.brand,
            supported_device.model,
+           supported_device.photo,
            authentication_field.name,
            authentication_field.value,
            home_device_location.latitude,
@@ -460,8 +462,8 @@ INSERT INTO metric (name, unit) values ("Heart Rate", "bpm"),
                                        ("Relative polution", "Percentage (%)");
                                        -- Foobot ^^
 
-INSERT INTO supported_device (type, brand, model) values ("bracelet", "FitBit", "Charge 3"),
-                                                         ("home_device", "Foobot", "");
+INSERT INTO supported_device (type, brand, model, photo) values ("bracelet", "FitBit", "Charge 3", "https://ss7.vzw.com/is/image/VerizonWireless/fitbit-charge3-graphite-black-fb409gmbk-a?$png8alpha256$&hei=410"),
+                                                         ("home_device", "Foobot", "", "https://cdn.shopify.com/s/files/1/0008/7330/0029/products/foobot_x700.jpg?v=1528342886");
 
 INSERT INTO supported_metric (metric_id, device_id) values (1 , 1),
                                                            (2 , 1),

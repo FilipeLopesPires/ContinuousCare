@@ -4,3 +4,4 @@ Dockerfile
 plugins/*
 !plugins/js
 !plugins/core-components.js
+!plugins/localStorage.js
