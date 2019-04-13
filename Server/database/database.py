@@ -109,7 +109,12 @@ class Database:
 
 
     def getAllUsers(self):
-        """"""
+        """
+        Obtain all usernames of all clients registered on the system
+
+        :return: all usernames of all clients
+        :rtype: list
+        """
         return self.relational_proxy.get_all_usernames()
 
     def addDevice(self, user, data):
@@ -148,7 +153,15 @@ class Database:
         self.relational_proxy.updtate_device(user, device_id, data)
 
     def deleteDevice(self, user, device_id):
-        """"""
+        """
+        Deassociates a device from a user deleating associated infor with the device
+
+        :param user: username of the client
+        :type user: str
+        :param device_id: id of the device to update
+        :type device_id: int
+        """
+        self.relational_proxy.delete_device(user, device_id)
 
     def getAllDevices(self, user):
         """
@@ -261,11 +274,13 @@ class Database:
 
     def insert(self, measurement, data, user):
         """
+        Inserts new data to the influx database. This is historical data retrived from
+        devices or external apis.
 
-        :param measurement:
+        :param measurement: nome of the measument to where to write the values
         :type measurement: str
-        :param data:
-        :type data: list or dict
+        :param data: several fields to write
+        :type data: dict
         :param user: username of the client
         :type user: str
         """

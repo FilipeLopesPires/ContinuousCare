@@ -441,6 +441,22 @@ CREATE PROCEDURE update_device (
 
   END //
 
+CREATE PROCEDURE delete_device (
+    IN _username VARCHAR(30),
+    IN _device_id INTEGER)
+  BEGIN
+    IF NOT EXISTS(SELECT *
+                  FROM client_device JOIN client_username ON client_device.client_id = client_username.client_id
+                  WHERE client_username.username = _username AND device_id = _device_id) THEN
+           SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "No such device associated with that user";
+    END IF;
+
+    DELETE FROM home_device_location WHERE device_id = _device_id;
+    DELETE FROM authentication_field WHERE device_id = _device_id;
+    DELETE FROM client_device WHERE device_id = _device_id;
+    DELETE FROM device WHERE id = _device_id;
+  END //
+
 DELIMITER ;
 
 -- INSERT DATA

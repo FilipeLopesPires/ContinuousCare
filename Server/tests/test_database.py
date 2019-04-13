@@ -69,6 +69,7 @@ class TestDatabaseProxy(unittest.TestCase):
             }
         )
 
+    @unittest.skip
     def test_updateDevice(self):
         self.db.updateDevice("zonnax", {
             "id": 3,
@@ -77,6 +78,10 @@ class TestDatabaseProxy(unittest.TestCase):
             "latitude": 1,
             "longitude": 1,
         })
+
+    @unittest.skip
+    def test_deleteDevice(self):
+        self.db.deleteDevice("zonnax", 3)
 
     @unittest.skip
     def test_getAllDevices(self):

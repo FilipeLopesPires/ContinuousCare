@@ -32,7 +32,7 @@ class StoredProcedures:
     INSERT_SLEEP_SESSION = "insert_sleep_session"
     GET_SLEEP_SESSIONS = "get_sleep_sessions"
     UPDATE_DEVICE = "update_device"
-    #DELETE_DEVICE = "delete_device"
+    DELETE_DEVICE = "delete_device"
 
 
 class MySqlProxy:
@@ -454,3 +454,22 @@ class MySqlProxy:
             conn.commit()
         finally:
             self._close_conenction(conn, cursor)
+
+    def delete_device(self, username, device_id):
+        """
+        Deassociates a device from a user deleting any information associated with the device
+
+        :param username: of the client
+        :type username: str
+        :param device_id: id of the device to delete
+        :type device_id: int
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.DELETE_DEVICE, (username, device_id))
+
+            conn.commit()
+        finally:
+            self._close_conenction(conn, cursor)
+
