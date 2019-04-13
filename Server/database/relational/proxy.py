@@ -33,6 +33,12 @@ class StoredProcedures:
     GET_SLEEP_SESSIONS = "get_sleep_sessions"
     UPDATE_DEVICE = "update_device"
     DELETE_DEVICE = "delete_device"
+    REQUEST_PERMISSION = "request_permission"
+    GRANT_PERMISSION = "grant_permission"
+    ACCEPT_PERMISSION = "accept_permission"
+    REJECT_PERMISSION = "reject_permission"
+    HAS_PERMISSION = "has_permission"
+    GET_HISTORICAL_PERMISSIONS = "get_historical_permissions"
 
 
 class MySqlProxy:
@@ -395,7 +401,19 @@ class MySqlProxy:
             self._close_conenction(conn, cursor)
 
     def get_sleep_sessions(self, username, begin=None, end=None):
-        """"""
+        """
+        Get information of the sleep session that belongs to the days within the interval
+        of the dates received on the arguments
+
+        :param username: of the client
+        :type username: str
+        :param begin: all sleep sesisons after this date
+        :type begin: datetime.date
+        :param end: all sleep sessions before this date
+        :type end: datetime.date
+        :return: information of all sleep sessions that respect the arguments received
+        :rtype: list
+        """
         try:
             conn, cursor = self._init_connection()
 
@@ -424,6 +442,7 @@ class MySqlProxy:
 
     def updtate_device(self, username, device_id, data):
         """
+        Update information, authentication fields, of a device associated with a client
 
         :param username: of the client
         :type username: str
@@ -473,3 +492,116 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
+    def request_permission(self, medic, client, duration):
+        """
+        A medic requests temporary permission to see a client's data
+
+        :param medic: username of the medic
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        :param duration: for how long the permission will be up
+        :type duration: datetime.timedelta
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, duration))
+
+            conn.commit()
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def grant_permission(self, client, medic, duration):
+        """
+        A clients grants temporary permission to a medic to let him see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the client
+        :type medic: str
+        :param duration: for how long the permission will be up
+        :type duration: datetime.timedelta
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GRANT_PERMISSION, (client, medic, duration))
+
+            conn.commit()
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def accept_permission(self, client, medic):
+        """
+        A client accepts a pending request created by a medic to see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.ACCEPT_PERMISSION, (client, medic))
+
+            conn.commit()
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def reject_permission(self, client, medic):
+        """
+        A client rejects a pending request created by a medic to see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.REJECT_PERMISSION, (client, medic))
+
+            conn.commit()
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def has_permission(self, medic, client):
+        """
+        Verifies if a medic [still] has access to client's data
+
+        :param medic:
+        :type medic: str
+        :param client:
+        :type client: str
+        :return: true if it has, false otherwise
+        :rtype: bool
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.HAS_PERMISSION, (medic, client))
+
+            return next(cursor.stored_results).fetchone()[0] == 1
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_historical_permissions(self, user):
+        """
+        Obtains information of permissions that WERE active
+
+        :param user: username of the client
+        :type user: str
+        :return: all historical permissions
+        :rtype: list
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_HISTORICAL_PERMISSIONS, [user])
+
+            return next(cursor.stored_results).fetchall()
+        finally:
+            self._close_conenction(conn, cursor)

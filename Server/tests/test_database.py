@@ -153,6 +153,23 @@ class TestDatabaseProxy(unittest.TestCase):
             }
         )
 
+    def test_requestPermission(self):
+        pass
+
+    def test_grantPermission(self):
+        pass
+
+    def test_acceptPermission(self):
+        pass
+
+    def test_rejectPermission(self):
+        pass
+
+    def test_hasPermission(self):
+        pass
+
+    def test_getHistoricalPermissions(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()

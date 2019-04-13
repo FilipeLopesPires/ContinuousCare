@@ -159,6 +159,10 @@ CREATE VIEW client_username AS
     SELECT client.client_id AS client_id, user.username AS username
     FROM client JOIN user ON client.user_id = user.user_id;
 
+CREATE VIEW medic_username AS
+    SELECT medic.medic_id AS medic_id, user.username AS username
+    FROM medic JOIN user ON medic.user_id = user.user_id;
+
 DELIMITER //
 
 CREATE PROCEDURE insert_client (
@@ -455,6 +459,43 @@ CREATE PROCEDURE delete_device (
     DELETE FROM authentication_field WHERE device_id = _device_id;
     DELETE FROM client_device WHERE device_id = _device_id;
     DELETE FROM device WHERE id = _device_id;
+  END //
+
+CREATE PROCEDURE request_permission (
+    IN _medic VARCHAR(30),
+    IN _client VARCHAR(30),
+    IN _duration time)
+  BEGIN
+  END //
+
+CREATE PROCEDURE grant_permission (
+    IN _client VARCHAR(30),
+    IN _medic VARCHAR(30),
+    IN _duration time)
+  BEGIN
+  END //
+
+CREATE PROCEDURE accept_permission (
+    IN _client VARCHAR(30),
+    IN _medic VARCHAR(30))
+  BEGIN
+  END //
+
+CREATE PROCEDURE reject_permission (
+    IN _client VARCHAR(30),
+    IN _medic VARCHAR(30))
+  BEGIN
+  END //
+
+CREATE PROCEDURE has_permission (
+    IN _medic VARCHAR(30),
+    IN _client VARCHAR(30))
+  BEGIN
+  END //
+
+CREATE PROCEDURE get_historical_permissions (
+    IN _client VARCHAR(30))
+  BEGIN
   END //
 
 DELIMITER ;

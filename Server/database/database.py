@@ -103,11 +103,6 @@ class Database:
         """
         return self.relational_proxy.get_user_profile_data(user)
 
-    def deleteProfile(self, user):
-        """"""
-        pass
-
-
     def getAllUsers(self):
         """
         Obtain all usernames of all clients registered on the system
@@ -212,9 +207,9 @@ class Database:
         data = {}
 
         if measurement == "sleep":
-            if not start and not end: #both None last
+            if not start and not end: #both None -> last
                 results = self.relational_proxy.get_sleep_sessions(user)
-            elif start: # just end None  from start
+            elif start: # just end None -> from start
                 start_date = datetime.date.fromtimestamp(start)
                 results = self.relational_proxy.get_sleep_sessions(user, start_date)
             else: # within
@@ -325,3 +320,76 @@ class Database:
                     "fields": data
                 }]
             )
+
+    def requestPermission(self, medic, client, duration):
+        """
+        A medic requests temporary permission to see a client's data
+
+        :param medic: username of the medic
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        :param duration: for how long the permission will be up
+        :type duration: int # TODO define if its decimal of not
+        """
+        self.relational_proxy.request_permission(medic, client, datetime.timedelta(hours=duration))
+
+    def grantPermission(self, client, medic, duration):
+        """
+        A clients grants temporary permission to a medic to let him see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the client
+        :type medic: str
+        :param duration: for how long the permission will be up
+        :type duration: int # TODO define if its decimal of not
+        """
+        self.relational_proxy.grant_permission(client, medic, datetime.timedelta(hours=duration))
+
+    def acceptPermission(self, client, medic):
+        """
+        A client accepts a pending request created by a medic to see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        self.relational_proxy.accept_permission(client, medic)
+
+    def rejectPermission(self, client, medic):
+        """
+        A client rejects a pending request created by a medic to see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        self.relational_proxy.reject_permission(client, medic)
+
+    def hasPermission(self, medic, client):
+        """
+        Verifies if a medic [still] has access to client's data
+
+        :param medic:
+        :type medic: str
+        :param client:
+        :type client: str
+        :return: true if it has, false otherwise
+        :rtype: bool
+        """
+        return self.relational_proxy.has_permission(medic, client)
+
+    def getHistoricalPermissions(self, user):
+        """
+        Obtains information of permissions that WERE active
+
+        :param user: username of the client
+        :type user: str
+        :return: all historical permissions
+        :rtype: list
+        """
+        for (a,b,c) in self.relational_proxy.get_historical_permissions(user): #TODO
+            pass
