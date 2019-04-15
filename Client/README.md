@@ -1,6 +1,6 @@
-# ContinuousCare
+# continuous_care
 
-> System&#39;s Client Side: Node + Vue + Nuxt
+> Client Side: Node + Vue + Nuxt
 
 ## Build Setup
 

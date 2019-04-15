@@ -1,8 +1,7 @@
-const pkg = require('./package')
+import pkg from './package'
 
-
-module.exports = {
-  mode: 'spa',
+export default {
+  mode: 'universal',
 
   /* Headers of the page */
   head: {
@@ -27,7 +26,6 @@ module.exports = {
       { src: '/vendors/nice-select/js/jquery.nice-select.min.js'},
       { src: 'https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js'},
       { src: 'https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js'},
-      { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyA7nx22ZmINYk9TGiXDEXGVxghC43Ox6qA'}, // key problem must be solved
     ]
   },
 
@@ -50,25 +48,20 @@ module.exports = {
   /* Plugins to load before mounting the App */
   plugins: [
     '~plugins/core-components.js',
-    { src: '~/plugins/localStorage.js', ssr: false },
-    { src: '~plugins/vue-js-modal', ssr: false},
-    { src: '~plugins/js/custom.js', ssr: false},
-    /* { src: '~plugins/js/mail-script.js', ssr: false},
-    { src: '~plugins/js/jquery.ajaxchimp.min.js', ssr: false}, */
+    /* { src: '~/plugins/localStorage.js', ssr: false },
+    { src: '~node_modules/vuex-persistedstate', ssr: false},
+    { src: '~node_modules/vue-js-modal', ssr: false},
+    { src: '~node_modules/apexcharts', ssr: false},
+    { src: '~node_modules/vue-apexcharts', ssr: false}, */
   ],
 
   /* Nuxt.js modules */
   modules: [
-    // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
-    // Doc: https://bootstrap-vue.js.org/docs/ 
     'bootstrap-vue/nuxt',
   ],
-
   /* Axios module configuration */
   axios: {
-    // See https://github.com/nuxt-community/axios-module#options
-    //baseURL: "http://192.168.43.136:5000",
     baseURL: "http://mednat.ieeta.pt:8342",
   },
 
@@ -78,9 +71,7 @@ module.exports = {
 
   /* Build configuration */
   build: {
-    // You can extend webpack config here
     extend(config, ctx) {
-      
     }
   }
 }

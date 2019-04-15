@@ -46,7 +46,7 @@
             <div class="input-group-icon mt-10 single-team single-input justify-content-center d-flex align-items-center">
                 <p class="mt-10">Date of Birth </p> 
                 <!-- <DatePicker v-bind="$attrs" v-on="$listeners" v-model="filledform.birthdate" /> -->
-                <datepicker v-bind="$attrs" v-on="$listeners" :value="filledform.birthdate" format="DD-MM-YYYY" name="birthdate" placeholder="Date of Birth"></datepicker>
+                <!-- <datepicker v-bind="$attrs" v-on="$listeners" :value="filledform.birthdate" format="DD-MM-YYYY" name="birthdate" placeholder="Date of Birth"></datepicker> -->
                 
             </div>
             
@@ -96,12 +96,12 @@
 
 <script>
 /* import DatePicker from '@/components/forms/DatePicker.vue'; */
-import datepicker from 'vue-date-picker'
+/* import datepicker from 'vue-date-picker' */
 
 export default {
     components: {
         /* DatePicker */
-        datepicker
+        /* datepicker */
     },
     data() {
         return {

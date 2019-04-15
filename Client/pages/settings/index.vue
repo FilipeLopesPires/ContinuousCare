@@ -18,6 +18,7 @@
 <script>
 
 export default {
+    middleware: ['check-log', 'log'],
     components: {
         
     },

@@ -72,6 +72,7 @@ Vue.use(VueApexCharts)
 import PaginationBox from '@/components/boxes/PaginationBox.vue'
 
 export default {
+    middleware: ['check-log', 'log'],
     components: {
         PaginationBox,
     },

@@ -45,30 +45,19 @@
                 </div>
             </div>
         </form>
-
-    <!-- 
-        Info:
-        - Brand
-        - Model
-        - Token
-        - Type
-        - Supported Metrics
-        Operations:
-        - Update
-        - Remove
-    -->
-    <!-- 
-        Info:
-        - Type (dos disponiveis)
-        - Token
-        Operations:
-        - Add
-     -->
-
     </modal>
 </template>
 
 <script>
+/* 
+import VModal from 'vue-js-modal'
+Vue.component('vmodal', VModal)
+Vue.use(VModal) */
+import Vue from 'vue'
+import VModal from 'vue-js-modal'
+Vue.component('vmodal', VModal)
+Vue.use(VModal)
+
 import BasicTable from '@/components/tables/BasicTable.vue'
 
 export default {

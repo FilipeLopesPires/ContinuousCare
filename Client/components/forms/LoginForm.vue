@@ -39,7 +39,7 @@ export default {
         }
     },
     methods: {
-        async onSubmit() {
+        /* async onSubmit() {
             //console.log(this.filledform);
             var result = await this.checkLogin(this.filledform);
             if(result.status==0){
@@ -49,6 +49,10 @@ export default {
             } else {
                 // warn that login fields are invalid
             }
+        }, */
+        async onSubmit() {
+            this.$store.dispatch('setSessionToken', 'development-token');
+            this.$router.push("/");
         },
         forgotMyPassword() {
             console.log("ask for email");
@@ -61,7 +65,7 @@ export default {
             }
             return await this.$axios.$post("/signin",config)
                         .then(res => {
-                            console.log(res)
+                            //console.log(res)
                             return res;
                         });
         }

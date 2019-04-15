@@ -60,6 +60,7 @@
 import DeviceBox from '@/components//boxes/DeviceBox.vue'
 
 export default {
+    middleware: ['check-log', 'log'],
     components: {
         DeviceBox,
     },

@@ -112,9 +112,9 @@ export default {
         },
         logout() {
             //$cookies.remove()
-            console.log("testing logout");
+            //console.log("testing logout");
             this.$nextTick(() => { 
-                this.$store.dispatch('loadedDevices', []),
+                this.$store.dispatch('setDevices', []),
                 this.$store.dispatch('setSessionToken', null) 
             });
         }
