@@ -156,10 +156,16 @@ class TestDatabaseProxy(unittest.TestCase):
     def test_requestPermission(self):
         pass
 
+    def test_deleteRequestPermission(self):
+        pass
+
     def test_grantPermission(self):
         pass
 
     def test_acceptPermission(self):
+        pass
+
+    def test_deleteAcceptedPermission(self):
         pass
 
     def test_rejectPermission(self):
@@ -169,6 +175,9 @@ class TestDatabaseProxy(unittest.TestCase):
         pass
 
     def test_getHistoricalPermissions(self):
+        pass
+
+    def test_allPermissionsData(self):
         pass
 
 if __name__ == '__main__':

@@ -36,7 +36,9 @@ class StoredProcedures:
     REQUEST_PERMISSION = "request_permission"
     GRANT_PERMISSION = "grant_permission"
     ACCEPT_PERMISSION = "accept_permission"
-    REJECT_PERMISSION = "reject_permission"
+    REMOVE_ACCEPTED_PERMISSION = "remove_accepted_permission"
+    REJECT_PERMISSION = "delete_permission"
+    DELETE_PERMISSION = REJECT_PERMISSION
     HAS_PERMISSION = "has_permission"
     GET_HISTORICAL_PERMISSIONS = "get_historical_permissions"
 
@@ -156,8 +158,6 @@ class MySqlProxy:
             )
 
             new_id = next(cursor.stored_results()).fetchone()[0]
-
-            conn.commit()
 
             return new_id
         finally:
@@ -370,8 +370,6 @@ class MySqlProxy:
                                                                                       birth_year),
                                                                         birth_date, weight,
                                                                         height, additional_information))
-
-            conn.commit()
         finally:
             self._close_conenction(conn, cursor)
 
@@ -395,8 +393,6 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.INSERT_SLEEP_SESSION, (username, day, duration, begin, end))
-
-            conn.commit()
         finally:
             self._close_conenction(conn, cursor)
 
@@ -487,8 +483,6 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.DELETE_DEVICE, (username, device_id))
-
-            conn.commit()
         finally:
             self._close_conenction(conn, cursor)
 
@@ -507,8 +501,22 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, duration))
+        finally:
+            self._close_conenction(conn, cursor)
 
-            conn.commit()
+    def delete_request_permission(self, medic, client):
+        """
+        Allows a medic to delete a request permission done previously
+
+        :param medic: username of the medic
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.DELETE_PERMISSION, (client, medic))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -527,8 +535,6 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.GRANT_PERMISSION, (client, medic, duration))
-
-            conn.commit()
         finally:
             self._close_conenction(conn, cursor)
 
@@ -545,8 +551,22 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.ACCEPT_PERMISSION, (client, medic))
+        finally:
+            self._close_conenction(conn, cursor)
 
-            conn.commit()
+    def delete_accepted_permission(self, client, medic):
+        """
+        Allows a client to delete an accepted permission (still not active)
+
+        :param client: username of the medic
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.REMOVE_ACCEPTED_PERMISSION, (client, medic))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -563,8 +583,6 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.REJECT_PERMISSION, (client, medic))
-
-            conn.commit()
         finally:
             self._close_conenction(conn, cursor)
 

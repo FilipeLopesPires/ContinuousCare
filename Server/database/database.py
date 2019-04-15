@@ -334,6 +334,17 @@ class Database:
         """
         self.relational_proxy.request_permission(medic, client, datetime.timedelta(hours=duration))
 
+    def deleteRequestPermission(self, medic, client):
+        """
+        Allows a medic to delete a request permission done previously
+
+        :param medic: username of the medic
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        """
+        self.relational_proxy.delete_request_permission(medic, client)
+
     def grantPermission(self, client, medic, duration):
         """
         A clients grants temporary permission to a medic to let him see his data
@@ -357,6 +368,17 @@ class Database:
         :type medic: str
         """
         self.relational_proxy.accept_permission(client, medic)
+
+    def deleteAcceptedPermission(self, client, medic):
+        """
+        Allows a client to delete an accepted permission (still not active)
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        self.relational_proxy.delete_accepted_permission(client, medic)
 
     def rejectPermission(self, client, medic):
         """
@@ -386,10 +408,21 @@ class Database:
         """
         Obtains information of permissions that WERE active
 
-        :param user: username of the client
+        :param user: username of the client TODO maybe also for medic
         :type user: str
         :return: all historical permissions
         :rtype: list
         """
         for (a,b,c) in self.relational_proxy.get_historical_permissions(user): #TODO
             pass
+
+    def allPermissionsData(self, user):
+        """
+        Used by both medic and client TODO maybe medic has different things to see
+
+        :param user: username of the USER (can be both client and medic)
+        :param user: str
+        :return:
+        :return: dict or list #TODO
+        """
+        pass
