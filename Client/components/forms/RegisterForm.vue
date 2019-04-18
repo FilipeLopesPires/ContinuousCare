@@ -25,13 +25,6 @@
                 </div>
                 <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.email" type="email" name="EMAIL" placeholder="Email Address *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Email Address *'" > <!-- class="single-input-primary"/"single-input-accent"/"single-input-secondary" -->
             </div>
-            <!-- Public Health Personal Number -->
-            <div class="input-group-icon mt-10">
-                <div class="icon">
-                    <i class="fa fa-plus" aria-hidden="true"></i>
-                </div>
-                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.phpn" type="text" name="phpn" placeholder="Public Health Personal Number *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Public Health Personal Number *'">
-            </div>
             <!-- Password -->
             <div class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
@@ -41,32 +34,18 @@
                     <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password_confirmation" type="password" name="password_confirmation" placeholder="Confirm Password *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm Password *'">
                 </div>
             </div>
-            
-            <!-- Birthdate -->
-            <div class="input-group-icon mt-10 single-team single-input justify-content-center d-flex align-items-center">
-                <p class="mt-10">Date of Birth </p> 
-                <!-- <DatePicker v-bind="$attrs" v-on="$listeners" v-model="filledform.birthdate" /> -->
-                <!-- <datepicker v-bind="$attrs" v-on="$listeners" :value="filledform.birthdate" format="DD-MM-YYYY" name="birthdate" placeholder="Date of Birth"></datepicker> -->
-                
-            </div>
-            
-            <!-- <div class="appointment-area appointment-right input-group-icon mt-10">
-                <div class="icon">
-                    <i class="fa fa-plane" aria-hidden="true"></i>
-                </div>
-                <div class="form-select" id="default-select">
-                    <div class="nice-select open" tabindex="0">
-                        <span class="current">City *</span>
-                        <ul class="list">
-                            <li data-value="City" class="option selected focus">Disease Type</li>
-                            <li data-value="1" class="option">Type One</li>
-                            <li data-value="2" class="option">Type Two</li>
-                            <li data-value="3" class="option">Type Three</li>
-                            <li data-value="4" class="option">Type Four</li
-                        ></ul>
+            <!-- Public Health Personal Number & Birthdate-->
+            <div class="row ">
+                <div class="input-group-icon mt-10 col-lg-6 col-md-6">
+                    <div class="icon ml-15">
+                        <i class="fa fa-plus" aria-hidden="true"></i>
                     </div>
+                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.phpn" type="text" name="phpn" placeholder="Public Health Personal Number *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Public Health Personal Number *'">
                 </div>
-            </div> -->
+                <div class="mt-10 col-lg-6 col-md-6 single-team " >
+                    <datepicker placeholder="Date of Birth" v-model="filledform.birthdate" format="dd-MM-yyyy" input-class="input-group-icon single-team single-input justify-content-center d-flex align-items-center"></datepicker>
+                </div>
+            </div>
             <!-- Weight and Height -->
             <div class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
@@ -95,13 +74,11 @@
 </template>
 
 <script>
-/* import DatePicker from '@/components/forms/DatePicker.vue'; */
-/* import datepicker from 'vue-date-picker' */
+import Datepicker from 'vuejs-datepicker';
 
 export default {
     components: {
-        /* DatePicker */
-        /* datepicker */
+        Datepicker,
     },
     data() {
         return {
@@ -113,7 +90,7 @@ export default {
                 phpn: "",
                 password: "",
                 password_confirmation: "",
-                //birdthdate: new Date,
+                birdthdate: "",
                 weight: "",
                 height: "",
                 additional_info: ""
@@ -130,6 +107,7 @@ export default {
             } */
 
             /* Server Validation */
+            //console.log(this.filledform)
             var result = await this.checkRegistration(this.filledform);
             if(result.status==0){
                 result = await this.checkLogin(this.filledform);
@@ -152,7 +130,7 @@ export default {
                 'email': filledform.email,
                 'phpn': filledform.phpn,
                 'password': filledform.password,
-                'birth_date':"25-06-1998", //filledform.birthdate,
+                'birth_date': filledform.birthdate,
                 'weight': filledform.weight,
                 'height': filledform.height,
                 'additional_information': filledform.additional_info,

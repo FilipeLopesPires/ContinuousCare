@@ -48,9 +48,7 @@ export default {
   /* Plugins to load before mounting the App */
   plugins: [
     '~plugins/core-components.js',
-    /* { src: '~/plugins/localStorage.js', ssr: false },
-    { src: '~node_modules/vuex-persistedstate', ssr: false},
-    { src: '~node_modules/vue-js-modal', ssr: false},
+    /* { src: '~node_modules/vue-js-modal', ssr: false},
     { src: '~node_modules/apexcharts', ssr: false},
     { src: '~node_modules/vue-apexcharts', ssr: false}, */
   ],
