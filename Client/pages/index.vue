@@ -67,6 +67,7 @@ import ServiceBox from '@/components/boxes/ServiceBox.vue'
 import TagsArea from '@/components/boxes/TagsArea.vue'
 
 export default { 
+  middleware: 'check-log',
   components: {
     HomeBanner,
     ServiceBox,
@@ -90,14 +91,14 @@ export default {
     loggedIn() {
       //console.log("Token:")
       //console.log(this.$store.getters.sessionToken);
-      if(this.$store.getters.sessionToken == null) {
+      if(this.$store.getters.isLoggedIn) {
         //console.log("not logged in")
         this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
-        return false
+        return true
       }
       //console.log("logged in")
       this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
-      return true
+      return false
     }
   },
   head: {

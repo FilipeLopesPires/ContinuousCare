@@ -6,11 +6,3 @@ import PageFooter from '@/components/footers/PageFooter.vue'
 Vue.component('HeaderMenu', HeaderMenu)
 Vue.component('PageBanner', PageBanner)
 Vue.component('PageFooter', PageFooter)
-
-/* import VModal from 'vue-js-modal/dist/ssr.index'
-Vue.component('modal', VModal) */
-
-/* import VueApexCharts from 'vue-apexcharts'
-Vue.component('apexchart', VueApexCharts) */
-
-/* Vue.component('', ) */

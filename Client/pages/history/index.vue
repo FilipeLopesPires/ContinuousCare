@@ -145,7 +145,7 @@ export default {
     },
     methods: {
         async onLoadChart() {
-            console.log(this.chartSource)
+            //console.log(this.chartSource)
             await this.getServerData(this.filledform.start, this.filledform.end, this.filledform.interval, this.$store.getters.sessionToken, this.chartSource)
             if(!this.requestError) {
                 this.showChart = true;
