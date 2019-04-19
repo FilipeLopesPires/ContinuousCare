@@ -43,16 +43,16 @@
                     <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.phpn" type="text" name="phpn" placeholder="Public Health Personal Number *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Public Health Personal Number *'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                    <datepicker placeholder="Date of Birth" v-model="filledform.birthdate" format="dd-MM-yyyy" input-class="input-group-icon single-team single-input justify-content-center d-flex align-items-center"></datepicker>
+                    <datepicker placeholder="Date of Birth" v-model="filledform.birthdate" format="dd-MM-yyyy" :disabledDates="this.disabledDates" input-class="input-group-icon single-team single-input justify-content-center d-flex align-items-center"></datepicker>
                 </div>
             </div>
             <!-- Weight and Height -->
             <div class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.weight" type="text" name="weight" placeholder="Weight" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Weight'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.weight" type="number" name="weight" placeholder="Weight" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Weight'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team ">
-                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.height" type="text" name="height" placeholder="Height" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.height" type="number" min="10" max="250" name="height" placeholder="Height" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height'">
                 </div>
             </div>
             <!-- Aditional Info -->
@@ -74,7 +74,11 @@
 </template>
 
 <script>
+import Vue from "vue";
 import Datepicker from 'vuejs-datepicker';
+import Toasted from 'vue-toasted';
+
+Vue.use(Toasted)
 
 export default {
     components: {
@@ -82,6 +86,10 @@ export default {
     },
     data() {
         return {
+            disabledDates: {
+                to: new Date(1900, 0, 1),
+                from: new Date()
+            },
             filledform: {
                 first_name: "",
                 last_name: "",
@@ -91,8 +99,8 @@ export default {
                 password: "",
                 password_confirmation: "",
                 birdthdate: "",
-                weight: "",
-                height: "",
+                weight: null,
+                height: null,
                 additional_info: ""
             }
         }
@@ -101,25 +109,38 @@ export default {
         async onSubmit() {
             /* Fields Validation */
             //console.log(this.filledform);
-            /* var validation = this.validateFormFields(this.filledform);
-            if (validation != 0) {
-                // do something 
-            } */
+            if(this.filledform.password != this.filledform.password_confirmation) {
+                this.$toasted.show('Password inputs must match!', 
+                    {position: 'bottom-center',
+                    duration: 2500});
+                return;
+            }
 
             /* Server Validation */
-            //console.log(this.filledform)
             var result = await this.checkRegistration(this.filledform);
+            if(result==null) {
+                return;
+            }
             if(result.status==0){
                 result = await this.checkLogin(this.filledform);
+                if(result==null) {
+                    return;
+                }
                 if(result.status==0){
                     this.$store.dispatch('setSessionToken', result.data.token);
-                    //console.log(this.$store.getters.sessionToken)
                     this.$router.push("/");
                 } else {
                     // this should never happen
+                    this.$toasted.show('Something went terribly wrong with the registration process. Please try to login, if it does not work contact us through email.', 
+                        {position: 'bottom-center',
+                        duration: 7500});
                 }
             } else {
-                // warn that registration fields are invalid
+                // warn which registration fields are invalid
+                this.$toasted.show('Registration was invalid. Please make sure you fill in the form correctly.', 
+                    {position: 'bottom-center',
+                    duration: 5000});
+                return;
             }
         },
 
@@ -135,14 +156,16 @@ export default {
                 'height': filledform.height,
                 'additional_information': filledform.additional_info,
             }
-            console.log(filledform)
             return await this.$axios.$post("/signup",config)
                         .then(res => {
-                            console.log(res)
                             return res;
                         })
                         .catch(e => {
-                            // error ...
+                            // unable to register
+                            this.$toasted.show('Something went wrong with the registration process. The server might be down at the moment. Please re-submit or try again later.', 
+                                {position: 'bottom-center',
+                                duration: 7500});
+                            return null;
                         });
         },
         async checkLogin(filledform) {
@@ -152,28 +175,15 @@ export default {
             }
             return await this.$axios.$post("/signin",config)
                         .then(res => {
-                            console.log(res)
                             return res;
+                        })
+                        .catch(e => {
+                            // unable to login
+                            this.$toasted.show('Something went terribly wrong. The server might be down at the moment. Please try to login, if it does not work try again later.', 
+                                {position: 'bottom-center',
+                                duration: 7500});
+                            return null;
                         });
-        },
-        validateFormFields(filledform) {
-            if(filledform.password != filledform.password_confirmation) {
-                // warn that password != password_confirmation
-                return 1
-            }
-            if(isNaN(filledform.phpn)) {
-                // warn that phpn must be a number
-                return 2
-            }
-            if(isNaN(filledform.weight)) {
-                // warn that weight must be a number
-                return 3
-            }
-            if(isNaN(filledform.height)) {
-                // warn that height must be a number
-                return 4
-            }
-            return 0
         }
     }
 };

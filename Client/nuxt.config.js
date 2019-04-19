@@ -50,7 +50,8 @@ export default {
     '~plugins/core-components.js',
     /* { src: '~node_modules/vue-js-modal', ssr: false},
     { src: '~node_modules/apexcharts', ssr: false},
-    { src: '~node_modules/vue-apexcharts', ssr: false}, */
+    { src: '~node_modules/vue-apexcharts', ssr: false}, 
+    { src: '~node_modules/vue-toasted', ssr:false}, */
   ],
 
   /* Nuxt.js modules */
@@ -58,6 +59,7 @@ export default {
     '@nuxtjs/axios',
     'bootstrap-vue/nuxt',
   ],
+ 
   /* Axios module configuration */
   axios: {
     baseURL: "http://mednat.ieeta.pt:8342",
