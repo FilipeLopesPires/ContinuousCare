@@ -66,7 +66,7 @@ class InfluxProxy:
         :return: list of maps
         :rtype: list
         """
-        if not interval or re.match("[1-9]([0-9]+)?(ns|u|ms|s|m|h|d|w)", interval):
+        if interval and not re.match("[1-9]([0-9]+)?(ns|u|ms|s|m|h|d|w)", interval):
             raise ValueError("Interval argument must follow the regex  -> [1-9]([0-9]+)?(ns|u|ms|s|m|h|d|w)")
 
         # Parameters on query only work on the where clause

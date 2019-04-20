@@ -14,11 +14,11 @@ class TestDatabaseProxy(unittest.TestCase):
     @unittest.skip
     def test_register(self):
         self.db.register({
-            "username": "zonnax",
+            "username": "aspedrosa",
             "password": "ola",
             "name": "André Pedrosa",
             "email": "asdf@ua",
-            "phpn": 111111113,
+            "phpn": 999999999,
             "birth_date": "14-03-1998",
             "weight": 1.4,
             "height": 3.1,
@@ -96,15 +96,20 @@ class TestDatabaseProxy(unittest.TestCase):
         print(self.db.getData("health_status", "zonnax", None, 1554714227, None))
 
     @unittest.skip
+    def test_getDataByMedic(self):
+        print(self.db.getDataByMedic("medic", "health_status", "zonnax", 1555781567, None, None))
+
+    @unittest.skip
     def test_getData_sleep(self):
         print(self.db.getData("sleep", "zonnax", 1554662636, None, None))
 
     @unittest.skip
     def test_insert(self):
         print(self.db.insert("health_status", {
-            "hearth_rate2": 60,
-            "calories2": 50,
-            "steps2": 10000
+            "time": 1555781667,
+            "hearth_rate": 60,
+            "calories": 50,
+            "steps": 10000
         }, "zonnax"))
 
     @unittest.skip
@@ -153,32 +158,51 @@ class TestDatabaseProxy(unittest.TestCase):
             }
         )
 
+    @unittest.skip
     def test_requestPermission(self):
-        pass
+        self.db.requestPermission("medic", "zonnax", 2)
 
+    @unittest.skip
     def test_deleteRequestPermission(self):
-        pass
+        self.db.deleteRequestPermission("medic", "zonnax")
 
+    @unittest.skip
     def test_grantPermission(self):
-        pass
+        self.db.grantPermission("zonnax", "medic", 3)
 
+    @unittest.skip
     def test_acceptPermission(self):
-        pass
+        self.db.acceptPermission("zonnax", "medic")
 
+    @unittest.skip
     def test_deleteAcceptedPermission(self):
-        pass
+        self.db.deleteAcceptedPermission("zonnax", "medic")
 
+    @unittest.skip
     def test_rejectPermission(self):
-        pass
+        self.db.rejectPermission("zonnax", "medic")
 
+    @unittest.skip
     def test_hasPermission(self):
-        pass
+        print(self.db.relational_proxy.has_permission("medic", "zonnax"))
 
+    @unittest.skip
+    def test_stopAcceptedPermission(self):
+        self.db.stopAcceptedPermission("medic", "zonnax")
+
+    @unittest.skip
+    def test_removeAcceptedPermission(self):
+        self.db.removeAcceptedPermission("zonnax", "medic")
+
+    @unittest.skip
     def test_getHistoricalPermissions(self):
-        pass
+        print(self.db.getHistoricalPermissions("zonnax"))
+        print(self.db.getHistoricalPermissions("medic"))
 
+    @unittest.skip
     def test_allPermissionsData(self):
-        pass
+        print(self.db.allPermissionsData("zonnax"))
+        print(self.db.allPermissionsData("medic"))
 
 if __name__ == '__main__':
     unittest.main()

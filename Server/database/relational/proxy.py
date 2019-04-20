@@ -40,7 +40,12 @@ class StoredProcedures:
     REJECT_PERMISSION = "delete_permission"
     DELETE_PERMISSION = REJECT_PERMISSION
     HAS_PERMISSION = "has_permission"
+    STOP_ACTIVE_PERMISSION = "stop_active_permission"
+    REMOVE_ACTIVE_PERMISSION = "remove_active_permission"
     GET_HISTORICAL_PERMISSIONS = "get_historical_permissions"
+    GET_PENDING_PERMISSIONS_OF_USER = "get_pending_permissions"
+    GET_ACCEPTED_PERMISSIONS_OF_USER = "get_accepted_permissions"
+    GET_ACTIVE_PERMISSIONS_OF_USER = "get_active_permissions"
 
 
 class MySqlProxy:
@@ -134,8 +139,8 @@ class MySqlProxy:
         :param health_number: number used on the country of the client to identify him in which concerns the health
             department
         :type health_number: int
-        :param birth_date: with format (day, month, year)
-        :type birth_date: tuple
+        :param birth_date: with format day-month-year
+        :type birth_date: str
         :param weight: in kilograms
         :type weight: float
         :param height: in meters
@@ -150,11 +155,10 @@ class MySqlProxy:
 
             password = self._hash_password(password)
 
-            birth_day, birth_month, birth_year = birth_date
             cursor.callproc(
                 StoredProcedures.REGISTER_CLIENT,
                 (username, password, full_name, email, health_number,
-                 "%s-%s-%s" % (birth_year, birth_month, birth_day), weight, height, additional_information)
+                 birth_date, weight, height, additional_information)
             )
 
             new_id = next(cursor.stored_results()).fetchone()[0]
@@ -602,9 +606,100 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.HAS_PERMISSION, (medic, client))
 
-            return next(cursor.stored_results).fetchone()[0] == 1
+            return next(cursor.stored_results()).fetchone()[0] == 1
         finally:
             self._close_conenction(conn, cursor)
+
+    def stop_active_permission(self, medic, client):
+        """
+        Allows a medic to stop an active permission so he can save the time
+        to use another time
+
+        :param medic: username of the client
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.STOP_ACTIVE_PERMISSION, (medic, client))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def remove_active_permission(self, client, medic):
+        """
+        Allows a client to remove an active permission from a medic.
+        The medic will not be able to see the data from the client after this.
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.REMOVE_ACTIVE_PERMISSION, (client, medic))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def _parse_permissions_data(self, data, type):
+        """
+        Parses permission's data from a list of tuples
+        to a list of dictionaries for each type of permission
+
+        :param data: data returned from the database
+        :type data: list
+        :param type: diferent types of permissions have different fields. With
+            this argument conditionals can be done so this method handles each one
+            different
+        0 pending
+        1 accepted
+        2 active
+        3 expired
+        :type type: int
+        :return: parsed data
+        :rtype: list
+        """
+        return_value = []
+        if type in [0, 1]:
+            for duration, username, full_name, health_number in data:
+                permission = {
+                    "duration": duration,
+                    "username": username,
+                    "full_name": full_name
+                }
+
+                if health_number:
+                    permission["health_number"] = health_number
+
+                return_value.append(permission)
+
+        elif type in [2, 3]:
+            if type == 2:
+                last_date_key = "expiration_date"
+            else:
+                last_date_key = "end_date"
+
+            for begin_date, \
+                last_date, username, full_name, health_number in data:
+                permission = {
+                    "begin_date": begin_date,
+                    last_date_key: last_date,
+                    "username": username,
+                    "full_name": full_name
+                }
+
+                if health_number:
+                    permission["health_number"] = health_number
+
+                return_value.append(permission)
+
+        else:
+            raise TypeError("type argument can only be one of these (0, 1, 2, 3)")
+
+        return return_value
 
     def get_historical_permissions(self, user):
         """
@@ -620,6 +715,33 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.GET_HISTORICAL_PERMISSIONS, [user])
 
-            return next(cursor.stored_results).fetchall()
+            return self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 3)
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_all_permissions_data(self, user):
+        """
+        Gets existing permissions of the three types of permissions to display on the permissions page.
+
+        :param user: username
+        :type user: str
+        :return: lists of the three types of permissions
+        :rtype: dict
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            data = {}
+
+            cursor.callproc(StoredProcedures.GET_PENDING_PERMISSIONS_OF_USER, [user])
+            data["pending"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 0)
+
+            cursor.callproc(StoredProcedures.GET_ACCEPTED_PERMISSIONS_OF_USER, [user])
+            data["accepted"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 1)
+
+            cursor.callproc(StoredProcedures.GET_ACTIVE_PERMISSIONS_OF_USER, [user])
+            data["active"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 2)
+
+            return data
         finally:
             self._close_conenction(conn, cursor)
