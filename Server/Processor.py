@@ -77,8 +77,10 @@ class Processor:
                 self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
                 self.userThreads[user].start()
             return json.dumps({"status":0, "msg":"Successfull operation."}).encode("UTF-8")
+        except RelationalDBException as e:
+            return json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
         except Exception as e:
-            return json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def logout(self, token):
         if token not in self.userTokens:
@@ -121,8 +123,10 @@ class Processor:
         try:
             result=self.database.updateDevice(user, json.loads(data.decode("UTF-8")))
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": profile}).encode("UTF-8")
+        except RelationalDBException as e:
+            return  json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def addDevice(self, token, data):
         if token not in self.userTokens:
@@ -154,8 +158,10 @@ class Processor:
 
             
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+        except RelationalDBException as e:
+            return  json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def getData(self, token, function, datatype, start, end, interval):
         if token not in self.userTokens:
@@ -165,8 +171,12 @@ class Processor:
         try:
             values=eval("self.database."+function)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
+        except RelationalDBException as e:
+            return  json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
+        except TimeSeriesDBException as e:
+            return  json.dumps({"status":1, "msg":"Time series database internal error. "+str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
         return  json.dumps({"status":1, "msg":"Bad combination of arguments. It can only be start+end, start+interval or end+interval"}).encode("UTF-8")
                 
 
@@ -178,8 +188,10 @@ class Processor:
         try:
             self.database.updateProfile(user, json.loads(data.decode("UTF-8")))
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+        except RelationalDBException as e:
+            return  json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def getProfile(self, token):
         if token not in self.userTokens:
@@ -189,8 +201,10 @@ class Processor:
         try:
             profile=self.database.getProfile(user)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": profile}).encode("UTF-8")
+        except RelationalDBException as e:
+            return  json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def deleteProfile(self, token):
         if token not in self.userTokens:
@@ -200,15 +214,19 @@ class Processor:
         try:
             self.database.deleteProfile(user)
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+        except RelationalDBException as e:
+            return  json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def getSupportedDevices(self):
         try:
             values=self.database.getSupportedDevices()
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
+        except RelationalDBException as e:
+            return  json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Database internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def process(self, responses, user):
         normalData={}

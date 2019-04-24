@@ -48,17 +48,7 @@ class TestDatabaseProxy(unittest.TestCase):
         self.db.addDevice(
             "zonnax",
             {
-                "type": 2,
-                "authentication_fields": {
-                    "token":"cenas",
-                    "refresh_token":"outras cenas"
-                }
-            }
-        )
-        self.db.addDevice(
-            "zonnax",
-            {
-                "type": "Foobot df",
+                "type": "Foobot ",
                 "authentication_fields": {
                     "token": "asdflah34ohaohw",
                     "uuid": "112331",
@@ -71,7 +61,7 @@ class TestDatabaseProxy(unittest.TestCase):
 
     def test_updateDevice(self):
         self.db.updateDevice("zonnax", {
-            "id": 3,
+            "id": 10,
             "refresh_token": "outrascenas",
             "token": "outrascenas3",
             "latitude": 1,
