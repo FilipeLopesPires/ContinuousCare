@@ -21,18 +21,33 @@ import base64
 
 class StoredProcedures:
     REGISTER_CLIENT = "insert_client"
+    REGISTER_MEDIC = "insert_medic"
     GET_ALL_USERNAMES = "get_all_usernames"
     INSERT_DEVICE = "insert_device"
     VERIFY_CREDENTIALS = "verify_credentials"
     GET_ALL_CLIENT_DEVICES = "get_all_client_devices"
     GET_ALL_SUPPORTED_DEVICES = "get_all_supported_devices"
     GET_USER_PROFILE_DATA = "get_user_info"
-    UPDATE_USER_PROFILE_DATA = "update_user_info"
+    UPDATE_CLIENT_PROFILE_DATA = "update_client_info"
+    UPDATE_MEDIC_PROFILE_DATA = "update_medic_info"
     REGISTER_SLEEP_SESSION = "register_sleep_session"
     INSERT_SLEEP_SESSION = "insert_sleep_session"
     GET_SLEEP_SESSIONS = "get_sleep_sessions"
     UPDATE_DEVICE = "update_device"
-    #DELETE_DEVICE = "delete_device"
+    DELETE_DEVICE = "delete_device"
+    REQUEST_PERMISSION = "request_permission"
+    GRANT_PERMISSION = "grant_permission"
+    ACCEPT_PERMISSION = "accept_permission"
+    REMOVE_ACCEPTED_PERMISSION = "remove_accepted_permission"
+    REJECT_PERMISSION = "delete_permission"
+    DELETE_PERMISSION = REJECT_PERMISSION
+    HAS_PERMISSION = "has_permission"
+    STOP_ACTIVE_PERMISSION = "stop_active_permission"
+    REMOVE_ACTIVE_PERMISSION = "remove_active_permission"
+    GET_HISTORICAL_PERMISSIONS = "get_historical_permissions"
+    GET_PENDING_PERMISSIONS_OF_USER = "get_pending_permissions"
+    GET_ACCEPTED_PERMISSIONS_OF_USER = "get_accepted_permissions"
+    GET_ACTIVE_PERMISSIONS_OF_USER = "get_active_permissions"
 
 
 class MySqlProxy:
@@ -109,9 +124,10 @@ class MySqlProxy:
     def register_client(self, username, password, full_name, email, health_number,
                               birth_date, weight, height, additional_information):
         """
-        Creates a new user on the database. The `register_client` SP is used to create all user related data.
+        Creates a new user on the database. The `insert_client` SP is used to create all user related data.
         On this function the password is hashed to be stored.
-        The write to the database can fail if an user with the same username or health_number already exists.
+        The write to the database can fail if an user with the same username exists or a
+         client with the same health_number already exists.
 
         :raises Exception: In case if something goes wrong when calling stored procedures
 
@@ -126,13 +142,14 @@ class MySqlProxy:
         :param health_number: number used on the country of the client to identify him in which concerns the health
             department
         :type health_number: int
-        :param birth_date: with format (day, month, year)
-        :type birth_date: tuple
-        :param weight: in kilograms
+        :param birth_date: with format day-month-year
+        :type birth_date: str
+        :param weight: in kilograms (optional)
         :type weight: float
-        :param height: in meters
+        :param height: in meters (optional)
         :type height: float
         :param additional_information: information that can be important to mention so a medic can be more contextualized
+        (optional)
         :type additional_information: list
         :return: client_id of the client created on the database
         :rtype: int
@@ -142,24 +159,56 @@ class MySqlProxy:
 
             password = self._hash_password(password)
 
-            birth_day, birth_month, birth_year = birth_date
             cursor.callproc(
                 StoredProcedures.REGISTER_CLIENT,
                 (username, password, full_name, email, health_number,
-                 "%s-%s-%s" % (birth_year, birth_month, birth_day), weight, height, additional_information)
+                 birth_date, weight, height, additional_information)
             )
 
             new_id = next(cursor.stored_results()).fetchone()[0]
-
-            conn.commit()
 
             return new_id
         finally:
             self._close_conenction(conn, cursor)
 
-    def register_medic(self, username, password, full_name, email, specialization, company):
-        """"""
-        pass
+    def register_medic(self, username, password, full_name, email, company, specialities):
+        """
+        Creates a new user on the database. The `insert_medic` SP is used to create all user related data.
+        On this function the password is hashed to be stored.
+        The write to the database can fail if an user with the same username already exists.
+
+        :param username: of the medic
+        :type username: str
+        :param password: clear text password to be hashed
+        :type password: str
+        :param full_name: of the medic
+        :type full_name: str
+        :param email: of the medic
+        :type email: str
+        :param company: to which company is the medic working (optional)
+        :type company: str
+        :param specialities: medic specializations (optional)
+        :type specialities: str
+        :return: medic_id of the medic created on the database
+        :rtype: int
+
+        :raises Exception: In case if something goes wrong when calling stored procedures
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            password = self._hash_password(password)
+
+            cursor.callproc(
+                StoredProcedures.REGISTER_MEDIC,
+                (username, password, full_name, email, company, specialities)
+            )
+
+            new_id = next(cursor.stored_results()).fetchone()[0]
+
+            return new_id
+        finally:
+            self._close_conenction(conn, cursor)
 
     def check_credentials(self, username, password):
         """
@@ -300,9 +349,9 @@ class MySqlProxy:
         """
         Obtains all profile data associated with the username received
 
-        :param username: of the client to search for
+        :param username: of the client/medic to search for
         :type username: str
-        :return: all client's profile data
+        :return: all client/medic's profile data
         {client_id:int, full_name:str, email:str, health_number:int, birth_date:datetime, weight:float, height:float}
         :rtype: dict
         """
@@ -313,19 +362,29 @@ class MySqlProxy:
 
             results = next(cursor.stored_results()).fetchall()[0]
 
-            return {key: (results[i] if key != "birth_date" else results[i].strftime("%d-%m-%Y"))
-                    for i, key in enumerate(["client_id",
-                                             "full_name",
-                                             "email",
-                                             "health_number",
-                                             "birth_date",
-                                             "weight",
-                                             "height",
-                                             "additional_info"])}
+            if results[0] == "client":
+                return {key: (results[i+1] if key != "birth_date" else results[i+1].strftime("%d-%m-%Y"))
+                        for i, key in enumerate(["client_id",
+                                                 "full_name",
+                                                 "email",
+                                                 "health_number",
+                                                 "birth_date",
+                                                 "weight",
+                                                 "height",
+                                                 "additional_info"])}
+            elif results[0] == "doctor":
+                return {key: results[i]
+                        for i, key in enumerate(["medic_id",
+                                                 "full_name",
+                                                 "email",
+                                                 "company",
+                                                 "specialities"])}
+            else:
+                raise Exception("Invalid user type")
         finally:
             self._close_conenction(conn, cursor)
 
-    def update_user_profile_data(self, username, password, full_name, email, health_number, #TODO they may not send this field
+    def update_client_profile_data(self, username, password, full_name, email, health_number,
                                        birth_date, weight, height, additional_information):
         """
         Updates the profile information for a user. The function receives all information
@@ -342,8 +401,8 @@ class MySqlProxy:
         :param health_number: number used on the country of the client to identify him in which concerns the health
             department
         :type health_number: int
-        :param birth_date: with format (day, month, year)
-        :type birth_date: tuple
+        :param birth_date: with format dd-mm-yyyy
+        :type birth_date: str
         :param weight: in kilograms
         :type weight: float
         :param height: in meters
@@ -356,16 +415,38 @@ class MySqlProxy:
 
             password = self._hash_password(password)
 
-            birth_day, birth_month, birth_year = birth_date
+            cursor.callproc(StoredProcedures.UPDATE_CLIENT_PROFILE_DATA, (username, password, full_name, email,
+                                                                        health_number, birth_date, weight, height,
+                                                                        additional_information))
+        finally:
+            self._close_conenction(conn, cursor)
 
-            cursor.callproc(StoredProcedures.UPDATE_USER_PROFILE_DATA, (username, password, full_name, email,
-                                                                        "%s-%s-%s" % (birth_year,
-                                                                                      birth_month,
-                                                                                      birth_year),
-                                                                        birth_date, weight,
-                                                                        height, additional_information))
+    def update_medic_profile_data(self, username, password, full_name, email,
+                                   company, specialities):
+        """
+        Updates the profile information for a user. The function receives all information
+        to overload all data, assuming that some of it is the same as the stored one.
 
-            conn.commit()
+        :param username: of the client to update the data
+        :type username: str
+        :param password: clear text password
+        :type password: str
+        :param full_name: full name of the client
+        :type full_name: str
+        :param email: email of the client
+        :type email: str
+        :param company: to which company is the medic working
+        :type company: str
+        :param specialities: medic specializations
+        :type specialities: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            password = self._hash_password(password)
+
+            cursor.callproc(StoredProcedures.UPDATE_MEDIC_PROFILE_DATA, (username, password, full_name, email,
+                                                                        company, specialities))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -389,13 +470,23 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.INSERT_SLEEP_SESSION, (username, day, duration, begin, end))
-
-            conn.commit()
         finally:
             self._close_conenction(conn, cursor)
 
     def get_sleep_sessions(self, username, begin=None, end=None):
-        """"""
+        """
+        Get information of the sleep session that belongs to the days within the interval
+        of the dates received on the arguments
+
+        :param username: of the client
+        :type username: str
+        :param begin: all sleep sesisons after this date
+        :type begin: datetime.date
+        :param end: all sleep sessions before this date
+        :type end: datetime.date
+        :return: information of all sleep sessions that respect the arguments received
+        :rtype: list
+        """
         try:
             conn, cursor = self._init_connection()
 
@@ -424,6 +515,7 @@ class MySqlProxy:
 
     def updtate_device(self, username, device_id, data):
         """
+        Update information, authentication fields, of a device associated with a client
 
         :param username: of the client
         :type username: str
@@ -452,5 +544,277 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.UPDATE_DEVICE, (username, device_id, latitude, longitude))
 
             conn.commit()
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def delete_device(self, username, device_id):
+        """
+        Deassociates a device from a user deleting any information associated with the device
+
+        :param username: of the client
+        :type username: str
+        :param device_id: id of the device to delete
+        :type device_id: int
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.DELETE_DEVICE, (username, device_id))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def request_permission(self, medic, client, duration):
+        """
+        A medic requests temporary permission to see a client's data
+
+        :param medic: username of the medic
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        :param duration: for how long the permission will be up
+        :type duration: datetime.timedelta
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, duration))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def delete_request_permission(self, medic, client):
+        """
+        Allows a medic to delete a request permission done previously
+
+        :param medic: username of the medic
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.DELETE_PERMISSION, (client, medic))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def grant_permission(self, client, medic, duration):
+        """
+        A clients grants temporary permission to a medic to let him see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the client
+        :type medic: str
+        :param duration: for how long the permission will be up
+        :type duration: datetime.timedelta
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GRANT_PERMISSION, (client, medic, duration))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def accept_permission(self, client, medic):
+        """
+        A client accepts a pending request created by a medic to see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.ACCEPT_PERMISSION, (client, medic))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def delete_accepted_permission(self, client, medic):
+        """
+        Allows a client to delete an accepted permission (still not active)
+
+        :param client: username of the medic
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.REMOVE_ACCEPTED_PERMISSION, (client, medic))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def reject_permission(self, client, medic):
+        """
+        A client rejects a pending request created by a medic to see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.REJECT_PERMISSION, (client, medic))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def has_permission(self, medic, client):
+        """
+        Verifies if a medic [still] has access to client's data
+
+        :param medic:
+        :type medic: str
+        :param client:
+        :type client: str
+        :return: true if it has, false otherwise
+        :rtype: bool
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.HAS_PERMISSION, (medic, client))
+
+            return next(cursor.stored_results()).fetchone()[0] == 1
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def stop_active_permission(self, medic, client):
+        """
+        Allows a medic to stop an active permission so he can save the time
+        to use another time
+
+        :param medic: username of the client
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.STOP_ACTIVE_PERMISSION, (medic, client))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def remove_active_permission(self, client, medic):
+        """
+        Allows a client to remove an active permission from a medic.
+        The medic will not be able to see the data from the client after this.
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.REMOVE_ACTIVE_PERMISSION, (client, medic))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def _parse_permissions_data(self, data, type):
+        """
+        Parses permission's data from a list of tuples
+        to a list of dictionaries for each type of permission
+
+        :param data: data returned from the database
+        :type data: list
+        :param type: diferent types of permissions have different fields. With
+            this argument conditionals can be done so this method handles each one
+            different
+        0 pending
+        1 accepted
+        2 active
+        3 expired
+        :type type: int
+        :return: parsed data
+        :rtype: list
+        """
+        return_value = []
+        if type in [0, 1]:
+            for duration, username, full_name, health_number in data:
+                permission = {
+                    "duration": duration,
+                    "username": username,
+                    "full_name": full_name
+                }
+
+                if health_number:
+                    permission["health_number"] = health_number
+
+                return_value.append(permission)
+
+        elif type in [2, 3]:
+            if type == 2:
+                last_date_key = "expiration_date"
+            else:
+                last_date_key = "end_date"
+
+            for begin_date, \
+                last_date, username, full_name, health_number in data:
+                permission = {
+                    "begin_date": begin_date,
+                    last_date_key: last_date,
+                    "username": username,
+                    "full_name": full_name
+                }
+
+                if health_number:
+                    permission["health_number"] = health_number
+
+                return_value.append(permission)
+
+        else:
+            raise TypeError("type argument can only be one of these (0, 1, 2, 3)")
+
+        return return_value
+
+    def get_historical_permissions(self, user):
+        """
+        Obtains information of permissions that WERE active
+
+        :param user: username of the client
+        :type user: str
+        :return: all historical permissions
+        :rtype: list
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_HISTORICAL_PERMISSIONS, [user])
+
+            return self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 3)
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_all_permissions_data(self, user):
+        """
+        Gets existing permissions of the three types of permissions to display on the permissions page.
+
+        :param user: username
+        :type user: str
+        :return: lists of the three types of permissions
+        :rtype: dict
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            data = {}
+
+            cursor.callproc(StoredProcedures.GET_PENDING_PERMISSIONS_OF_USER, [user])
+            data["pending"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 0)
+
+            cursor.callproc(StoredProcedures.GET_ACCEPTED_PERMISSIONS_OF_USER, [user])
+            data["accepted"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 1)
+
+            cursor.callproc(StoredProcedures.GET_ACTIVE_PERMISSIONS_OF_USER, [user])
+            data["active"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 2)
+
+            return data
         finally:
             self._close_conenction(conn, cursor)

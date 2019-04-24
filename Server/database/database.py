@@ -32,27 +32,38 @@ class Database:
 
     def register(self, data):
         """
-        Register a client on the database
+        Register a user on the database
 
-        :param data: keys : [username:str, password:str, name:str, email:str, phpn:int,
-                             birth_date:tuple dd-mm-yyyy, weight:float, height:float, diseases:str]
+        :param data: common : [type:str, username:str, password:str, name:str, email:str]
+            client : [phpn:str, birth_date: str dd-mm-yyyy, weight:float, height:float, additional_information:str]
+            medic : [company: str, specialities:str]
         :type data: dict
-        :return: the client_id for the new client
+        :return: the id for the new client/medic
         :rtype: int
         """
-        birth_day, birth_month, birth_year = data["birth_date"].split("-")
-
-        return self.relational_proxy.register_client(
-            data["username"],
-            data["password"],
-            data["name"],
-            data["email"],
-            int(data["phpn"]),
-            (birth_day, birth_month, birth_year),
-            float(data["weight"]),
-            float(data["height"]),
-            data["additional_information"]
-        )
+        if data["type"].lower() == "client":
+            return self.relational_proxy.register_client(
+                data["username"],
+                data["password"],
+                data["name"],
+                data["email"],
+                int(data["phpn"]),
+                data["birth_date"],
+                data["weight"],
+                data["height"],
+                data["additional_information"]
+            )
+        elif data["type"].lower() == "doctor":
+            return self.relational_proxy.register_medic(
+                data["username"],
+                data["password"],
+                data["name"],
+                data["email"],
+                data["company"],
+                data["specialities"]
+            )
+        else:
+            raise Exception("Unkown type of user!")
 
     def verifyUser(self, data):
         """
@@ -74,22 +85,34 @@ class Database:
 
         :param user: username of the client to update
         :type user: str
-        :param data: keys : [password:str, name:str, email:str, phpn:int,
-                             birth_date:str dd-mm-yyyy, weight:float, height:float, diseases:str]
+        :param data: common : [type:str, username:str, password:str, name:str, email:str]
+            client : [phpn:str, birth_date: str dd-mm-yyyy, weight:float, height:float, additional_information:str]
+            medic : [company: str, specialities:str]
         :type data: dict
         """
-        birth_day, birth_month, birth_year = data["birth_date"].split("-")
-        self.relational_proxy.update_user_profile_data(
-            user,
-            data["password"],
-            data["name"],
-            data["email"],
-            data["phpn"], # TODO do they send me this?
-            (birth_day, birth_month, birth_year),
-            data["weight"],
-            data["height"],
-            data["diseases"]
-        )
+        if data["type"].lower() == "client":
+            self.relational_proxy.update_client_profile_data(
+                user,
+                data["password"],
+                data["name"],
+                data["email"],
+                data["phpn"], # TODO do they send me this?
+                data["birth_date"],
+                data["weight"],
+                data["height"],
+                data["additional_information"]
+            )
+        elif data["type"].lower() == "doctor":
+            self.relational_proxy.update_medic_profile_data(
+                user,
+                data["password"],
+                data["name"],
+                data["email"],
+                data["company"],
+                data["specialities"]
+            )
+        else:
+            raise Exception("Unkown type of user!")
 
     def getProfile(self, user):
         """
@@ -103,13 +126,13 @@ class Database:
         """
         return self.relational_proxy.get_user_profile_data(user)
 
-    def deleteProfile(self, user):
-        """"""
-        pass
-
-
     def getAllUsers(self):
-        """"""
+        """
+        Obtain all usernames of all clients registered on the system
+
+        :return: all usernames of all clients
+        :rtype: list
+        """
         return self.relational_proxy.get_all_usernames()
 
     def addDevice(self, user, data):
@@ -148,7 +171,15 @@ class Database:
         self.relational_proxy.updtate_device(user, device_id, data)
 
     def deleteDevice(self, user, device_id):
-        """"""
+        """
+        Deassociates a device from a user deleating associated infor with the device
+
+        :param user: username of the client
+        :type user: str
+        :param device_id: id of the device to update
+        :type device_id: int
+        """
+        self.relational_proxy.delete_device(user, device_id)
 
     def getAllDevices(self, user):
         """
@@ -199,9 +230,9 @@ class Database:
         data = {}
 
         if measurement == "sleep":
-            if not start and not end: #both None last
+            if not start and not end: #both None -> last
                 results = self.relational_proxy.get_sleep_sessions(user)
-            elif start: # just end None  from start
+            elif start: # just end None -> from start
                 start_date = datetime.date.fromtimestamp(start)
                 results = self.relational_proxy.get_sleep_sessions(user, start_date)
             else: # within
@@ -256,16 +287,53 @@ class Database:
 
         return data
 
+    def getDataByMedic(self, medic, measurement, client, start, end, interval):
+        """
+        Allows a medic to query a client's data
+        First the server first verifies if the medic has permission to
+            access that data, if he has retrives the data else raises an exception
+
+        :param medic: username of the client
+        :type medic: str
+        :param measurement: which measurement to get from database
+        :type measurement: str
+        :param client: username of the client
+        :type client: str
+        :param start: values after this time (seconds)
+        :type start: int
+        :param end: values before this time (seconds)
+        :type end: int
+        :param interval: size of interval like influx (ns, u, ms, s, m, h, d, w)
+        :type interval: str
+        :return: {
+                    time:[],
+                    value:[],
+                    lat:[],
+                    long:[],
+                    hearth_rate:[],calories:[],...
+                 }
+        :rtype: dict
+        :raises Exception: if the medic doesn't have permission
+            to acess the client's data
+        """
+        if not self.relational_proxy.has_permission(medic, client):
+            raise Exception("You don't have permission to acces this data")
+            # TODO maybe raise a costum exception. Mandatory to handle it
+
+        return self.getData(measurement, client, start, end, interval)
+
     #def getData(self): #TODO all db data
     #    """"""
 
     def insert(self, measurement, data, user):
         """
+        Inserts new data to the influx database. This is historical data retrived from
+        devices or external apis.
 
-        :param measurement:
+        :param measurement: nome of the measument to where to write the values
         :type measurement: str
-        :param data:
-        :type data: list or dict
+        :param data: several fields to write
+        :type data: dict
         :param user: username of the client
         :type user: str
         """
@@ -310,3 +378,120 @@ class Database:
                     "fields": data
                 }]
             )
+
+    def requestPermission(self, medic, client, duration):
+        """
+        A medic requests temporary permission to see a client's data
+
+        :param medic: username of the medic
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        :param duration: for how long the permission will be up
+        :type duration: int # TODO define if its decimal of not
+        """
+        self.relational_proxy.request_permission(medic, client, datetime.timedelta(hours=duration))
+
+    def deleteRequestPermission(self, medic, client):
+        """
+        Allows a medic to delete a request permission done previously
+
+        :param medic: username of the medic
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        """
+        self.relational_proxy.delete_request_permission(medic, client)
+
+    def grantPermission(self, client, medic, duration):
+        """
+        A clients grants temporary permission to a medic to let him see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the client
+        :type medic: str
+        :param duration: for how long the permission will be up
+        :type duration: int # TODO define if its decimal of not
+        """
+        self.relational_proxy.grant_permission(client, medic, datetime.timedelta(hours=duration))
+
+    def acceptPermission(self, client, medic):
+        """
+        A client accepts a pending request created by a medic to see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        self.relational_proxy.accept_permission(client, medic)
+
+    def deleteAcceptedPermission(self, client, medic):
+        """
+        Allows a client to delete an accepted permission (still not active)
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        self.relational_proxy.delete_accepted_permission(client, medic)
+
+    def rejectPermission(self, client, medic):
+        """
+        A client rejects a pending request created by a medic to see his data
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        self.relational_proxy.reject_permission(client, medic)
+
+    def stopAcceptedPermission(self, medic, client):
+        """
+        Allows a medic to stop an active permission so he can save the time
+        to use another time
+
+        :param medic: username of the client
+        :type medic: str
+        :param client: username of the client
+        :type client: str
+        """
+        self.relational_proxy.stop_active_permission(medic, client)
+
+    def removeAcceptedPermission(self, client, medic):
+        """
+        Allows a client to remove an active permission from a medic.
+        The medic will not be able to see the data from the client after this.
+
+        :param client: username of the client
+        :type client: str
+        :param medic: username of the medic
+        :type medic: str
+        """
+        self.relational_proxy.remove_active_permission(client, medic)
+
+    def getHistoricalPermissions(self, user):
+        """
+        Obtains information of permissions that WERE active (expired/historical ones)
+        Use by both medics and clients
+
+        :param user: username
+        :type user: str
+        :return: all historical permissions
+        :rtype: list
+        """
+        return self.relational_proxy.get_historical_permissions(user)
+
+    def allPermissionsData(self, user):
+        """
+        Used by both medic and client
+
+        :param user: username of the USER (can be both client and medic)
+        :param user: str
+        :return: three lists concerning the three types of permissions (pending, accepted and active)
+        :return: dict
+        """
+        return self.relational_proxy.get_all_permissions_data(user)
