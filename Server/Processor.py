@@ -25,7 +25,7 @@ class Processor:
 
     def __init__(self):
         self.database=database.Database()
-        self.externalAPI=ExternalAPI.ExternalAPI("","","","",None, None).metrics()
+        self.externalAPI=ExternalAPI("","","","",None, None).metrics
        
         self.userThreads={}
         self.userTokens={}
@@ -36,12 +36,12 @@ class Processor:
             userDevices=self.database.getAllDevices(user)
             for device in userDevices:
                 deviceType=device["type"].strip().replace(" ", "_")
-                metric=eval(deviceType+"("+device.get("token","")+","+device.get("refresh_token","")+","+device.get("uuid","")+","+user+","+str(device["id"])+", ["+device.get("latitude",0)+","+device.get("longitude", 0)+"])")
+                metric=eval(deviceType+"("+device.get("token","")+","+device.get("refresh_token","")+","+device.get("uuid","")+","+user+","+str(device["id"])+", ["+device.get("latitude",None)+","+device.get("longitude", None)+"])")
                 if metric.metricType not in metrics:
                     metrics[metric.metricType]=[]
                 metrics[metric.metricType].append(metric)
 
-            for metric in GPS.GPS("","","",user,None, None).metrics()+self.externalAPI:
+            for metric in GPS("","","",user,None, None).metrics+self.externalAPI:
                 if metric.metricType not in metrics:
                     metrics[metric.metricType]=[]
                 metrics[metric.metricType].append(metric)
@@ -51,7 +51,7 @@ class Processor:
             print(metrics)
 
             #passing only the GPS, HealthStatus and Sleep to the Thread
-            self.userThreads[user]=myThread(self, {k:v for k,v in metrics if k in ["GPS", "HealthStatus", "Sleep"]},user)
+            self.userThreads[user]=myThread(self, {k:v for k,v in metrics.items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
             self.userThreads[user].start()
 
 
@@ -68,7 +68,7 @@ class Processor:
             if user not in self.userMetrics:
                 self.userMetrics[user]={}
 
-                for metric in GPS.GPS("","","", user, None, None).metrics()+self.externalAPI:
+                for metric in GPS("","","", user, None, None).metrics+self.externalAPI:
                     if metric.metricType not in self.userMetrics[user]:
                         self.userMetrics[user][metric.metricType]=[]
                     self.userMetrics[user][metric.metricType].append(metric)
@@ -139,7 +139,7 @@ class Processor:
 
             if jsonData["id"] not in [submetric.dataSource.id for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]]:
                 deviceType=jsonData["type"].strip().replace(" ", "_")
-                metric=eval(deviceType+"("+device.get("token","")+","+device.get("refresh_token","")+","+device.get("uuid","")+","+user+","+str(device["id"])+", ["+device.get("latitude",0)+","+device.get("longitude", 0)+"])")
+                metric=eval(deviceType+"("+device.get("token","")+","+device.get("refresh_token","")+","+device.get("uuid","")+","+user+","+str(id)+", ["+device.get("latitude",None)+","+device.get("longitude", None)+"])")
                 if metric.metricType not in self.userMetrics[user]:
                     self.userMetrics[user][metric.metricType]=[]
                 self.userMetrics[user][metric.metricType].append(metric)
@@ -329,6 +329,7 @@ class myThread (threading.Thread):
                 for i,v in enumerate(updating):
                     if v:
                         try:
+                            old_times[i]=now1
                             resp=self.deltaTimes[i][1].getData()
                             responses.append((self.deltaTimes[i][1].metricType, resp))
                         except Exception as e:

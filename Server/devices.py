@@ -45,19 +45,19 @@ class HearthRate(Metric):
         super().__init__(dataSource)
 
     @property
-    def URLTemplate():
+    def URLTemplate(self):
         return "https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json"
 
     @property
-    def updateTime():
-        return 5
+    def updateTime(self):
+        return 0.15
 
     @property
-    def metricType():
+    def metricType(self):
         return "HealthStatus"
 
     @property
-    def metricLocation():
+    def metricLocation(self):
         return ""
 
     def getData(self, latitude=None, longitude=None):
@@ -78,19 +78,19 @@ class Sleep(Metric):
         super().__init__(dataSource)
 
     @property
-    def URLTemplate():
+    def URLTemplate(self):
         return "https://api.fitbit.com/1.2/user/-/sleep/date/today.json"
 
     @property
-    def updateTime():
+    def updateTime(self):
         return 360
 
     @property
-    def metricType():
+    def metricType(self):
         return "Sleep"
 
     @property
-    def metricLocation():
+    def metricLocation(self):
         return ""
 
     def getData(self, latitude=None, longitude=None):
@@ -115,19 +115,19 @@ class Calories(Metric):
         super().__init__(dataSource)
 
     @property
-    def URLTemplate():
+    def URLTemplate(self):
         return "https://api.fitbit.com/1/user/-/activities/date/today.json"
 
     @property
-    def updateTime():
+    def updateTime(self):
         return 5
 
     @property
-    def metricType():
+    def metricType(self):
         return "HealthStatus"
 
     @property
-    def metricLocation():
+    def metricLocation(self):
         return ""
 
     def getData(self, latitude=None, longitude=None):
@@ -149,19 +149,19 @@ class Activity(Metric):
         super().__init__(dataSource)
 
     @property
-    def URLTemplate():
+    def URLTemplate(self):
         return "https://api.fitbit.com/1/user/-/activities/date/today.json"
 
     @property
-    def updateTime():
+    def updateTime(self):
         return 5
 
     @property
-    def metricType():
+    def metricType(self):
         return "HealthStatus"
 
     @property
-    def metricLocation():
+    def metricLocation(self):
         return ""
 
     def getData(self, latitude=None, longitude=None):
@@ -183,19 +183,19 @@ class Steps(Metric):
         super().__init__(dataSource)
 
     @property
-    def URLTemplate():
+    def URLTemplate(self):
         return "https://api.fitbit.com/1/user/-/activities/date/today.json" 
 
     @property
-    def updateTime():
+    def updateTime(self):
         return 5
 
     @property
-    def metricType():
+    def metricType(self):
         return "HealthStatus"
 
     @property
-    def metricLocation():
+    def metricLocation(self):
         return ""
 
     def getData(self, latitude=None, longitude=None):
@@ -248,19 +248,19 @@ class Foobot(Metric):
         super().__init__(dataSource)
 
     @property
-    def URLTemplate():
+    def URLTemplate(self):
         return "http://api.foobot.io/v2/device/UUID/datapoint/10/last/0/"
 
     @property
-    def updateTime():
+    def updateTime(self):
         return 0 #irrelevant
 
     @property
-    def metricType():
+    def metricType(self):
         return "Environment"
 
     @property
-    def metricLocation():
+    def metricLocation(self):
         return "inside"
 
     def getData(self, latitude=None, longitude=None):
@@ -312,19 +312,19 @@ class WAQI(Metric):
         super().__init__(dataSource)
 
     @property
-    def URLTemplate():
+    def URLTemplate(self):
         return "https://api.waqi.info/feed/geo:LATITUDE;LONGITUDE/?token=453f8f3898bd238302fe5f84e3526a90c5da9496"
 
     @property
-    def updateTime():
+    def updateTime(self):
         return 0 #irrelevant
 
     @property
-    def metricType():
+    def metricType(self):
         return "Environment"
 
     @property
-    def metricLocation():
+    def metricLocation(self):
         return "outside"
 
     def getData(self, latitude=None, longitude=None):
@@ -352,7 +352,7 @@ class GPS(DataSource):
 
     @property
     def metrics(self):
-        return [GPS(self)]
+        return [GPSmetric(self)]
 
     @property
     def _headerTemplate(self):
@@ -374,24 +374,24 @@ class GPS(DataSource):
         raise Exception("Impossible to refresh tokens.")
 
 
-class GPS(Metric):
+class GPSmetric(Metric):
     def __init__(self, dataSource):
         super().__init__(dataSource)
 
     @property
-    def URLTemplate():
+    def URLTemplate(self):
         return "http://mednat.ieeta.pt:8343/gps/USER"
 
     @property
-    def updateTime():
+    def updateTime(self):
         return 10
 
     @property
-    def metricType():
+    def metricType(self):
         return "GPS"
 
     @property
-    def metricLocation():
+    def metricLocation(self):
         return ""
 
     def getData(self, latitude=None, longitude=None):

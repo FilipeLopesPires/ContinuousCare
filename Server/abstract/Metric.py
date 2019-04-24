@@ -11,19 +11,19 @@ class Metric(ABC):
         return self.URLTemplate.replace("UUID", self.dataSource._uuid)
 
     @abstractproperty
-    def URLTemplate():
+    def URLTemplate(self):
         return ""
 
     @abstractproperty
-    def updateTime():
+    def updateTime(self):
         return 0
 
     @abstractproperty
-    def metricType():
+    def metricType(self):
         return ""
 
     @abstractproperty
-    def metricLocation():
+    def metricLocation(self):
         return ""
 
     @abstractmethod
