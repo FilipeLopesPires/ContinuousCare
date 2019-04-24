@@ -3,6 +3,8 @@
 import unittest
 import datetime
 
+from pprint import pprint
+
 from database import *
 
 class TestDatabaseProxy(unittest.TestCase):
@@ -14,15 +16,25 @@ class TestDatabaseProxy(unittest.TestCase):
     @unittest.skip
     def test_register(self):
         self.db.register({
-            "username": "aspedrosa",
+            "type": "client",
+            "username": "aspedrosa2",
             "password": "ola",
             "name": "André Pedrosa",
             "email": "asdf@ua",
-            "phpn": 999999999,
+            "phpn": 236457836,
             "birth_date": "14-03-1998",
             "weight": 1.4,
             "height": 3.1,
             "additional_information": "doime cenas muitas vezes"
+        })
+        self.db.register({
+            "type": "doctor",
+            "username": "arnaldo",
+            "password": "ola",
+            "name": "André Pedrosa",
+            "email": "asdf@ua",
+            "company": None,
+            "specialities": "14-03-1998"
         })
 
     @unittest.skip
@@ -38,6 +50,32 @@ class TestDatabaseProxy(unittest.TestCase):
             "password": "olb"
         })
         self.assertFalse(result, "password olb")
+
+    @unittest.skip
+    def test_updateProfile(self):
+        self.db.updateProfile("aspedrosa2", {
+            "type": "client",
+            "password": "ola",
+            "name": "André Pedrosa 2",
+            "email": "asdf@ua",
+            "phpn": 236457836,
+            "birth_date": "14-03-1998",
+            "weight": None,
+            "height": None,
+            "additional_information": "doime cenas poucas vezes"
+        })
+        self.db.updateProfile("arnaldo", {
+            "type": "doctor",
+            "password": "ola",
+            "name": "Arnaldo Pedrosa",
+            "email": "asdf@ua",
+            "company": None,
+            "specialities": None
+        })
+
+    def test_getProfile(self):
+        pprint(self.db.getProfile("aspedrosa2"))
+        pprint(self.db.getProfile("arnaldo"))
 
     @unittest.skip
     def test_getAllUsers(self):
@@ -137,26 +175,6 @@ class TestDatabaseProxy(unittest.TestCase):
                 }
             ]
         }, "zonnax"))
-
-    @unittest.skip
-    def test_get_user_profile(self):
-        print(self.db.getProfile("aspedrosa"))
-
-    @unittest.skip
-    def test_update_user_profile(self):
-        self.db.updateProfile(
-            "aspedrosa",
-            {
-                "password": "ola",
-                "name": "André Pedrosa",
-                "email": "asdf@ua",
-                "phpn": 111111112,
-                "birth_date": "2019-03-04",
-                "weight": 1.4,
-                "height": 3.1,
-                "diseases": "doime cenas muitas vezes"
-            }
-        )
 
     @unittest.skip
     def test_requestPermission(self):

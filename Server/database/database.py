@@ -32,25 +32,38 @@ class Database:
 
     def register(self, data):
         """
-        Register a client on the database
+        Register a user on the database
 
-        :param data: keys : [username:str, password:str, name:str, email:str, phpn:int,
-                             birth_date:str dd-mm-yyyy, weight:float, height:float, diseases:str]
+        :param data: common : [type:str, username:str, password:str, name:str, email:str]
+            client : [phpn:str, birth_date: str dd-mm-yyyy, weight:float, height:float, additional_information:str]
+            medic : [company: str, specialities:str]
         :type data: dict
-        :return: the client_id for the new client
+        :return: the id for the new client/medic
         :rtype: int
         """
-        return self.relational_proxy.register_client(
-            data["username"],
-            data["password"],
-            data["name"],
-            data["email"],
-            int(data["phpn"]),
-            data["birth_date"],
-            float(data["weight"]),
-            float(data["height"]),
-            data["additional_information"]
-        )
+        if data["type"].lower() == "client":
+            return self.relational_proxy.register_client(
+                data["username"],
+                data["password"],
+                data["name"],
+                data["email"],
+                int(data["phpn"]),
+                data["birth_date"],
+                data["weight"],
+                data["height"],
+                data["additional_information"]
+            )
+        elif data["type"].lower() == "doctor":
+            return self.relational_proxy.register_medic(
+                data["username"],
+                data["password"],
+                data["name"],
+                data["email"],
+                data["company"],
+                data["specialities"]
+            )
+        else:
+            raise Exception("Unkown type of user!")
 
     def verifyUser(self, data):
         """
@@ -72,22 +85,34 @@ class Database:
 
         :param user: username of the client to update
         :type user: str
-        :param data: keys : [password:str, name:str, email:str, phpn:int,
-                             birth_date:str dd-mm-yyyy, weight:float, height:float, diseases:str]
+        :param data: common : [type:str, username:str, password:str, name:str, email:str]
+            client : [phpn:str, birth_date: str dd-mm-yyyy, weight:float, height:float, additional_information:str]
+            medic : [company: str, specialities:str]
         :type data: dict
         """
-        birth_day, birth_month, birth_year = data["birth_date"].split("-")
-        self.relational_proxy.update_user_profile_data(
-            user,
-            data["password"],
-            data["name"],
-            data["email"],
-            data["phpn"], # TODO do they send me this?
-            (birth_day, birth_month, birth_year),
-            data["weight"],
-            data["height"],
-            data["diseases"]
-        )
+        if data["type"].lower() == "client":
+            self.relational_proxy.update_client_profile_data(
+                user,
+                data["password"],
+                data["name"],
+                data["email"],
+                data["phpn"], # TODO do they send me this?
+                data["birth_date"],
+                data["weight"],
+                data["height"],
+                data["additional_information"]
+            )
+        elif data["type"].lower() == "doctor":
+            self.relational_proxy.update_medic_profile_data(
+                user,
+                data["password"],
+                data["name"],
+                data["email"],
+                data["company"],
+                data["specialities"]
+            )
+        else:
+            raise Exception("Unkown type of user!")
 
     def getProfile(self, user):
         """

@@ -36,8 +36,8 @@ create table medic (
 -- PRIMARY KEY
   user_id                 integer,
   foreign key (user_id) references user (user_id),
-  specialisation          varchar(30),
-  company                 varchar(30)
+  specialities            varchar(200),
+  company                 varchar(100)
 );
 
 /*
@@ -200,10 +200,8 @@ CREATE PROCEDURE insert_client (
     START TRANSACTION;
     -- Check duplicates
     IF EXISTS (SELECT * FROM user WHERE username = _username) THEN
-      COMMIT;
       SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "username already exists";
     ELSEIF EXISTS (SELECT * FROM client WHERE health_number = _health_number) THEN
-      COMMIT;
       SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "health number already exists";
     END IF;
 
@@ -219,6 +217,39 @@ CREATE PROCEDURE insert_client (
 
     COMMIT;
   END //
+
+/*
+ * Register a new medic
+ * Fails if for existing same:
+ * - username
+ */
+CREATE PROCEDURE insert_medic (
+    IN _username VARCHAR(30),
+    IN _password CHAR(88),
+    IN _full_name VARCHAR(55),
+    IN _email VARCHAR(30),
+    IN _company VARCHAR(100),
+    IN _specialities VARCHAR(200))
+  BEGIN
+    START TRANSACTION;
+    -- Check duplicates
+    IF EXISTS (SELECT * FROM user WHERE username = _username) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "username already exists";
+    END IF;
+
+    -- Insertions
+    INSERT INTO user (username, password, full_name, email)
+    VALUES (_username, _password, _full_name, _email);
+
+    INSERT INTO medic (user_id, company, specialities)
+    VALUES (LAST_INSERT_ID(), _company, _specialities);
+
+    -- Return medic_id
+    SELECT LAST_INSERT_ID();
+
+    COMMIT;
+  END //
+
 
 /*
  * Verifies if the credentials of a user are correct
@@ -352,23 +383,33 @@ CREATE PROCEDURE get_all_supported_devices ()
 CREATE PROCEDURE get_user_info (
     IN _username VARCHAR(30))
   BEGIN
-    SELECT client_id, full_name, email, health_number, birth_date, weight, height
-    FROM client JOIN user ON client.user_id = user.user_id
-    WHERE username = _username;
+    IF EXISTS (SELECT * FROM client_username WHERE username = _username) THEN
+      SELECT "client", client_id, full_name, email, health_number, birth_date, weight, height, additional_information
+      FROM client JOIN user ON client.user_id = user.user_id
+      WHERE username = _username;
+
+    ELSEIF EXISTS (SELECT * FROM medic_username WHERE username = _username) THEN
+      SELECT "doctor", medic_id, full_name, email, company, specialities
+      FROM medic JOIN user ON medic.user_id = user.user_id
+      WHERE username = _username;
+    ELSE
+	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There is no user with that username";
+    END IF;
+
   END //
 
 /*
- * Updates several fields of the user profile
+ * Updates several fields of the client profile
  * Receives them all and overrites them, assuming
  *  that some are equal
  */
-CREATE PROCEDURE update_user_info (
+CREATE PROCEDURE update_client_info (
     IN _username varchar(30),
     IN _password char(88),
     IN _full_name varchar(55),
     IN _email varchar(30),
     IN _health_number integer,
-    IN _birth_date date,
+    IN _birth_date VARCHAR(10),
     IN _weight float,
     IN _height float,
     IN _additional_information varchar(1000))
@@ -399,11 +440,49 @@ CREATE PROCEDURE update_user_info (
     -- Update client related data
     UPDATE client
     SET health_number = _health_number,
-        birth_date = _birth_date,
+        birth_date = STR_TO_DATE(_birth_date, "%d-%m-%Y")
         weight = _weight,
         height = _height,
         additional_information = _additional_information
     WHERE client_id = __client_id;
+
+    COMMIT;
+  END //
+
+/*
+ * Updates several fields of the medic profile
+ * Receives them all and overrites them, assuming
+ *  that some are equal
+ */
+CREATE PROCEDURE update_medic_info (
+    IN _username varchar(30),
+    IN _password char(88),
+    IN _full_name varchar(55),
+    IN _email varchar(30),
+    IN _company varchar(100),
+    IN _specialities varchar(200))
+  BEGIN
+    DECLARE __medic_id INTEGER;
+
+    START TRANSACTION;
+
+    -- Get id of the client
+    SELECT medic_id INTO __medic_id
+    FROM medic_username
+    where username = _username;
+
+    -- Update user related data
+    UPDATE user
+    SET password = _password,
+        full_name = _full_name,
+        email = _email
+    WHERE username = _username;
+
+    -- Update client related data
+    UPDATE medic
+    SET company = _company,
+        specialities = _specialities
+    WHERE medic_id = __medic_id;
 
     COMMIT;
   END //

@@ -21,13 +21,15 @@ import base64
 
 class StoredProcedures:
     REGISTER_CLIENT = "insert_client"
+    REGISTER_MEDIC = "insert_medic"
     GET_ALL_USERNAMES = "get_all_usernames"
     INSERT_DEVICE = "insert_device"
     VERIFY_CREDENTIALS = "verify_credentials"
     GET_ALL_CLIENT_DEVICES = "get_all_client_devices"
     GET_ALL_SUPPORTED_DEVICES = "get_all_supported_devices"
     GET_USER_PROFILE_DATA = "get_user_info"
-    UPDATE_USER_PROFILE_DATA = "update_user_info"
+    UPDATE_CLIENT_PROFILE_DATA = "update_client_info"
+    UPDATE_MEDIC_PROFILE_DATA = "update_medic_info"
     REGISTER_SLEEP_SESSION = "register_sleep_session"
     INSERT_SLEEP_SESSION = "insert_sleep_session"
     GET_SLEEP_SESSIONS = "get_sleep_sessions"
@@ -122,9 +124,10 @@ class MySqlProxy:
     def register_client(self, username, password, full_name, email, health_number,
                               birth_date, weight, height, additional_information):
         """
-        Creates a new user on the database. The `register_client` SP is used to create all user related data.
+        Creates a new user on the database. The `insert_client` SP is used to create all user related data.
         On this function the password is hashed to be stored.
-        The write to the database can fail if an user with the same username or health_number already exists.
+        The write to the database can fail if an user with the same username exists or a
+         client with the same health_number already exists.
 
         :raises Exception: In case if something goes wrong when calling stored procedures
 
@@ -141,11 +144,12 @@ class MySqlProxy:
         :type health_number: int
         :param birth_date: with format day-month-year
         :type birth_date: str
-        :param weight: in kilograms
+        :param weight: in kilograms (optional)
         :type weight: float
-        :param height: in meters
+        :param height: in meters (optional)
         :type height: float
         :param additional_information: information that can be important to mention so a medic can be more contextualized
+        (optional)
         :type additional_information: list
         :return: client_id of the client created on the database
         :rtype: int
@@ -167,9 +171,44 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def register_medic(self, username, password, full_name, email, specialization, company):
-        """"""
-        pass
+    def register_medic(self, username, password, full_name, email, company, specialities):
+        """
+        Creates a new user on the database. The `insert_medic` SP is used to create all user related data.
+        On this function the password is hashed to be stored.
+        The write to the database can fail if an user with the same username already exists.
+
+        :param username: of the medic
+        :type username: str
+        :param password: clear text password to be hashed
+        :type password: str
+        :param full_name: of the medic
+        :type full_name: str
+        :param email: of the medic
+        :type email: str
+        :param company: to which company is the medic working (optional)
+        :type company: str
+        :param specialities: medic specializations (optional)
+        :type specialities: str
+        :return: medic_id of the medic created on the database
+        :rtype: int
+
+        :raises Exception: In case if something goes wrong when calling stored procedures
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            password = self._hash_password(password)
+
+            cursor.callproc(
+                StoredProcedures.REGISTER_MEDIC,
+                (username, password, full_name, email, company, specialities)
+            )
+
+            new_id = next(cursor.stored_results()).fetchone()[0]
+
+            return new_id
+        finally:
+            self._close_conenction(conn, cursor)
 
     def check_credentials(self, username, password):
         """
@@ -310,9 +349,9 @@ class MySqlProxy:
         """
         Obtains all profile data associated with the username received
 
-        :param username: of the client to search for
+        :param username: of the client/medic to search for
         :type username: str
-        :return: all client's profile data
+        :return: all client/medic's profile data
         {client_id:int, full_name:str, email:str, health_number:int, birth_date:datetime, weight:float, height:float}
         :rtype: dict
         """
@@ -323,19 +362,29 @@ class MySqlProxy:
 
             results = next(cursor.stored_results()).fetchall()[0]
 
-            return {key: (results[i] if key != "birth_date" else results[i].strftime("%d-%m-%Y"))
-                    for i, key in enumerate(["client_id",
-                                             "full_name",
-                                             "email",
-                                             "health_number",
-                                             "birth_date",
-                                             "weight",
-                                             "height",
-                                             "additional_info"])}
+            if results[0] == "client":
+                return {key: (results[i+1] if key != "birth_date" else results[i+1].strftime("%d-%m-%Y"))
+                        for i, key in enumerate(["client_id",
+                                                 "full_name",
+                                                 "email",
+                                                 "health_number",
+                                                 "birth_date",
+                                                 "weight",
+                                                 "height",
+                                                 "additional_info"])}
+            elif results[0] == "doctor":
+                return {key: results[i]
+                        for i, key in enumerate(["medic_id",
+                                                 "full_name",
+                                                 "email",
+                                                 "company",
+                                                 "specialities"])}
+            else:
+                raise Exception("Invalid user type")
         finally:
             self._close_conenction(conn, cursor)
 
-    def update_user_profile_data(self, username, password, full_name, email, health_number, #TODO they may not send this field
+    def update_client_profile_data(self, username, password, full_name, email, health_number,
                                        birth_date, weight, height, additional_information):
         """
         Updates the profile information for a user. The function receives all information
@@ -352,8 +401,8 @@ class MySqlProxy:
         :param health_number: number used on the country of the client to identify him in which concerns the health
             department
         :type health_number: int
-        :param birth_date: with format (day, month, year)
-        :type birth_date: tuple
+        :param birth_date: with format dd-mm-yyyy
+        :type birth_date: str
         :param weight: in kilograms
         :type weight: float
         :param height: in meters
@@ -366,14 +415,38 @@ class MySqlProxy:
 
             password = self._hash_password(password)
 
-            birth_day, birth_month, birth_year = birth_date
+            cursor.callproc(StoredProcedures.UPDATE_CLIENT_PROFILE_DATA, (username, password, full_name, email,
+                                                                        health_number, birth_date, weight, height,
+                                                                        additional_information))
+        finally:
+            self._close_conenction(conn, cursor)
 
-            cursor.callproc(StoredProcedures.UPDATE_USER_PROFILE_DATA, (username, password, full_name, email,
-                                                                        "%s-%s-%s" % (birth_year,
-                                                                                      birth_month,
-                                                                                      birth_year),
-                                                                        birth_date, weight,
-                                                                        height, additional_information))
+    def update_medic_profile_data(self, username, password, full_name, email,
+                                   company, specialities):
+        """
+        Updates the profile information for a user. The function receives all information
+        to overload all data, assuming that some of it is the same as the stored one.
+
+        :param username: of the client to update the data
+        :type username: str
+        :param password: clear text password
+        :type password: str
+        :param full_name: full name of the client
+        :type full_name: str
+        :param email: email of the client
+        :type email: str
+        :param company: to which company is the medic working
+        :type company: str
+        :param specialities: medic specializations
+        :type specialities: str
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            password = self._hash_password(password)
+
+            cursor.callproc(StoredProcedures.UPDATE_MEDIC_PROFILE_DATA, (username, password, full_name, email,
+                                                                        company, specialities))
         finally:
             self._close_conenction(conn, cursor)
 
