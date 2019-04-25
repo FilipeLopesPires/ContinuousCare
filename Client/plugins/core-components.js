@@ -6,3 +6,6 @@ import PageFooter from '@/components/footers/PageFooter.vue'
 Vue.component('HeaderMenu', HeaderMenu)
 Vue.component('PageBanner', PageBanner)
 Vue.component('PageFooter', PageFooter)
+
+import Toasted from 'vue-toasted'
+Vue.use(Toasted)

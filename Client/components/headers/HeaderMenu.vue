@@ -1,6 +1,11 @@
 <template>
     <div v-if="loggedIn()">
-        <HeaderMenuClient :activePage="activePage" />
+        <div v-if="regularAccount()">
+            <HeaderMenuClient :activePage="activePage" />
+        </div>
+        <div v-else>
+            <HeaderMenuDoctor :activePage="activePage" />
+        </div>
     </div>
     <div v-else>
         <HeaderMenuDefault :activePage="activePage" />
@@ -38,6 +43,15 @@ export default {
             this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
             return false
         },
+        regularAccount() {
+            var retval = true;
+            this.$nextTick(() => { 
+                if(this.$store.getters.userType == "doctor") {
+                    retval = false;
+                }
+            });
+            return retval;
+        }
     }
 }
 </script>

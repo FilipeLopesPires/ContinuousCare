@@ -1,69 +1,67 @@
 <template>
     <div class="register-form" >
-        <h3 class="mt-120 mb-30 title_color text-center" >Join the ContinuousCare Community!</h3>
-        <div class="container col-lg-9 col-md-9 switch-wrap d-flex justify-content-between">
-            <p class="col-lg-6 col-md-6">Account type:</p>
-            <div v-if="accountTypeChecked" class="row col-lg-8 col-md-8">
-                <div class="col-lg-1 col-md-1 primary-switch-inverted">
-                    <input type="checkbox" id="primary-switch-inverted" @click="changeAccountType" checked>
-                    <label for="primary-switch-inverted"></label>
-                </div>
-                <p class="col-lg-10 col-md-10">Doctor</p>
-            </div>
-            <div v-else class="row col-lg-8 col-md-8">
-                <div class="col-lg-1 col-md-1 confirm-switch">
-                    <input type="checkbox" id="confirm-switch" @click="changeAccountType" checked>
-                    <label for="confirm-switch"></label>
-                </div>
-                <p class="col-lg-10 col-md-10">Regular User</p>
-            </div>
-        </div>
+        <h1 class="mt-120 mb-30 title_color text-center" >My Profile</h1>
         <form class="form-wrap" @submit.prevent="onSubmit">
+            <!-- Account Type -->
+            <p v-if="accountTypeChecked" class="title-form-wrap">Account type: Regular User</p>
+            <p v-else class="title-form-wrap">Account type: Doctor</p>
             <!-- First and Last Name -->
+            <p class="title-form-wrap">Name:</p>
             <div class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.first_name" type="text" name="first_name" placeholder="First Name *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'First Name *'">
+                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.first_name" type="text" name="first_name" placeholder="First Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'First Name'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team ">
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.last_name" type="text" name="last_name" placeholder="Last Name *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Last Name *'">
+                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.last_name" type="text" name="last_name" placeholder="Last Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Last Name'">
                 </div>
             </div>
             <!-- Username -->
+            <p class="title-form-wrap">Username:</p>
             <div class="input-group-icon mt-10">
                 <div class="icon">
                     <i class="fa fa-user" aria-hidden="true"></i>
                 </div>
-                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.username" type="text" name="username" placeholder="Username *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Username *'">
+                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.username" type="text" name="username" placeholder="Username" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Username'">
             </div>
             <!-- Email -->
+            <p class="title-form-wrap">Email:</p>
             <div class="input-group-icon mt-10">
                 <div class="icon">
                     <i class="fa fa-envelope" aria-hidden="true"></i>
                 </div>
-                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.email" type="email" name="EMAIL" placeholder="Email Address *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Email Address *'" > <!-- class="single-input-primary"/"single-input-accent"/"single-input-secondary" -->
+                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.email" type="email" name="EMAIL" placeholder="Email Address" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Email Address'" > <!-- class="single-input-primary"/"single-input-accent"/"single-input-secondary" -->
             </div>
             <!-- Password -->
+            <p class="title-form-wrap">Password:</p>
+            <div class="row d-flex ">
+                <div class="mt-10 col-lg-6 col-md-6 single-team " >
+                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password" type="password" name="password" placeholder="Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password'">
+                </div>
+            </div>
+            <p class="title-form-wrap">New Password:</p>
             <div class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password" type="password" name="password" placeholder="Password *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password *'">
+                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.new_password" type="password" name="new_password" placeholder="New Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'New Password'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team ">
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password_confirmation" type="password" name="password_confirmation" placeholder="Confirm Password *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm Password *'">
+                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.new_password_confirmation" type="password" name="new_password_confirmation" placeholder="Confirm New Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm New Password'">
                 </div>
             </div>
             <!-- Public Health Personal Number & Birthdate-->
+            <p v-if="!accountTypeChecked" class="title-form-wrap">Public Health Personal Number and Birthdate</p>
             <div v-if="!accountTypeChecked" class="row ">
                 <div class="input-group-icon mt-10 col-lg-6 col-md-6">
                     <div class="icon ml-15">
                         <i class="fa fa-plus" aria-hidden="true"></i>
                     </div>
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.phpn" type="text" name="phpn" placeholder="Public Health Personal Number *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Public Health Personal Number *'">
+                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.phpn" type="text" name="phpn" placeholder="PHPN" onfocus="this.placeholder = ''" onblur="this.placeholder = 'PHPN'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
                     <datepicker placeholder="Date of Birth" v-model="filledform.birthdate" format="dd-MM-yyyy" :disabledDates="this.disabledDates" input-class="input-group-icon single-team single-input justify-content-center d-flex align-items-center"></datepicker>
                 </div>
             </div>
             <!-- Weight and Height -->
+            <p v-if="!accountTypeChecked" class="title-form-wrap">Weight and Height:</p>
             <div v-if="!accountTypeChecked" class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
                     <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.weight" type="number" name="weight" placeholder="Weight (kg)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Weight (kg)'">
@@ -73,10 +71,12 @@
                 </div>
             </div>
             <!-- Aditional Info -->
+            <p v-if="!accountTypeChecked" class="title-form-wrap">Aditional Information:</p>
             <div v-if="!accountTypeChecked" class="mt-10">
                 <textarea class="single-textarea" v-bind="$attrs" v-on="$listeners" v-model="filledform.additional_info" placeholder="Additional Information" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Additional Information'"></textarea>
             </div>
             <!-- Company and Specialities -->
+            <p v-if="accountTypeChecked" class="title-form-wrap">Company and Specialities:</p>
             <div v-if="accountTypeChecked" class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
                     <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.company" type="text" name="company" placeholder="Company" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Company'">
@@ -87,15 +87,10 @@
             </div>
             <!-- Submit -->
             <div class="row justify-content-center d-flex align-items-center">
+                <div class="mt-10 col-lg-8 col-md-9"> </div>
                 <div class="mt-10 col-lg-4 col-md-3 justify-content-center d-flex align-items-center">
-                    <button v-if="accountTypeChecked" class="genric-btn primary radius text-uppercase" type="submit">Register</button>
-                    <button v-else class="genric-btn info radius text-uppercase" type="submit">Register</button>
-                </div>
-                <div class="mt-10 col-lg-8 col-md-9">
-                    <p class="mt-10">
-                        Already have an account? <nuxt-link to="/login">Sign In!</nuxt-link> 
-                        <br>* These fields are mandatory
-                    </p>
+                    <button v-if="accountTypeChecked" class="genric-btn primary radius text-uppercase" type="submit">Update</button>
+                    <button v-else class="genric-btn info radius text-uppercase" type="submit">Update</button>
                 </div>
             </div>
         </form>
@@ -111,6 +106,7 @@ export default {
         Datepicker,
     },
     data() {
+
         return {
             accountTypeChecked: false,
             disabledDates: {
@@ -277,5 +273,11 @@ export default {
 .register-form {
     margin-top: 25%;
     margin-bottom: 15%;
+}
+.title-form-wrap {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: -12px;
+    margin-top: 10px;
 }
 </style>

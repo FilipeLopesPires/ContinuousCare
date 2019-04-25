@@ -9,19 +9,19 @@
                 </a>
             </li>
             <li class="page-item active" @click="switchChart(1)">
-                <nuxt-link class="page-link" to="/history">1</nuxt-link>
+                <nuxt-link class="page-link" to="">1</nuxt-link>
             </li>
             <li class="page-item" @click="switchChart(2)">
-                <nuxt-link class="page-link" to="/history">2</nuxt-link>
+                <nuxt-link class="page-link" to="">2</nuxt-link>
             </li>
             <li class="page-item" @click="switchChart(3)">
-                <nuxt-link class="page-link" to="/history">3</nuxt-link>
+                <nuxt-link class="page-link" to="">3</nuxt-link>
             </li>
             <li class="page-item" @click="switchChart(4)">
-                <nuxt-link class="page-link" to="/history">4</nuxt-link>
+                <nuxt-link class="page-link" to="">4</nuxt-link>
             </li>
             <li class="page-item" @click="switchChart(5)">
-                <nuxt-link class="page-link" to="/history">5</nuxt-link>
+                <nuxt-link class="page-link" to="">5</nuxt-link>
             </li>
             <li class="page-item">
                 <a href="#" class="page-link" aria-label="Next">

@@ -2,7 +2,8 @@
     <div class="col-lg-4 col-md-4 col-sm-6">
         <DeviceModal :device="device" />
         <div class="categories_post">
-            <img :src="device.photo" alt="Procedure" height="200px" width="200px" >
+            <img v-if="device.photo==''" src="~assets/img/elements/device-plus.png" alt="Procedure" height="200px" width="200px">
+            <img v-else :src="device.photo" alt="Procedure" height="200px" width="200px">
             <div class="categories_details" @click="showModal($modal, device.token)">
                 <div class="categories_text">
                     <div class="border_line"></div>

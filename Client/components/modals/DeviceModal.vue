@@ -9,7 +9,7 @@
         :adaptive="true"
         :pivot-y="0.5"
         :scrollable="true">
-        <form class="size-modal-content" >
+        <form class="size-modal-content" @submit.prevent="">
             <!-- Info -->
             <h3 class="title_color text-center" >{{ device.type }}</h3>
             <div v-if="device.type=='Add Device'" class="mt-10">
@@ -30,7 +30,7 @@
             <div v-else>
                 <div class="mt-10" v-for="field in chosenDeviceFields" :key="field.id" :field="field"> 
                     <h5 >{{ field }}:</h5>
-                    <input type="text" placeholder="" :name="field" class="single-input"> 
+                    <input required type="text" placeholder="" :name="field" class="single-input"> 
                 </div>
             </div>
             <div class="mt-10 row justify-content-center d-flex align-items-center">
@@ -40,8 +40,8 @@
                     <button v-if="device.type!='Add Device'" class="genric-btn primary radius text-uppercase" @click="onRemove" type="button" >Remove</button>
                 </div>
                 <div class="col-lg-3 col-md-3 row justify-content-right">
-                    <button v-if="device.type!='Add Device'" class="genric-btn info radius text-uppercase" @click="onUpdate" type="button" >Update</button>
-                    <button v-else class="genric-btn info radius text-uppercase" @click="onAdd" type="button" >Add</button>
+                    <button v-if="device.type!='Add Device'" class="genric-btn info radius text-uppercase" @click="onUpdate" type="submit" >Update</button>
+                    <button v-else class="genric-btn info radius text-uppercase" @click="onAdd" type="submit" >Add</button>
                 </div>
             </div>
         </form>
@@ -49,22 +49,15 @@
 </template>
 
 <script>
-/* 
-import VModal from 'vue-js-modal'
-Vue.component('vmodal', VModal)
-Vue.use(VModal) */
 import Vue from 'vue'
 import VModal from 'vue-js-modal'
+import Toasted from 'vue-toasted'
 Vue.component('vmodal', VModal)
 Vue.use(VModal)
-
-import BasicTable from '@/components/tables/BasicTable.vue'
+Vue.use(Toasted)
 
 export default {
     name: 'DeviceModal',
-    components: {
-        BasicTable,
-    },
     props: {
 		device: {
             type: Object,
@@ -93,21 +86,39 @@ export default {
             } else if(event.target.value==this.allOptions[1]) {
                 this.chosenDeviceFields = ["token","uuid","latitude","longitude"];
             } else {
-                // error ...
+                // this should never happen ...
             }
         },
         async onAdd() {
             /* Fields Validation */
-            // do something ...
-
-            /* Server Validation */
-            var result = await this.sendDevice(this.type, this.$store.getters.sessionToken);
-            if(result.status==0){
-                console.log("success");
-                this.$router.push("/devices");
-            } else {
-                // error ... warn that device fields are invalid
+            if(this.type == "") {
+                this.$toasted.show('Please choose a device type before submiting changes.', 
+                        {position: 'bottom-center',
+                        duration: 2500});
+                return;
             }
+            var data = this.getData(this.type);
+            if(this.validateFields(data) != 0) {
+                return;
+            }
+            
+            /* Server Validation */
+            /* var result = await this.sendDevice(data, this.$store.getters.sessionToken);
+            if(result) {
+                if(result.status==0){
+                    if(process.client) {
+                        window.location.reload(true);
+                    }
+                } else {
+                    // warn which device fields are invalid
+                    this.$toasted.show('Submission was invalid. Please make sure you fill in the fields correctly.', 
+                        {position: 'bottom-center',
+                        duration: 5000});
+                    return;
+                }
+            } else {
+                return;
+            } */
         },
         onUpdate() {
             // to do ...
@@ -115,10 +126,24 @@ export default {
         onRemove() {
             // to do ...
         },
-        async sendDevice(type,AuthToken) {
+        async sendDevice(data,AuthToken) {
             const config = {
                 headers: {'AuthToken': AuthToken},
             }
+            return await this.$axios.$post("/devices", data, config)
+                        .then(res => {
+                            console.log(res)
+                            return res;
+                        })
+                        .catch(e => {
+                            // unable to add device
+                            this.$toasted.show('Something went wrong while adding your device. The server might be down at the moment. Please try again later.', 
+                                {position: 'bottom-center',
+                                duration: 7500});
+                            return null;
+                        });
+        },
+        getData(type) {
             var data = {}
             if(type == this.allOptions[0]) {
                 data = {
@@ -137,18 +162,52 @@ export default {
                     'longitude': parseFloat(document.querySelector("input[name=longitude]").value)
                 }
             } else {
-                // error ...
+                // this should never happen ...
             }
-            console.log(data);
-            return await this.$axios.$post("/devices", data, config)
-                        .then(res => {
-                            console.log(res)
-                            return res;
-                        })
-                        .catch(e => {
-                            // error ...
-                        });
+            return data;
         },
+        validateFields(data) {
+            // check if values are not empty
+            var data_values = Object.values(data);
+            for(var i=0; i<data_values.length; i++) {
+                if(data_values[i] == null || data_values[i] == "") {
+                    return -1;
+                }
+            }
+            if(data.authentication_fields) {
+                var data_auth_values = Object.values(data.authentication_fields);
+                for(var i=0; i<data_auth_values.length; i++) {
+                    if(data_auth_values[i] == null || data_auth_values[i] == "") {
+                        return -1;
+                    }
+                }
+            }
+            // check if values are in the correct format
+            if(data.latitude) {
+                if(!String(data.latitude).match("^[-+]?(([1-8]?\d(\.\d+)?)|90(\.0+)?)$")) {
+                    this.$toasted.show("Latitude must follow the correct format!\n(e.g.: '10', '+180.0', '-127.5')", 
+                        {position: 'bottom-center',
+                        duration: 2500});
+                    return -2;
+                }
+                if(!String(data.longitude).match("^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$")) {
+                    this.$toasted.show("Longitude must follow the correct format!\n(e.g.: '47', '+90.0', '-180.00')", 
+                        {position: 'bottom-center',
+                        duration: 2500});
+                    return -2;
+                }
+            }
+            if(data.authentication_fields && data.authentication_fields.refresh_token) {
+                if(data.authentication_fields.token == data.authentication_fields.refresh_token) {
+                    this.$toasted.show('Refresh Token must be different from the Token!', 
+                        {position: 'bottom-center',
+                        duration: 2500});
+                    return -3;
+                }
+            }
+            //console.log("validated")
+            return 0;
+        }
     },
 }
 </script>

@@ -1,7 +1,7 @@
 import pkg from './package'
 
 export default {
-  mode: 'universal',
+  mode: 'spa',
 
   /* Headers of the page */
   head: {
@@ -47,11 +47,11 @@ export default {
 
   /* Plugins to load before mounting the App */
   plugins: [
-    '~plugins/core-components.js',
-    /* { src: '~node_modules/vue-js-modal', ssr: false},
-    { src: '~node_modules/apexcharts', ssr: false},
-    { src: '~node_modules/vue-apexcharts', ssr: false}, 
-    { src: '~node_modules/vue-toasted', ssr:false}, */
+    { src:'~plugins/core-components.js' },
+    /* { src: '~node_modules/vue-js-modal', ssr: false },
+    { src: '~node_modules/apexcharts', ssr: false },
+    { src: '~node_modules/vue-apexcharts', ssr: false }, 
+    { src: '~node_modules/vue-toasted', ssr:false }, */
   ],
 
   /* Nuxt.js modules */
@@ -71,6 +71,7 @@ export default {
 
   /* Build configuration */
   build: {
+    vendor: ['/js/custom.js'],
     extend(config, ctx) {
     }
   }

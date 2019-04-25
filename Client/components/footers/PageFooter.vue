@@ -36,7 +36,7 @@
                         <h6>Newsletter</h6>
                         <p>Keep informed about our latest updates!</p>
                         <div id="mc_embed_signup">
-                            <form target="_blank" action="#" method="get" class="form-inline">
+                            <form @submit.prevent="onSubmit" class="form-inline">
                                 <div class="form-group row">
                                     <div class="col-lg-7 col-md-6 col-sm-12">
                                         <input name="EMAIL" placeholder="Your Email Address" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Your Email Address '" required="" type="email">
@@ -79,6 +79,12 @@ export default {
     name: 'PageFooter',
     props: {
         
+    },
+    methods: {
+        onSubmit() {
+            this.$toasted.show('This feature is not yet implemented. We are sorry for the inconvenience :(', 
+                {position: 'bottom-center', duration: 4000});
+        }, 
     }
 }
 </script>

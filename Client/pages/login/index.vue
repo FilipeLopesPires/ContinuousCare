@@ -4,8 +4,7 @@
             <!--================ Header Menu Area =================-->
             <HeaderMenu activePage="Login or Register" />
 
-            <!--================ Register Form Area =================-->
-            
+            <!--================ Login Form Area =================-->
             <div class="row m0 justify-content-center align-items-center" >
                 <div class="col-lg-6">
                     <div class="whole-wrap">
@@ -15,6 +14,7 @@
                     </div>
                 </div>
             </div>
+
             <!--================ Footer Area =================-->
             <PageFooter />
             

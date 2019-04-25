@@ -20,14 +20,14 @@
           </div>
 
           <div class="row">
-            <ServiceBox icon="lnr lnr-map-marker" title="Environment Analysis based on Geolocation" 
-                        description="... description here ..."/>
-            <ServiceBox icon="lnr lnr-heart-pulse" title="Real-time Health Status Tracking" 
-                        description="... description here ..."/>
-            <ServiceBox icon="lnr lnr-picture" title="User Friendly Data Visualization" 
-                        description="... description here ..."/>
-            <ServiceBox icon="lnr lnr-users" title="Data Sharing for Medical Consultations" 
-                        description="... description here ..."/>
+            <ServiceBox icon="lnr lnr-map-marker" title1="Environment Analysis" title2="based on Geolocation" 
+                        description="Install our ContinuousCare Mobile app to keep track of the air quality of the places you visit."/>
+            <ServiceBox icon="lnr lnr-heart-pulse" title1="Real-time Health" title2="Status Tracking" 
+                        description="Visit ContinuousCare any time you wish to know your health conditions in any period of time."/>
+            <ServiceBox icon="lnr lnr-picture" title1="User Friendly" title2="Data Visualization" 
+                        description="Take advantage of our intuitive features to know better your body and the environment you live in."/>
+            <ServiceBox icon="lnr lnr-users" title1="Data Sharing" title2="for Medical Consultations" 
+                        description="Share relevant information with your local doctor to best understand, prevent and treat complaints and diseases."/>
           </div>
         </div>
       </section>

@@ -33,17 +33,21 @@
                 <div class="row justify-content-center">
                     <h1>Our Partners</h1>
                 </div>
-                <div class="mb-20 container">
-                    <h3 class="text-heading title_color">Fitbit</h3>
-                    <p class="sample-text">
-                        ... [ information about the device here ] ...
-                    </p>
+                <div v-if="supported_devices.length > 0">
+                    <div class="mb-20 container" v-for="device in supported_devices"
+                                                        :key="device.id"
+                                                        :device="device">
+                        <h3 class="text-heading title_color">{{device.brand}} {{device.model}}</h3>
+                        <p class="sample-text">
+                            Type: {{device.type}}
+                        </p>
+                        <p class="sample-text">
+                            Supported Metrics: {{device.metrics}}
+                        </p>
+                    </div>
                 </div>
-                <div class="mt-10 container">
-                    <h3 class="text-heading title_color">Foobot</h3>
-                    <p class="sample-text">
-                        ... [ information about the device here ] ...
-                    </p>
+                <div v-else class="row justify-content-center">
+                    <h2>Unable to load supported devices.</h2>
                 </div>
                 <div class="mb-50"></div>
             </section>
@@ -57,6 +61,10 @@
 </template>
 
 <script>
+import Vue from "vue"
+import Toasted from 'vue-toasted'
+Vue.use(Toasted)
+
 import DeviceBox from '@/components//boxes/DeviceBox.vue'
 
 export default {
@@ -65,28 +73,12 @@ export default {
         DeviceBox,
     },
     data() {
-        /* if(this.$store.getters.loadedDevices.length < 2) { */
+        var requestError = false;
+        var loaded_devices = [{id: 0, type: "Add Device", token: "", photo: ""}];
+        var supported_devices = [];
 
-            var requestError = false;
-            var loaded_devices = [{id: 0, type: "Add Device", token: "", photo: "http://www.clker.com/cliparts/A/P/L/b/V/G/blue-plus-sign-hi.png"}];
-            
-            return {
-                /* loaded_devices: [
-                    {device: {brand: "Fitbit", model: "Charge 3", 
-                        type: "bracelet", authentication_fields: [["Token","0001"]],
-                        supported_metrics: ["metric1","metric2"],
-                        photo: "https://ss7.vzw.com/is/image/VerizonWireless/fitbit-charge3-graphite-black-fb409gmbk-a?$png8alpha256$&hei=410"}},
-                    {device: {brand: "Foobot", model: "", 
-                        type: "home_device", authentication_fields: [["Token","0002"], ["UUID", "0001"]],
-                        supported_metrics: ["metric3","metric4"],
-                        photo: "https://cdn.shopify.com/s/files/1/0008/7330/0029/products/foobot_x700.jpg?v=1528342886"}},
-                    {device: {brand: "Add", model:"Device", 
-                        type: "", authentication_fields: [["",""]],
-                        supported_metrics: [""],
-                        photo: "http://www.clker.com/cliparts/A/P/L/b/V/G/blue-plus-sign-hi.png"}}
-                ], */
-
-                /* {"status": 0, "msg": "Successfull operation.", 
+        return {
+            /* {"status": 0, "msg": "Successfull operation.", 
                     "data": [
                         {"id": 3, "type": "FitBit Charge 3", 
                         "refresh_token": "7d0773d69555ee9a52f3210c662b95db788f4ad3e3b9a8a5ef9bd77f0c90abf8", 
@@ -97,26 +89,41 @@ export default {
                         "token": "eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiam9hby5wQHVhLnB0IiwiaWF0IjoxNTUyMDY2Njc5LCJ2YWxpZGl0eSI6LTEsImp0aSI6IjRiNmY2NzhiLWJjNTYtNDYxNi1hYmMyLTRiNjlkMTNkMjUzOSIsInBlcm1pc3Npb25zIjpbInVzZXI6cmVhZCIsImRldmljZTpyZWFkIl0sInF1b3RhIjoyMDAsInJhdGVMaW1pdCI6NX0.aeLLsrhh1-DVXSwl-Z_qDx1Xbr9oIid1IKsOyGQxwqQ"}
                         ]} */
 
-                /* // AUX:
-                this.$store.getters.loadedDevices
-                this.$store.dispatch('setDevices', ...); */
-
-                requestError,
-                loaded_devices,
-            }
-        /* } */
+            requestError,
+            loaded_devices,
+            supported_devices,
+        }
     },
     async mounted() {
-        //console.log("mounted is running")
-        await this.getDevices(this.$store.getters.sessionToken)
+        await this.getDevices(this.$store.getters.sessionToken);
         if(!this.requestError) {
-            //console.log("no error");
-            //this.insertPhotos();
-            //console.log(this.loaded_devices)
+            this.insertPhotos();
             this.$store.dispatch('setDevices', this.loaded_devices);
+        }
+        await this.getSupportedDevices();
+        if(this.supported_devices.length > 0) {
+            this.$store.dispatch('setSupportedDevices', this.supported_devices);
         }
     },
     methods: {
+        async getSupportedDevices() {
+            this.supported_devices = await this.$axios.$get("/supportedDevices")
+                                    .then(res => {
+                                        if(res.status != 0) {
+                                            console.log(res)
+                                            return [];
+                                        } 
+                                        return res.data;
+                                    })
+                                    .catch(e => {
+                                        // Unable to get supported devices from server
+                                        this.$toasted.show('Something went wrong while trying to retrieve supported devices. The server might be down at the moment. Please try again later.', 
+                                            {position: 'bottom-center',
+                                            duration: 7500});
+                                        return [];
+                                    });
+            
+        },
         async getDevices(AuthToken) {
             const config = {
                 headers: {'AuthToken': AuthToken}
@@ -125,11 +132,16 @@ export default {
                                 .then(res => {
                                     if(res.status != 0) {
                                         this.requestError = true;
+                                        console.log(res)
                                         return [];
                                     }
                                     return res.data;
                                 })
                                 .catch(e => {
+                                    // Unable to get devices from server
+                                    this.$toasted.show('Something went wrong while trying to retrieve devices. The server might be down at the moment. Please try again later.', 
+                                        {position: 'bottom-center',
+                                        duration: 7500});
                                     this.requestError = true;
                                     return [];
                                 });

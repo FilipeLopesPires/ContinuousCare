@@ -1,5 +1,5 @@
 <template>
-    <header class="header_area">
+    <header :class="headerClass">
         <HeaderInfo />
         <div class="main_menu">
             <nav class="navbar navbar-expand-lg navbar-light">
@@ -60,7 +60,7 @@
 import HeaderInfo from '@/components/headers/HeaderInfo.vue'
 
 export default {
-    name: 'HeaderMenuDefault',
+    name: 'HeaderMenuClient',
     props: {
         activePage: {
 			type: String,
@@ -69,6 +69,14 @@ export default {
     },
     components: {
         HeaderInfo
+    },
+    data() {
+        var scrolled;
+        var headerClass;
+        return {
+            scrolled: false,
+            headerClass: "header_area"
+        };
     },
     methods: {
         isActive(menuItem) {
@@ -79,7 +87,21 @@ export default {
                 this.$store.dispatch('logout'),
                 this.$router.push("/login")
             });
-        }
+        },
+        handleScroll () {
+            this.scrolled = window.scrollY > 30;
+            if(this.scrolled) {
+                this.headerClass = "header_area navbar_fixed"
+            } else {
+                this.headerClass = "header_area"
+            }
+        },
+    },
+    beforeMount () {
+        window.addEventListener('scroll', this.handleScroll);
+    },
+    beforeDestroy () {
+        window.removeEventListener('scroll', this.handleScroll);
     }
 }
 </script>

@@ -2,9 +2,9 @@
     <div class="col-lg-3 col-md-6">
         <div class="single_service">
             <span :class="icon"></span> <!-- "lnr lnr-rocket","lnr lnr-bug","lnr lnr-users",etc. -->
-            <a href="#">
-                <h4>{{ title }}</h4>
-            </a>
+            <nuxt-link to="/">
+                <h4>{{ title1 }} <br> {{ title2 }}</h4>
+            </nuxt-link>
             <p>{{ description }}</p>
         </div>
     </div>
@@ -18,7 +18,11 @@ export default {
             type: String,
             required: true
         },
-        title: {
+        title1: {
+            type: String,
+            required: true
+        },
+        title2: {
             type: String,
             required: true
         },
