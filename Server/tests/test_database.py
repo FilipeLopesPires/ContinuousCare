@@ -73,6 +73,7 @@ class TestDatabaseProxy(unittest.TestCase):
             "specialities": None
         })
 
+    @unittest.skip
     def test_getProfile(self):
         pprint(self.db.getProfile("aspedrosa2"))
         pprint(self.db.getProfile("arnaldo"))

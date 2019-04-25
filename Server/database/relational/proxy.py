@@ -165,7 +165,7 @@ class MySqlProxy:
                  birth_date, weight, height, additional_information)
             )
 
-            new_id = next(cursor.stored_results()).fetchone()[0]
+            new_id = next(cursor.stored_results()).fetchall()[0]
 
             return new_id
         finally:
@@ -204,7 +204,7 @@ class MySqlProxy:
                 (username, password, full_name, email, company, specialities)
             )
 
-            new_id = next(cursor.stored_results()).fetchone()[0]
+            new_id = next(cursor.stored_results()).fetchall()[0]
 
             return new_id
         finally:
@@ -228,7 +228,7 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.VERIFY_CREDENTIALS, (username, password))
 
-            return next(cursor.stored_results()).fetchone()[0] == 1
+            return next(cursor.stored_results()).fetchall()[0] == 1
         finally:
             self._close_conenction(conn, cursor)
 
@@ -262,7 +262,7 @@ class MySqlProxy:
 
             conn.commit()
 
-            return next(cursor.stored_results()).fetchone()[0]
+            return next(cursor.stored_results()).fetchall()[0]
         finally:
             self._close_conenction(conn, cursor)
 
@@ -679,7 +679,7 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.HAS_PERMISSION, (medic, client))
 
-            return next(cursor.stored_results()).fetchone()[0] == 1
+            return next(cursor.stored_results()).fetchall()[0] == 1
         finally:
             self._close_conenction(conn, cursor)
 
