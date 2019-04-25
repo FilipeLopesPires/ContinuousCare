@@ -42,16 +42,17 @@ class Database:
         :rtype: int
         """
         if data["type"].lower() == "client":
+            additional_info = None if data["additional_information"] == "" else data["additional_information"]
             return self.relational_proxy.register_client(
                 data["username"],
                 data["password"],
                 data["name"],
                 data["email"],
-                int(data["phpn"]),
+                data["phpn"],
                 data["birth_date"],
                 data["weight"],
                 data["height"],
-                data["additional_information"]
+                additional_info
             )
         elif data["type"].lower() == "doctor":
             return self.relational_proxy.register_medic(

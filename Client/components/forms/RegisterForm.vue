@@ -260,14 +260,14 @@ export default {
 
                 return dd + '-' + mm + '-' + yyyy;
             }   
-            return "00-00-0000";
+            return null;
         },
 
         convertNull(field) {
             if(field) {
                 return parseFloat(field);
             }
-            return -1;
+            return null;
         }
     }
 };

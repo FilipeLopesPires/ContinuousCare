@@ -363,7 +363,7 @@ class MySqlProxy:
             results = next(cursor.stored_results()).fetchall()[0]
 
             if results[0] == "client":
-                return {key: (results[i+1] if key != "birth_date" else results[i+1].strftime("%d-%m-%Y"))
+                return {key: "" if not results[i+1] else (results[i+1] if key != "birth_date" else results[i+1].strftime("%d-%m-%Y"))
                         for i, key in enumerate(["client_id",
                                                  "full_name",
                                                  "email",
@@ -373,7 +373,7 @@ class MySqlProxy:
                                                  "height",
                                                  "additional_info"])}
             elif results[0] == "doctor":
-                return {key: results[i]
+                return {key: results[i+1] if results[i+1] else ""
                         for i, key in enumerate(["medic_id",
                                                  "full_name",
                                                  "email",
