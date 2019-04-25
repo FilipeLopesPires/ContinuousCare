@@ -440,7 +440,7 @@ CREATE PROCEDURE update_client_info (
     -- Update client related data
     UPDATE client
     SET health_number = _health_number,
-        birth_date = STR_TO_DATE(_birth_date, "%d-%m-%Y")
+        birth_date = STR_TO_DATE(_birth_date, "%d-%m-%Y"),
         weight = _weight,
         height = _height,
         additional_information = _additional_information
