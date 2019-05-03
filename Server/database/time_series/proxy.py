@@ -12,6 +12,7 @@ the database (in what concerns the connections)
 import influxdb
 import json
 from database.time_series import config
+from database.exceptions import TimeSeriesDBException
 
 import re
 
@@ -45,7 +46,10 @@ class InfluxProxy:
         :param data: data to write
         :type data: list
         """
-        self._get_connection.write_points(data, 's')
+        try:
+            self._get_connection.write_points(data, 's')
+        except Exception as e:
+            raise TimeSeriesDBException(str(e))
 
     def read(self, username, measurement, begin_time=None, end_time=None, interval=None):
         """
@@ -102,5 +106,8 @@ class InfluxProxy:
             query += " ORDER BY time DESC LIMIT 1"
             
 
-        result = self._get_connection.query(query, {"params": json.dumps(params)})
+        try:
+            result = self._get_connection.query(query, {"params": json.dumps(params)})
+        except Exception as e:
+            raise TimeSeriesDBExceptino(str(e))
         return list(result.get_points(measurement))

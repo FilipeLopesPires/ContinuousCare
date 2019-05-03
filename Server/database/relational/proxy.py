@@ -12,6 +12,7 @@ the database (in what concerns the connections)
 from mysql.connector.pooling import MySQLConnectionPool
 
 from database.relational import config
+from database.exceptions import RelationalDBException
 
 # for password hashing
 from cryptography.hazmat.backends import default_backend
@@ -168,6 +169,8 @@ class MySqlProxy:
             new_id = next(cursor.stored_results()).fetchall()[0]
 
             return new_id
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -228,7 +231,9 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.VERIFY_CREDENTIALS, (username, password))
 
-            return next(cursor.stored_results()).fetchall()[0] == 1
+            return next(cursor.stored_results()).fetchone()[0] == 1
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -262,7 +267,9 @@ class MySqlProxy:
 
             conn.commit()
 
-            return next(cursor.stored_results()).fetchall()[0]
+            return next(cursor.stored_results()).fetchone()[0]
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -307,6 +314,8 @@ class MySqlProxy:
                     devices[device_id][auth_field_name] = auth_field_value
 
             return list(devices.values())
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -342,6 +351,8 @@ class MySqlProxy:
                 })
 
             return list(retval.values())
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -381,6 +392,8 @@ class MySqlProxy:
                                                  "specialities"])}
             else:
                 raise Exception("Invalid user type")
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -447,6 +460,9 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.UPDATE_MEDIC_PROFILE_DATA, (username, password, full_name, email,
                                                                         company, specialities))
+            conn.commit()
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -470,6 +486,10 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.INSERT_SLEEP_SESSION, (username, day, duration, begin, end))
+
+            conn.commit()
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -493,6 +513,8 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.GET_SLEEP_SESSIONS, (username, begin, end))
 
             return next(cursor.stored_results()).fetchall()
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -510,6 +532,8 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.GET_ALL_USERNAMES)
 
             return [username[0] for username in next(cursor.stored_results()).fetchall()]
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -544,6 +568,8 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.UPDATE_DEVICE, (username, device_id, latitude, longitude))
 
             conn.commit()
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
