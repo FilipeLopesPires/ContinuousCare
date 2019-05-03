@@ -1,15 +1,17 @@
-import requests
 import json
-import string
-from random import *
-import threading
-from datetime import datetime, timedelta
-from database import *
 import logging
+import string
+import threading
 import time
-import dateutil.parser as dp
+from datetime import datetime, timedelta
 from math import sqrt
+from random import *
+
+import requests
 from geopy.distance import vincenty
+
+from database import *
+from database.exceptions import *
 from devices import *
 
 '''
@@ -36,10 +38,11 @@ class Processor:
             userDevices=self.database.getAllDevices(user)
             for device in userDevices:
                 deviceType=device["type"].strip().replace(" ", "_")
-                metric=eval(deviceType+"("+device.get("token","")+","+device.get("refresh_token","")+","+device.get("uuid","")+","+user+","+str(device["id"])+", ["+device.get("latitude",None)+","+device.get("longitude", None)+"])")
-                if metric.metricType not in metrics:
-                    metrics[metric.metricType]=[]
-                metrics[metric.metricType].append(metric)
+                userDevice=eval(deviceType+"(\""+device.get("token",str(None))+"\",\""+device.get("refresh_token",str(None))+"\",\""+device.get("uuid",str(None))+"\",\""+user+"\",\""+str(device.get("id", str(None)))+"\", ["+device.get("latitude",str(None))+","+device.get("longitude", str(None))+"])")
+                for metric in userDevice.metrics:    
+                    if metric.metricType not in metrics:
+                        metrics[metric.metricType]=[]
+                    metrics[metric.metricType].append(metric)
 
             for metric in GPS("","","",user,None, None).metrics+self.externalAPI:
                 if metric.metricType not in metrics:
@@ -48,7 +51,7 @@ class Processor:
 
             self.userMetrics[user]=metrics
 
-            print(metrics)
+            #print(metrics)
 
             #passing only the GPS, HealthStatus and Sleep to the Thread
             self.userThreads[user]=myThread(self, {k:v for k,v in metrics.items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
@@ -58,7 +61,6 @@ class Processor:
         #urls["https://api.fitbit.com/1/user/-/activities/heart/date/today/1d.json"]=[{"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkRLMlgiLCJzdWIiOiI3Q05RV1oiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJhY3QgcnNldCBybG9jIHJ3ZWkgcmhyIHJudXQgcnBybyByc2xlIiwiZXhwIjoxNTUzODAxNjA5LCJpYXQiOjE1NTM3NzI4MDl9.6_hSXgYG36430e-ZaRfcEYSzDezGJeaMF5R2PiSr4bk"}, 1]
         #urls["http://api.foobot.io/v2/device/240D676D40002482/datapoint/10/last/0/"]=[{"Accept":"application/json;charset=UTF-8","X-API-KEY-TOKEN":"eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiam9hby5wQHVhLnB0IiwiaWF0IjoxNTUyMDY2Njc5LCJ2YWxpZGl0eSI6LTEsImp0aSI6IjRiNmY2NzhiLWJjNTYtNDYxNi1hYmMyLTRiNjlkMTNkMjUzOSIsInBlcm1pc3Npb25zIjpbInVzZXI6cmVhZCIsImRldmljZTpyZWFkIl0sInF1b3RhIjoyMDAsInJhdGVMaW1pdCI6NX0.aeLLsrhh1-DVXSwl-Z_qDx1Xbr9oIid1IKsOyGQxwqQ"},1]
 
-    #REAL THING
 
     def signup(self, data):
         jsonData=json.loads(data.decode("UTF-8"))
@@ -115,14 +117,44 @@ class Processor:
         devices=self.database.getAllDevices(user)
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":devices}).encode("UTF-8")
 
-    def updateDevice(self, token, data): #!!!!!!!!!!!!!!update threads!!!!!!!!!!!!!
+    def updateDevice(self, token, data):
         if token not in self.userTokens:
             return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
 
         user=self.userTokens[token]
         try:
-            result=self.database.updateDevice(user, json.loads(data.decode("UTF-8")))
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data": profile}).encode("UTF-8")
+            deviceConf=json.loads(data.decode("UTF-8"))
+            userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
+            for device in userDevices:
+                if device.id==deviceConf["id"]:
+                    device.update(deviceConf["authentication_fields"].get("token",None),deviceConf["authentication_fields"].get("refresh_token",None), deviceConf["authentication_fields"].get("uuid",None), user, id, [deviceConf.get("latitude",None), deviceConf.get("longitude", None)])
+            result=self.database.updateDevice(user, deviceConf)
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data": result}).encode("UTF-8")
+        except RelationalDBException as e:
+            return  json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
+        except Exception as e:
+            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+
+
+    def deleteDevice(self, token, data):
+        if token not in self.userTokens:
+            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+
+        user=self.userTokens[token]
+        try:
+            deviceConf=json.loads(data.decode("UTF-8"))
+            for metric in self.userMetrics[user]:
+                for submetric in self.userMetrics[user][metric]:
+                    if submetric.dataSource.id == deviceConf["id"]:
+                        self.userMetrics[user][metric].remove(submetric)
+                
+            result=self.database.deleteDevice(user, deviceConf)
+            if user in self.userThreads:
+                self.userThreads[user].end()
+            self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+            self.userThreads[user].start()
+
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data": result}).encode("UTF-8")
         except RelationalDBException as e:
             return  json.dumps({"status":1, "msg":"Relational database internal error. "+str(e)}).encode("UTF-8")
         except Exception as e:
@@ -135,15 +167,13 @@ class Processor:
         user=self.userTokens[token]
         try:
             jsonData=json.loads(data.decode("UTF-8"))
-
-
-            deviceToken=jsonData["authentication_fields"]["token"]
             
             id=str(self.database.addDevice(user, jsonData))
+            print(id)
 
             if jsonData["id"] not in [submetric.dataSource.id for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]]:
                 deviceType=jsonData["type"].strip().replace(" ", "_")
-                metric=eval(deviceType+"("+device.get("token","")+","+device.get("refresh_token","")+","+device.get("uuid","")+","+user+","+str(id)+", ["+device.get("latitude",None)+","+device.get("longitude", None)+"])")
+                metric=eval(deviceType+"(\""+jsonData["authentication_fields"].get("token",str(None))+"\",\""+jsonData["authentication_fields"].get("refresh_token",str(None))+"\",\""+jsonData["authentication_fields"].get("uuid",str(None))+"\",\""+user+"\",\""+str(id)+"\", ["+jsonData.get("latitude",str(None))+","+jsonData.get("longitude", str(None))+"])")
                 if metric.metricType not in self.userMetrics[user]:
                     self.userMetrics[user][metric.metricType]=[]
                 self.userMetrics[user][metric.metricType].append(metric)
@@ -230,7 +260,6 @@ class Processor:
 
     def process(self, responses, user):
         normalData={}
-        errors={}
         for resp in responses:
             metric=resp[0]
             if metric not in normalData:
@@ -252,10 +281,9 @@ class Processor:
                             except Exception as e:
                                 logging.error("Exception caught while refetching the data: "+str(e))
                                 try:
-                                    tokens=self.deltaTimes[i][1].dataSource.refreshToken()
-                                    self.processor.database.updateDevice(metric.dataSource.user, {"id":metric.dataSource.id, "token":tokens["token"],"refresh_token":tokens["refresh_token"]})
-                                    resp=self.deltaTimes[i][1].getData()
-                                    data=metric.normalizeData(resp)
+                                    tokens=metric.dataSource.refreshToken()
+                                    self.updateDevice(metric.dataSource.user, {"id":metric.dataSource.id, "token":tokens["token"],"refresh_token":tokens["refresh_token"]})
+                                    resp=metric.normalizeData(metric.getData())
                                     normalData["Environment"]=dict(normalData["Environment"], **data)
                                 except Exception as e:
                                     logging.error("Tried to refresh tokens and couldn't, caught error: "+str(e))
@@ -268,10 +296,9 @@ class Processor:
                             except Exception as e:
                                 logging.error("Exception caught while refetching the data: "+str(e))
                                 try:
-                                    tokens=self.deltaTimes[i][1].dataSource.refreshToken()
-                                    self.processor.database.updateDevice(metric.dataSource.user, {"id":metric.dataSource.id, "token":tokens["token"],"refresh_token":tokens["refresh_token"]})
-                                    resp=self.deltaTimes[i][1].getData()
-                                    data=metric.normalizeData(resp)
+                                    tokens=metric.dataSource.refreshToken()
+                                    self.updateDevice(metric.dataSource.user, {"id":metric.dataSource.id, "token":tokens["token"],"refresh_token":tokens["refresh_token"]})
+                                    resp=metric.normalizeData(metric.getData())
                                     normalData["Environment"]=dict(normalData["Environment"], **data)
                                 except Exception as e:
                                     logging.error("Tried to refresh tokens and couldn't, caught error: "+str(e))
@@ -316,10 +343,6 @@ class Processor:
             self.userThreads[k].end()
         return ""
 
-    def getStartPath(self, device):
-        for t in self.configFile:
-            if device in self.configFile[t]:
-                return t
 
     
 

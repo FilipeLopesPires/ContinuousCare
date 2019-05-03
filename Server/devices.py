@@ -2,6 +2,7 @@ import json
 import requests
 from abstract.DataSource import DataSource
 from abstract.Metric import Metric
+import dateutil.parser as dp
 
 
 class FitBit_Charge_3(DataSource):
@@ -65,7 +66,7 @@ class HearthRate(Metric):
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
             if not jsonData["success"]:
-                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData[errors][0][errorType])
+                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
             raise Exception("Error while fetching information for "+self.__class__.__name__+": "+str(e))
@@ -98,7 +99,7 @@ class Sleep(Metric):
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
             if not jsonData["success"]:
-                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData[errors][0][errorType])
+                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
             raise Exception("Error while fetching information for "+self.__class__.__name__+": "+str(e))
@@ -135,7 +136,7 @@ class Calories(Metric):
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
             if not jsonData["success"]:
-                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData[errors][0][errorType])
+                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
             raise Exception("Error while fetching information for "+self.__class__.__name__+": "+str(e))
@@ -169,7 +170,7 @@ class Activity(Metric):
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
             if not jsonData["success"]:
-                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData[errors][0][errorType])
+                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
             raise Exception("Error while fetching information for "+self.__class__.__name__+": "+str(e))
@@ -203,7 +204,7 @@ class Steps(Metric):
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
             if not jsonData["success"]:
-                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData[errors][0][errorType])
+                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
             raise Exception("Error while fetching information for "+self.__class__.__name__+": "+str(e))
@@ -221,7 +222,7 @@ class Foobot(DataSource):
 
     @property
     def metrics(self):
-        return [Foobot(self)]
+        return [Foobotmetric(self)]
 
     @property
     def _headerTemplate(self):
@@ -243,7 +244,7 @@ class Foobot(DataSource):
         raise Exception("Impossible to refresh tokens.")
 
 
-class Foobot(Metric):
+class Foobotmetric(Metric):
     def __init__(self, dataSource):
         super().__init__(dataSource)
 
@@ -268,7 +269,7 @@ class Foobot(Metric):
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
             if not jsonData["success"]:
-                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData[errors][0][errorType])
+                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
             raise Exception("Error while fetching information for "+self.__class__.__name__+": "+str(e))
@@ -334,7 +335,7 @@ class WAQI(Metric):
             data=requests.get(self.url.replace("LATITUDE", lat).replace("LONGITUDE", longi), headers=self.dataSource.header)
             jsonData=json.loads(data.text)
             if not jsonData["success"]:
-                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData[errors][0][errorType])
+                raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
             raise Exception("Error while fetching information for "+self.__class__.__name__+": "+str(e))
