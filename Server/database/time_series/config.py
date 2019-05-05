@@ -10,8 +10,7 @@ chmod 600 config.py
 """
 
 
-#HOST      = "db_time_series"
-HOST      = "localhost"
+HOST      = "db_time_series"
 PORT      = 8086
 USERNAME  = "pi2019ccFlaskapp"
 PASSWORD  = "wEv8Qx[mA2BUDtES3RPQ"

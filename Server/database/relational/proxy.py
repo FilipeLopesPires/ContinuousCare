@@ -210,6 +210,8 @@ class MySqlProxy:
             new_id = next(cursor.stored_results()).fetchall()[0]
 
             return new_id
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -431,6 +433,8 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.UPDATE_CLIENT_PROFILE_DATA, (username, password, full_name, email,
                                                                         health_number, birth_date, weight, height,
                                                                         additional_information))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -586,6 +590,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.DELETE_DEVICE, (username, device_id))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -604,6 +610,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, duration))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -620,6 +628,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.DELETE_PERMISSION, (client, medic))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -638,6 +648,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.GRANT_PERMISSION, (client, medic, duration))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -654,6 +666,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.ACCEPT_PERMISSION, (client, medic))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -670,6 +684,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.REMOVE_ACCEPTED_PERMISSION, (client, medic))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -686,6 +702,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.REJECT_PERMISSION, (client, medic))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -706,6 +724,8 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.HAS_PERMISSION, (medic, client))
 
             return next(cursor.stored_results()).fetchall()[0] == 1
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -723,6 +743,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.STOP_ACTIVE_PERMISSION, (medic, client))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -740,6 +762,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.REMOVE_ACTIVE_PERMISSION, (client, medic))
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -815,6 +839,8 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.GET_HISTORICAL_PERMISSIONS, [user])
 
             return self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 3)
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
 
@@ -842,5 +868,7 @@ class MySqlProxy:
             data["active"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 2)
 
             return data
+        except Exception as e:
+            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)

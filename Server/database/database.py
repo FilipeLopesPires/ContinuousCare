@@ -3,6 +3,8 @@
 from database.time_series.proxy import *
 from database.relational.proxy import *
 
+from database.exceptions import ProxyException, InternalException
+
 import datetime
 
 """
@@ -41,30 +43,35 @@ class Database:
         :return: the id for the new client/medic
         :rtype: int
         """
-        if data["type"].lower() == "client":
-            additional_info = None if data["additional_information"] == "" else data["additional_information"]
-            return self.relational_proxy.register_client(
-                data["username"],
-                data["password"],
-                data["name"],
-                data["email"],
-                data["phpn"],
-                data["birth_date"],
-                data["weight"],
-                data["height"],
-                additional_info
-            )
-        elif data["type"].lower() == "doctor":
-            return self.relational_proxy.register_medic(
-                data["username"],
-                data["password"],
-                data["name"],
-                data["email"],
-                data["company"],
-                data["specialities"]
-            )
-        else:
-            raise Exception("Unkown type of user!")
+        try:
+            if data["type"].lower() == "client":
+                additional_info = None if data["additional_information"] == "" else data["additional_information"]
+                return self.relational_proxy.register_client(
+                    data["username"],
+                    data["password"],
+                    data["name"],
+                    data["email"],
+                    data["phpn"],
+                    data["birth_date"],
+                    data["weight"],
+                    data["height"],
+                    additional_info
+                )
+            elif data["type"].lower() == "doctor":
+                return self.relational_proxy.register_medic(
+                    data["username"],
+                    data["password"],
+                    data["name"],
+                    data["email"],
+                    data["company"],
+                    data["specialities"]
+                )
+            else:
+                raise Exception("Unkown type of user!")
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def verifyUser(self, data):
         """
@@ -75,10 +82,15 @@ class Database:
         :return: true if credentials are ok, false otherwise
         :rtype: bool
         """
-        return self.relational_proxy.check_credentials(
-            data["username"],
-            data["password"]
-        )
+        try:
+            return self.relational_proxy.check_credentials(
+                data["username"],
+                data["password"]
+            )
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def updateProfile(self, user, data):
         """
@@ -91,29 +103,34 @@ class Database:
             medic : [company: str, specialities:str]
         :type data: dict
         """
-        if data["type"].lower() == "client":
-            self.relational_proxy.update_client_profile_data(
-                user,
-                data["password"],
-                data["name"],
-                data["email"],
-                data["phpn"], # TODO do they send me this?
-                data["birth_date"],
-                data["weight"],
-                data["height"],
-                data["additional_information"]
-            )
-        elif data["type"].lower() == "doctor":
-            self.relational_proxy.update_medic_profile_data(
-                user,
-                data["password"],
-                data["name"],
-                data["email"],
-                data["company"],
-                data["specialities"]
-            )
-        else:
-            raise Exception("Unkown type of user!")
+        try:
+            if data["type"].lower() == "client":
+                self.relational_proxy.update_client_profile_data(
+                    user,
+                    data["password"],
+                    data["name"],
+                    data["email"],
+                    data["phpn"], # TODO do they send me this?
+                    data["birth_date"],
+                    data["weight"],
+                    data["height"],
+                    data["additional_information"]
+                )
+            elif data["type"].lower() == "doctor":
+                self.relational_proxy.update_medic_profile_data(
+                    user,
+                    data["password"],
+                    data["name"],
+                    data["email"],
+                    data["company"],
+                    data["specialities"]
+                )
+            else:
+                raise Exception("Unkown type of user!")
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def getProfile(self, user):
         """
@@ -125,7 +142,12 @@ class Database:
         {client_id:int, full_name:str, email:str, health_number:int, birth_date:datetime, weight:float, height:float}
         :rtype: dict
         """
-        return self.relational_proxy.get_user_profile_data(user)
+        try:
+            return self.relational_proxy.get_user_profile_data(user)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def getAllUsers(self):
         """
@@ -134,7 +156,12 @@ class Database:
         :return: all usernames of all clients
         :rtype: list
         """
-        return self.relational_proxy.get_all_usernames()
+        try:
+            return self.relational_proxy.get_all_usernames()
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def addDevice(self, user, data):
         """
@@ -147,13 +174,18 @@ class Database:
         :return: id of the new device created
         :rtype: int
         """
-        return self.relational_proxy.register_device(
-            user,
-            data["type"],
-            data["authentication_fields"],
-            data.get("latitude", None), # TODO may not be this key
-            data.get("longitude", None) # TODO may not be this key
-        )
+        try:
+            return self.relational_proxy.register_device(
+                user,
+                data["type"],
+                data["authentication_fields"],
+                data.get("latitude", None), # TODO may not be this key
+                data.get("longitude", None) # TODO may not be this key
+            )
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def updateDevice(self, user, data):
         """
@@ -166,10 +198,15 @@ class Database:
         {id:int, token:asdf, ...}
         :type data: dict
         """
-        device_id = data["id"]
-        del data["id"]
+        try:
+            device_id = data["id"]
+            del data["id"]
 
-        self.relational_proxy.updtate_device(user, device_id, data)
+            self.relational_proxy.updtate_device(user, device_id, data)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def deleteDevice(self, user, device_id):
         """
@@ -180,7 +217,12 @@ class Database:
         :param device_id: id of the device to update
         :type device_id: int
         """
-        self.relational_proxy.delete_device(user, device_id)
+        try:
+            self.relational_proxy.delete_device(user, device_id)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def getAllDevices(self, user):
         """
@@ -192,7 +234,12 @@ class Database:
         [{device:int, type:int,  token:str}, ...]
         :rtype: list
         """
-        return self.relational_proxy.get_all_devices_of_user(user)
+        try:
+            return self.relational_proxy.get_all_devices_of_user(user)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def getSupportedDevices(self):
         """
@@ -203,7 +250,12 @@ class Database:
         [{id:int, type:str, brand:str, model:str, metrics:[{name:str, unit:str}, ...]}, ...]
         :rtype: list
         """
-        return self.relational_proxy.get_all_supported_devices()
+        try:
+            return self.relational_proxy.get_all_supported_devices()
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def getData(self, measurement, user, start, end, interval):
         """
@@ -228,65 +280,70 @@ class Database:
                  }
         :rtype: dict
         """
-        data = {}
+        try:
+            data = {}
 
-        if measurement == "sleep":
-            if not start and not end: #both None -> last
-                results = self.relational_proxy.get_sleep_sessions(user)
-            elif start: # just end None -> from start
-                start_date = datetime.date.fromtimestamp(start)
-                results = self.relational_proxy.get_sleep_sessions(user, start_date)
-            else: # within
-                start_date = datetime.date.fromtimestamp(start)
-                end_date = datetime.date.fromtimestamp(end)
-                results = self.relational_proxy.get_sleep_sessions(user, start_date, end_date)
+            if measurement == "sleep":
+                if not start and not end: #both None -> last
+                    results = self.relational_proxy.get_sleep_sessions(user)
+                elif start: # just end None -> from start
+                    start_date = datetime.date.fromtimestamp(start)
+                    results = self.relational_proxy.get_sleep_sessions(user, start_date)
+                else: # within
+                    start_date = datetime.date.fromtimestamp(start)
+                    end_date = datetime.date.fromtimestamp(end)
+                    results = self.relational_proxy.get_sleep_sessions(user, start_date, end_date)
 
-            return_value = {
-                "sessions_info": [], # list of dicts
-                "sessions_data": [] # list of dicts [{time:[...], level:[...], duration:[...]},{X},...]
-            }
-            for day, sleep_begin, sleep_end, duration in results: # TODO maybe filipe wants this other way
-                return_value["sessions_info"].append({
-                    "day": day,
-                    "begin": sleep_begin,
-                    "end": sleep_end,
-                    "duration": duration
-                })
-                session_data = {}
-                for read in self.time_series_proxy.read(user, measurement, sleep_begin.timestamp(),
-                                                                           sleep_end.timestamp()):
-                    for key, value in read.items():
-                        if key == "username":
-                            continue
-                        if key not in session_data.keys():
-                            session_data[key] = []
+                return_value = {
+                    "sessions_info": [], # list of dicts
+                    "sessions_data": [] # list of dicts [{time:[...], level:[...], duration:[...]},{X},...]
+                }
+                for day, sleep_begin, sleep_end, duration in results: # TODO maybe filipe wants this other way
+                    return_value["sessions_info"].append({
+                        "day": day,
+                        "begin": sleep_begin,
+                        "end": sleep_end,
+                        "duration": duration
+                    })
+                    session_data = {}
+                    for read in self.time_series_proxy.read(user, measurement, sleep_begin.timestamp(),
+                                                                               sleep_end.timestamp()):
+                        for key, value in read.items():
+                            if key == "username":
+                                continue
+                            if key not in session_data.keys():
+                                session_data[key] = []
 
-                        session_data[key].append(value)
-                return_value["sessions_data"].append(session_data)
+                            session_data[key].append(value)
+                    return_value["sessions_data"].append(session_data)
 
-            return return_value
+                return return_value
 
-        none_count = {}
-        values_count = 0
-        for read in self.time_series_proxy.read(user, measurement, start, end, interval):
-            values_count += 1
+            none_count = {}
+            values_count = 0
+            for read in self.time_series_proxy.read(user, measurement, start, end, interval):
+                values_count += 1
 
-            for key, value in read.items():
-                if key == "username":
-                    continue
-                if key not in data.keys():
-                    data[key] = []
-                    none_count[key] = 0
+                for key, value in read.items():
+                    if key == "username":
+                        continue
+                    if key not in data.keys():
+                        data[key] = []
+                        none_count[key] = 0
 
-                data[key].append(value)
-                if not value:
-                    none_count[key] += 1
+                    data[key].append(value)
+                    if not value:
+                        none_count[key] += 1
 
-        for key, count in none_count.items():
-            if count == values_count:
-                del data[key]
+            for key, count in none_count.items():
+                if count == values_count:
+                    del data[key]
 
-        return data
+            return data
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def getDataByMedic(self, medic, measurement, client, start, end, interval):
         """
@@ -317,11 +374,16 @@ class Database:
         :raises Exception: if the medic doesn't have permission
             to acess the client's data
         """
-        if not self.relational_proxy.has_permission(medic, client):
-            raise Exception("You don't have permission to acces this data")
-            # TODO maybe raise a costum exception. Mandatory to handle it
+        try:
+            if not self.relational_proxy.has_permission(medic, client):
+                raise Exception("You don't have permission to acces this data")
+                # TODO maybe raise a costum exception. Mandatory to handle it
 
-        return self.getData(measurement, client, start, end, interval)
+            return self.getData(measurement, client, start, end, interval)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     #def getData(self): #TODO all db data
     #    """"""
@@ -338,47 +400,51 @@ class Database:
         :param user: username of the client
         :type user: str
         """
+        try:
+            if measurement == "sleep":
 
-        if measurement == "sleep":
+                self.relational_proxy.insert_sleep_session(user,
+                                                           data["day"], #TODO may receive, Agree format
+                                                           data["duration"], #TODO agree format
+                                                           data["begin"], #TODO may not be this key. Agree format
+                                                           data["end"]) #TODO may not be this key. Agree format
 
-            self.relational_proxy.insert_sleep_session(user,
-                                                       data["day"], #TODO may receive, Agree format
-                                                       data["duration"], #TODO agree format
-                                                       data["begin"], #TODO may not be this key. Agree format
-                                                       data["end"]) #TODO may not be this key. Agree format
+                to_write = []
+                for point in data["sleep"]:
+                    time = point["time"]
+                    del point["time"]
 
-            to_write = []
-            for point in data["sleep"]:
-                time = point["time"]
-                del point["time"]
+                    to_write.append(
+                        {
+                            "measurement": measurement,
+                            "time": time,
+                            "tags": {
+                                "username": user,
+                            },
+                            "fields": point
+                        }
+                    )
 
-                to_write.append(
-                    {
+                self.time_series_proxy.write(to_write)
+            else:
+                time = data["time"]
+                del data["time"]
+                if data == {}:
+                    return
+                self.time_series_proxy.write(
+                    [{
                         "measurement": measurement,
-                        "time": time,
+                        "time":time,
                         "tags": {
                             "username": user,
                         },
-                        "fields": point
-                    }
+                        "fields": data
+                    }]
                 )
-
-            self.time_series_proxy.write(to_write)
-        else:
-            time = data["time"]
-            del data["time"]
-            if data == {}:
-                return
-            self.time_series_proxy.write(
-                [{
-                    "measurement": measurement,
-                    "time":time,
-                    "tags": {
-                        "username": user,
-                    },
-                    "fields": data
-                }]
-            )
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def requestPermission(self, medic, client, duration):
         """
@@ -391,7 +457,12 @@ class Database:
         :param duration: for how long the permission will be up
         :type duration: int # TODO define if its decimal of not
         """
-        self.relational_proxy.request_permission(medic, client, datetime.timedelta(hours=duration))
+        try:
+            self.relational_proxy.request_permission(medic, client, datetime.timedelta(hours=duration))
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def deleteRequestPermission(self, medic, client):
         """
@@ -415,7 +486,12 @@ class Database:
         :param duration: for how long the permission will be up
         :type duration: int # TODO define if its decimal of not
         """
-        self.relational_proxy.grant_permission(client, medic, datetime.timedelta(hours=duration))
+        try:
+            self.relational_proxy.grant_permission(client, medic, datetime.timedelta(hours=duration))
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def acceptPermission(self, client, medic):
         """
@@ -426,7 +502,12 @@ class Database:
         :param medic: username of the medic
         :type medic: str
         """
-        self.relational_proxy.accept_permission(client, medic)
+        try:
+            self.relational_proxy.accept_permission(client, medic)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def deleteAcceptedPermission(self, client, medic):
         """
@@ -437,7 +518,12 @@ class Database:
         :param medic: username of the medic
         :type medic: str
         """
-        self.relational_proxy.delete_accepted_permission(client, medic)
+        try:
+            self.relational_proxy.delete_accepted_permission(client, medic)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def rejectPermission(self, client, medic):
         """
@@ -448,7 +534,12 @@ class Database:
         :param medic: username of the medic
         :type medic: str
         """
-        self.relational_proxy.reject_permission(client, medic)
+        try:
+            self.relational_proxy.reject_permission(client, medic)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def stopAcceptedPermission(self, medic, client):
         """
@@ -460,7 +551,12 @@ class Database:
         :param client: username of the client
         :type client: str
         """
-        self.relational_proxy.stop_active_permission(medic, client)
+        try:
+            self.relational_proxy.stop_active_permission(medic, client)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def removeAcceptedPermission(self, client, medic):
         """
@@ -472,7 +568,12 @@ class Database:
         :param medic: username of the medic
         :type medic: str
         """
-        self.relational_proxy.remove_active_permission(client, medic)
+        try:
+            self.relational_proxy.remove_active_permission(client, medic)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def getHistoricalPermissions(self, user):
         """
@@ -484,7 +585,12 @@ class Database:
         :return: all historical permissions
         :rtype: list
         """
-        return self.relational_proxy.get_historical_permissions(user)
+        try:
+            return self.relational_proxy.get_historical_permissions(user)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
 
     def allPermissionsData(self, user):
         """
@@ -495,4 +601,9 @@ class Database:
         :return: three lists concerning the three types of permissions (pending, accepted and active)
         :return: dict
         """
-        return self.relational_proxy.get_all_permissions_data(user)
+        try:
+            return self.relational_proxy.get_all_permissions_data(user)
+        except InternalException:
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))

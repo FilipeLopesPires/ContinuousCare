@@ -105,9 +105,8 @@ class InfluxProxy:
         else:
             query += " ORDER BY time DESC LIMIT 1"
             
-
         try:
             result = self._get_connection.query(query, {"params": json.dumps(params)})
         except Exception as e:
-            raise TimeSeriesDBExceptino(str(e))
+            raise TimeSeriesDBException(str(e))
         return list(result.get_points(measurement))
