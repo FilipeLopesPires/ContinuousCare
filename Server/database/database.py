@@ -558,7 +558,7 @@ class Database:
         except Exception as e:
             raise ProxyException(str(e))
 
-    def removeAcceptedPermission(self, client, medic):
+    def removeActivePermission(self, client, medic):
         """
         Allows a client to remove an active permission from a medic.
         The medic will not be able to see the data from the client after this.
