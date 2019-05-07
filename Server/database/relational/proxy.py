@@ -376,7 +376,7 @@ class MySqlProxy:
             results = next(cursor.stored_results()).fetchall()[0]
 
             if results[0] == "client":
-                return {key: "" if not results[i+1] else (results[i+1] if key != "birth_date" else results[i+1].strftime("%d-%m-%Y"))
+                data = {key: "" if not results[i+1] else (results[i+1] if key != "birth_date" else results[i+1].strftime("%d-%m-%Y"))
                         for i, key in enumerate(["client_id",
                                                  "full_name",
                                                  "email",
@@ -385,15 +385,19 @@ class MySqlProxy:
                                                  "weight",
                                                  "height",
                                                  "additional_info"])}
+                data["user_type"] = "client"
             elif results[0] == "doctor":
-                return {key: results[i+1] if results[i+1] else ""
+                data = {key: results[i+1] if results[i+1] else ""
                         for i, key in enumerate(["medic_id",
                                                  "full_name",
                                                  "email",
                                                  "company",
                                                  "specialities"])}
+                data["user_type"] = "doctor"
             else:
                 raise Exception("Invalid user type")
+
+            return data
         except Exception as e:
             raise RelationalDBException(str(e))
         finally:
