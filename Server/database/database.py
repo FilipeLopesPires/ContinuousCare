@@ -37,7 +37,7 @@ class Database:
         Register a user on the database
 
         :param data: common : [type:str, username:str, password:str, name:str, email:str]
-            client : [phpn:str, birth_date: str dd-mm-yyyy, weight:float, height:float, additional_information:str]
+            client : [health_number:str, birth_date: str dd-mm-yyyy, weight:float, height:float, additional_info:str]
             medic : [company: str, specialities:str]
         :type data: dict
         :return: the id for the new client/medic
@@ -45,13 +45,13 @@ class Database:
         """
         try:
             if data["type"].lower() == "client":
-                additional_info = None if data["additional_information"] == "" else data["additional_information"]
+                additional_info = None if data["additional_info"] == "" else data["additional_info"]
                 return self.relational_proxy.register_client(
                     data["username"],
                     data["password"],
                     data["name"],
                     data["email"],
-                    data["phpn"],
+                    data["health_number"],
                     data["birth_date"],
                     data["weight"],
                     data["height"],
@@ -99,7 +99,7 @@ class Database:
         :param user: username of the client to update
         :type user: str
         :param data: common : [type:str, username:str, password:str, name:str, email:str]
-            client : [phpn:str, birth_date: str dd-mm-yyyy, weight:float, height:float, additional_information:str]
+            client : [health_number:str, birth_date: str dd-mm-yyyy, weight:float, height:float, additional_info:str]
             medic : [company: str, specialities:str]
         :type data: dict
         """
@@ -110,11 +110,11 @@ class Database:
                     data["password"],
                     data["name"],
                     data["email"],
-                    data["phpn"], # TODO do they send me this?
+                    data["health_number"],
                     data["birth_date"],
                     data["weight"],
                     data["height"],
-                    data["additional_information"]
+                    data["additional_info"]
                 )
             elif data["type"].lower() == "medic":
                 self.relational_proxy.update_medic_profile_data(
@@ -509,7 +509,7 @@ class Database:
         except Exception as e:
             raise ProxyException(str(e))
 
-    def deleteAcceptedPermission(self, client, medic):
+    def removeAcceptedPermission(self, client, medic):
         """
         Allows a client to delete an accepted permission (still not active)
 
@@ -519,7 +519,7 @@ class Database:
         :type medic: str
         """
         try:
-            self.relational_proxy.delete_accepted_permission(client, medic)
+            self.relational_proxy.remove_accepted_permission(client, medic)
         except InternalException:
             raise
         except Exception as e:
@@ -558,7 +558,7 @@ class Database:
         except Exception as e:
             raise ProxyException(str(e))
 
-    def removeAcceptedPermission(self, client, medic):
+    def removeActivePermission(self, client, medic):
         """
         Allows a client to remove an active permission from a medic.
         The medic will not be able to see the data from the client after this.

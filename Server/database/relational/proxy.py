@@ -675,7 +675,7 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def delete_accepted_permission(self, client, medic):
+    def remove_accepted_permission(self, client, medic):
         """
         Allows a client to delete an accepted permission (still not active)
 
