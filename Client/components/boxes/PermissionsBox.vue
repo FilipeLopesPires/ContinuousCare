@@ -1,13 +1,13 @@
 <template>
-    <table class="w-100" :id="title.toLowerCase()">
+    <table class="w-100">
         <thead>
             <tr>
                 <th>Username</th>
                 <th>Full Name</th>
                 <th v-if="user_type === 'medic'">Health Number</th>
                 <th v-if="user_type === 'client'">Company</th>
-                <th v-if="title === 'Pending'">Duration</th>
-                <th v-else-if="title === 'Accepted' || title === 'Active'">Time Left</th>
+                <th v-if="title === 'pending'">Duration</th>
+                <th v-else-if="title === 'accepted' || title === 'active'">Time Left</th>
             </tr>
         </thead>
         <tbody>
@@ -19,7 +19,7 @@
                 <td>{{ permission.duration }}</td>
 
                 <td>
-                    <div v-if="title === 'Pending'">
+                    <div v-if="title === 'pending'">
                         <div v-if="user_type === 'medic'">
                             <a @click="remove_pending(permission.username)" class="genric-btn danger circle"><i class="fa fa-trash" aria-hidden="true"></i></a>
                         </div>
@@ -32,7 +32,7 @@
                             </a>
                         </div>
                     </div>
-                    <div v-else-if="title === 'Accepted'">
+                    <div v-else-if="title === 'accepted'">
                         <div v-if="user_type === 'medic'">
                             <a class="genric-btn success circle"><i class="fa fa-play" aria-hidden="true"></i></a>
                         </div>
@@ -40,7 +40,7 @@
                             <a @click="remove_accepted(permission.username)" class="genric-btn danger circle"><i class="fa fa-trash"></i></a>
                         </div>
                     </div>
-                    <div v-else-if="title === 'Active'">
+                    <div v-else-if="title === 'active'">
                         <div v-if="user_type === 'medic'">
                             <a @click="remove_active(permission.username)" class="genric-btn warning circle"><i class="fa fa-pause"></i></a>
                         </div>
@@ -63,29 +63,13 @@ export default {
             type: String,
             required: true
         },
+        permissions: {
+            type: Array,
+            required: true
+        },
         user_type: {
             type: String,
             required: true
-        }
-    },
-    data() {
-        return {
-            permissions: [
-                {
-                    username: "aspedrosa",
-                    full_name: "André Pedrosa",
-                    company: "Hospital Leiria",
-                    health_number: 111111111,
-                    duration: 10
-                },
-                {
-                    username: "zonnax",
-                    full_name: "Rodrigo Loureiro",
-                    company: "Hospital Leiria",
-                    health_number: 111111112,
-                    duration: 10
-                }
-            ]
         }
     },
     methods: {

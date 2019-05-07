@@ -15,19 +15,19 @@
                         <div v-if="user_type === 'medic'">
                             <h3  class="title_color text-center" >Request Permission</h3>
                             <h5>Patient Username:</h5>
-                            <input id="req_gra_client_username" type="text" class="single-input"> 
+                            <input ref="client_username_input" type="text" class="single-input"> 
                             <h5>Patient Health Number:</h5>
-                            <input id="req_gra_health_number" type="number" class="single-input"> 
+                            <input ref="health_number_input" type="number" class="single-input"> 
                         </div>
                         <div v-else-if="user_type === 'client'">
                             <h3  class="title_color text-center" >Grant Permission</h3>
                             <div class="mt-10"> 
                                 <h5>Medic Username:</h5>
-                                <input id="req_gra_medic_username" type="text" class="single-input"> 
+                                <input ref="medic_username_input" type="text" class="single-input"> 
                             </div>
                         </div>
                         <h5>Duration:</h5>
-                        <input id="req_gra_duration" type="number" class="single-input">
+                        <input ref="duration_input" type="number" class="single-input">
                         <div class="mt-10 row justify-content-center d-flex align-items-center">
                             <div class="row">
                                 <button @click="close_modal" data-dismiss="modal" class="genric-btn danger circle text-uppercase ml-10 mr-10" type="button" >Cancel</button>
@@ -46,13 +46,13 @@
                     <b-card no-body class="w-100">
                         <b-tabs card justified>
                             <b-tab title="Pending">
-                                <PermissionsBox title="Pending" :user_type="user_type" />
+                                <PermissionsBox title="pending" :user_type="user_type" :permissions="permissions.pending" />
                             </b-tab>
                             <b-tab title="Accepted">
-                                <PermissionsBox title="Accepted" :user_type="user_type" />
+                                <PermissionsBox title="accepted" :user_type="user_type" :permissions="permissions.accepted" />
                             </b-tab>
                             <b-tab title="Active">
-                                <PermissionsBox title="Active" :user_type="user_type" />
+                                <PermissionsBox title="active" :user_type="user_type" :permissions="permissions.active" />
                             </b-tab>
                         </b-tabs>
                     </b-card>
@@ -84,8 +84,79 @@ export default {
     },
     data() {
         return {
-            user_type: "client"
+            user_type: "medic",
+            permissions: {
+                "pending":[],
+                "accepted":[],
+                "active":[]
+            }
         }
+    },
+    async mounted() {
+        this.permissions = {
+            pending: [
+                {
+                    full_name: "André Pedrosa",
+                    username: "aspedrosa",
+                    health_number: 111111111,
+                    company: "Hospital Leiria"
+                },
+                {
+                    full_name: "André Pedrosa",
+                    username: "zonnax",
+                    health_number: 111111112,
+                    company: "Hospital Leiria"
+                }
+            ],
+            accepted: [
+                {
+                    full_name: "André Pedrosa",
+                    username: "aspedrosa",
+                    health_number: 111111113,
+                    company: "Hospital Leiria"
+                },
+                {
+                    full_name: "André Pedrosa",
+                    username: "zonnax",
+                    health_number: 111111114,
+                    company: "Hospital Leiria"
+                }
+            ],
+            active: [
+                {
+                    full_name: "André Pedrosa",
+                    username: "aspedrosa",
+                    health_number: 111111115,
+                    company: "Hospital Leiria"
+                },
+                {
+                    full_name: "André Pedrosa",
+                    username: "zonnax",
+                    health_number: 111111116,
+                    company: "Hospital Leiria"
+                }
+            ]
+        }
+
+        return;
+
+        this.permissions = this.$axios.$get("", {
+
+        })
+        .then(res => {
+            if(res.status != 0) {
+                this.requestError = true;
+                return {
+                    "pending" : [],
+                    "accepted": [],
+                    "active": []
+                };
+            }
+            return res.data;
+        })
+        .catch(e => {
+
+        })
     },
     methods: {
         /**
@@ -95,12 +166,12 @@ export default {
             let username, health_number, duration;
 
             if (this.user_type === "medic") {
-                username = $("#req_gra_client_username").val();
-                health_number = $("#req_gra_health_number").val();
+                username = this.$refs.client_username_input.value;
+                health_number = this.$refs.health_number_input.value;
             } else if (this.user_type === "client")
-                username = $("#req_gra_medic_username").val();
+                username = this.$refs.medic_username_input.value;
 
-            duration = $("#req_gra_duration").val();
+            duration = this.$refs.duration_input.value;
 
             return await this.$axios.$post("", {
 
@@ -117,11 +188,16 @@ export default {
          * Clears all inputs on the modal and closes it
          */
         close_modal() {
-            $("#req_gra_client_username").val("");
-            $("#req_gra_health_number").val("");
-            $("#req_gra_medic_username").val("");
-            $("#req_gra_duration").val("");
-            this.$refs["request_grant_permission_modal"].hide();
+            if (this.user_type === "medic") {
+                this.$refs.client_username_input.value = "";
+                this.$refs.health_number_input.value = "";
+            }
+            else if (this.user_type === "client")
+                this.$refs.medic_username_input.value = "";
+
+            this.$refs.duration_input.value = "";
+
+            this.$refs.request_grant_permission_modal.hide();
         }
     }
 }
