@@ -386,14 +386,14 @@ class MySqlProxy:
                                                  "height",
                                                  "additional_info"])}
                 data["user_type"] = "client"
-            elif results[0] == "doctor":
+            elif results[0] == "medic":
                 data = {key: results[i+1] if results[i+1] else ""
                         for i, key in enumerate(["medic_id",
                                                  "full_name",
                                                  "email",
                                                  "company",
                                                  "specialities"])}
-                data["user_type"] = "doctor"
+                data["user_type"] = "medic"
             else:
                 raise Exception("Invalid user type")
 

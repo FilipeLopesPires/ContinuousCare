@@ -57,7 +57,7 @@ class Database:
                     data["height"],
                     additional_info
                 )
-            elif data["type"].lower() == "doctor":
+            elif data["type"].lower() == "medic":
                 return self.relational_proxy.register_medic(
                     data["username"],
                     data["password"],
@@ -116,7 +116,7 @@ class Database:
                     data["height"],
                     data["additional_information"]
                 )
-            elif data["type"].lower() == "doctor":
+            elif data["type"].lower() == "medic":
                 self.relational_proxy.update_medic_profile_data(
                     user,
                     data["password"],

@@ -389,7 +389,7 @@ CREATE PROCEDURE get_user_info (
       WHERE username = _username;
 
     ELSEIF EXISTS (SELECT * FROM medic_username WHERE username = _username) THEN
-      SELECT "doctor", medic_id, full_name, email, company, specialities
+      SELECT "medic", medic_id, full_name, email, company, specialities
       FROM medic JOIN user ON medic.user_id = user.user_id
       WHERE username = _username;
     ELSE
