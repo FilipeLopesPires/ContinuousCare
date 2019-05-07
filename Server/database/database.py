@@ -446,19 +446,21 @@ class Database:
         except Exception as e:
             raise ProxyException(str(e))
 
-    def requestPermission(self, medic, client, duration):
+    def requestPermission(self, medic, data):
         """
         A medic requests temporary permission to see a client's data
 
         :param medic: username of the medic
         :type medic: str
-        :param client: username of the client
-        :type client: str
-        :param duration: for how long the permission will be up
-        :type duration: int # TODO define if its decimal of not
+        :param data: keys : {username: str, health_number: int, duration: int}
+        :type data: dict
         """
         try:
-            self.relational_proxy.request_permission(medic, client, datetime.timedelta(hours=duration))
+            self.relational_proxy.request_permission(
+                medic,
+                data["username"],
+                data["health_number"],
+                datetime.timedelta(hours=int(data["duration"])))
         except InternalException:
             raise
         except Exception as e:
@@ -481,13 +483,14 @@ class Database:
 
         :param client: username of the client
         :type client: str
-        :param medic: username of the client
-        :type medic: str
-        :param duration: for how long the permission will be up
-        :type duration: int # TODO define if its decimal of not
+        :param data: keys : {username:str, health_number: int, duration: int}
+        :type data: dict
         """
         try:
-            self.relational_proxy.grant_permission(client, medic, datetime.timedelta(hours=duration))
+            self.relational_proxy.grant_permission(
+                client,
+                data["username"],
+                datetime.timedelta(hours=int(data["duration"])))
         except InternalException:
             raise
         except Exception as e:

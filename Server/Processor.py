@@ -30,7 +30,8 @@ class Processor:
         self.externalAPI=ExternalAPI("","","","",None, None).metrics
        
         self.userThreads={}
-        self.userTokens={}
+        self.clientTokens={}
+        self.medicTokens={}
         self.userMetrics={}
         allUsers=self.database.getAllUsers()
         for user in allUsers:
@@ -66,18 +67,20 @@ class Processor:
         jsonData=json.loads(data.decode("UTF-8"))
         try:
             self.database.register(jsonData)
-            user=jsonData["username"]
-            if user not in self.userMetrics:
-                self.userMetrics[user]={}
 
-                for metric in GPS("","","", user, None, None).metrics+self.externalAPI:
-                    if metric.metricType not in self.userMetrics[user]:
-                        self.userMetrics[user][metric.metricType]=[]
-                    self.userMetrics[user][metric.metricType].append(metric)
+            if jsonData["type"] == "client":
+                user=jsonData["username"]
+                if user not in self.userMetrics:
+                    self.userMetrics[user]={}
 
+                    for metric in GPS("","","", user, None, None).metrics+self.externalAPI:
+                        if metric.metricType not in self.userMetrics[user]:
+                            self.userMetrics[user][metric.metricType]=[]
+                        self.userMetrics[user][metric.metricType].append(metric)
 
-                self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
-                self.userThreads[user].start()
+                    self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+                    self.userThreads[user].start()
+
             return json.dumps({"status":0, "msg":"Successfull operation."}).encode("UTF-8")
         except DatabaseException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
@@ -85,43 +88,67 @@ class Processor:
             return json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def logout(self, token):
-        if token not in self.userTokens:
+        client = self.clientTokens.get(token, None)
+        medic = self.medicTokens.get(token, None)
+        if not client and not medic:
             return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+        elif client:
+            del self.clientTokens[token]
+        elif medic:
+            del self.medicTokens[token]
 
-        user=self.userTokens[token]
-        if self.userTokens==user:
-            del self.userTokens[token]
-            return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
-        return  json.dumps({"status":1, "msg":"Something went wrong logging out."}).encode("UTF-8")
+        return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
 
-    def signin(self, data):
+    def _generateToken(self, tokenMap, username):
+        """
+        Generates a new token for a user and stores it
+
+        :param tokenMap: self.clientTokens or self.medicTokens
+        :type tokenMap: dict
+        :param username: of the user loggedin
+        :type username: str
+        :return: the new token
+        :rtype: str
+        """
         min_char = 30
         max_char = 40
         allchar = string.ascii_letters + string.digits
-        token = "".join(choice(allchar) for x in range(randint(min_char, max_char)))
-        while token in self.userTokens:
-            token = "".join(choice(allchar) for x in range(randint(min_char, max_char)))
-        
 
+        token = "".join(choice(allchar) for x in range(randint(min_char, max_char)))
+        while token in tokenMap:
+            token = "".join(choice(allchar) for x in range(randint(min_char, max_char)))
+
+        tokenMap[username] = token
+
+        return token
+
+    def signin(self, data):
         jsonData=json.loads(data.decode("UTF-8"))
-        if self.database.verifyUser(jsonData):
-            self.userTokens[token]=jsonData["username"]
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":{"token":token}}).encode("UTF-8")
-        return json.dumps({"status":1, "msg":"Incorrect username or password."}).encode("UTF-8")
+        userType = self.database.verifyUser(jsonData)
+
+        if userType == 0: # invalid login
+            return json.dumps({"status":1, "msg":"Incorrect username or password."}).encode("UTF-8")
+
+        elif userType == 1: # valid login and user is a client
+            token = self._generateToken(self.clientTokens, jsonData["username"])
+        elif userType == 2: # valid login and user is a medic
+            token = self._generateToken(self.medicTokens, jsonData["username"])
+
+        return json.dumps({"status":0 , "msg":"Successfull operation.", "data":{"token":token}}).encode("UTF-8")
 
     def getAllDevices(self, token):
-        if token not in self.userTokens:
+        user = self.clientTokens.get(token, None)
+        if not user:
             return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
 
-        user=self.userTokens[token]
         devices=self.database.getAllDevices(user)
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":devices}).encode("UTF-8")
 
     def updateDevice(self, token, data):
-        if token not in self.userTokens:
+        user = self.clientTokens.get(token, None)
+        if not user:
             return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
 
-        user=self.userTokens[token]
         try:
             deviceConf=json.loads(data.decode("UTF-8"))
             userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
@@ -137,10 +164,10 @@ class Processor:
 
 
     def deleteDevice(self, token, data):
-        if token not in self.userTokens:
+        user = self.clientTokens.get(token, None)
+        if not user:
             return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
 
-        user=self.userTokens[token]
         try:
             deviceConf=json.loads(data.decode("UTF-8"))
             for metric in self.userMetrics[user]:
@@ -161,10 +188,10 @@ class Processor:
             return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def addDevice(self, token, data):
-        if token not in self.userTokens:
+        user = self.clientTokens.get(token, None)
+        if not user:
             return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
 
-        user=self.userTokens[token]
         try:
             jsonData=json.loads(data.decode("UTF-8"))
             
@@ -194,10 +221,10 @@ class Processor:
             return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def getData(self, token, function, datatype, start, end, interval):
-        if token not in self.userTokens:
+        user = self.clientTokens.get(token, None)
+        if not user:
             return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
 
-        user=self.userTokens[token]
         try:
             values=eval("self.database."+function)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
@@ -209,10 +236,15 @@ class Processor:
                 
 
     def updateProfile(self, token, data):
-        if token not in self.userTokens:
-            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+        client = self.clientTokens.get(token, None)
+        medic = self.medicTokens.get(token, None)
+        if not client and not medic:
+            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+        elif client:
+            user = client
+        elif medic:
+            user = medic
 
-        user=self.userTokens[token]
         try:
             self.database.updateProfile(user, json.loads(data.decode("UTF-8")))
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
@@ -222,10 +254,15 @@ class Processor:
             return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def getProfile(self, token):
-        if token not in self.userTokens:
-            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+        client = self.clientTokens.get(token, None)
+        medic = self.medicTokens.get(token, None)
+        if not client and not medic:
+            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+        elif client:
+            user = client
+        elif medic:
+            user = medic
 
-        user=self.userTokens[token]
         try:
             profile=self.database.getProfile(user)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": profile}).encode("UTF-8")
@@ -235,10 +272,15 @@ class Processor:
             return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def deleteProfile(self, token):
-        if token not in self.userTokens:
-            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+        client = self.clientTokens.get(token, None)
+        medic = self.medicTokens.get(token, None)
+        if not client and not medic:
+            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+        elif client:
+            user = client
+        elif medic:
+            user = medic
 
-        user=self.userTokens[token]
         try:
             self.database.deleteProfile(user)
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
@@ -255,6 +297,92 @@ class Processor:
             return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+
+    def permission(self, token, data):
+        client = self.clientTokens.get(token, None)
+        medic = self.medicTokens.get(token, None)
+        if not client and not medic:
+            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+
+        try:
+            if client:
+                self.database.grantPermission(client, data)
+            elif medic:
+                self.database.requestPermission(medic, data)
+
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
+        except DatabaseException as e:
+            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+        except Exception as e:
+            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+
+        """
+        Use by both medic and client
+        grants/requests for a permission. calls 'grantPermission' and 'requestPermission' on database.py
+
+        args:
+        username - str - of the user the he wants to grant or request permission
+        duration - int
+        """
+        pass
+
+    def permissions():
+        """
+        Use by both medic and client
+        gets all current permissions. calls 'allPermissionsData' on database.py
+        """
+        pass
+
+    def acceptPermission():
+        """
+        Used only by the client, accepts a pending permission
+
+        args:
+        username - str - of the medic that he wants to accept request for permission
+        """
+        pass
+
+    def rejectPermission():
+        """
+        Used only by the client, rejects a pending permission
+
+        args:
+        username - str - of the medic that he wants to reject request for permission
+        """
+        pass
+
+    def pausePermission():
+        """
+        Used only by the medic, pauses an active permission so he can save time for later, still has permission
+
+        args
+        username - str - of the client that he wants to pause the active permission
+        """
+        pass
+
+    def removePendingPermission():
+        """
+        Used only by the medic, removes a pending permission (requests not responded by the client)
+        """
+        pass
+
+    def removeAcceptedPermission():
+        """
+        Used only by the client, removes an accepted permission
+
+        args
+        username - str - of the medic that he wants to remove an accepted permission
+        """
+        pass
+
+    def removeActivePermission():
+        """
+        Used only by the client, removes and active permission, accepted permission are not removed
+
+        args
+        username - str - of the medic that he wants to remove and active permission
+        """
+        pass
 
     def process(self, responses, user):
         normalData={}

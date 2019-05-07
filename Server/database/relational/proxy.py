@@ -223,8 +223,8 @@ class MySqlProxy:
         :type username: str
         :param password:
         :type password: str
-        :return: true if the credentials are ok, false otherwise
-        :rtype: bool
+        :return: 0 - invalid credentials, 1 - valid and its a client, 2 - valid and its a medic
+        :rtype: int
         """
         try:
             conn, cursor = self._init_connection()

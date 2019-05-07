@@ -259,7 +259,17 @@ CREATE PROCEDURE verify_credentials (
     IN _username varchar(30),
     IN _password char(88))
   BEGIN
-    SELECT EXISTS(SELECT * FROM user WHERE username = _username and password = _password);
+    START TRANSACTION;
+
+    IF NOT EXISTS(SELECT * FROM user WHERE username = _username and password = _password) THEN
+      SELECT 0;
+    ELSEIF EXISTS(SELECT * FROM client_username WHERE username = _username) THEN
+      SELECT 1;
+    ELSE -- IF EXISTS(SELECT * FROM medic_username WHERE username = _username) THEN
+      SELECT 2;
+    END IF;
+
+    COMMIT;
   END //
 
 /*
@@ -703,9 +713,16 @@ CREATE PROCEDURE update_permissions (
 CREATE PROCEDURE request_permission (
     IN _medic VARCHAR(30),
     IN _client VARCHAR(30),
+    IN _health_number INTEGER,
     IN _duration time)
   BEGIN
     DECLARE __client_id, __medic_id VARCHAR(30);
+
+    IF _client IS NULL THEN
+      SELECT username INTO _client
+      FROM user JOIN client ON user.user_id = client.user_id
+      WHERE client.health_number = _health_number;
+    END IF;
 
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
 
