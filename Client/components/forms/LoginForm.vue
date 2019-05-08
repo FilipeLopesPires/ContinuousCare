@@ -114,12 +114,14 @@ export default {
                         .then(res => {
                             if(res.status != 0) {
                                 // warn which login field is invalid
+                                console.log(res);
                                 this.showToast("Invalid username or password. Please make sure you fill in the fields correctly.", 5000);
                             }
                             return res;
                         })
                         .catch(e => {
                             // unable to login
+                            console.log(e);
                             this.showToast("Something went wrong with the login process. The server might be down at the moment. Please re-submit or try again later.", 7500);
                             return null;
                         });
@@ -132,12 +134,14 @@ export default {
                         .then(res => {
                             if(res.status != 0) {
                                 // warn what exactly went wrong inside the server
+                                console.log(res);
                                 this.showToast("Something went terribly wrong while trying to retrieve information about the user. Please try to login again, if it does not work contact us through email.", 7500);
                             }
                             return res;
                         })
                         .catch(e => {
                             // unable to retrieve profile info
+                            console.log(e);
                             this.showToast("Something went wrong while trying to retrieve information about the user. The server might be down at the moment. Please re-submit or try again later.", 7500);
                             return null;
                         });

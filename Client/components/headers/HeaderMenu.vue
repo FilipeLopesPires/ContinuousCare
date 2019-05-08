@@ -1,10 +1,11 @@
 <template>
-    <div v-if="loggedIn()">
-        <div v-if="regularAccount()">
-            <HeaderMenuClient :activePage="activePage" />
+    <div v-if="this.$store.getters.isLoggedIn">
+        <div v-if="this.$store.getters.isMedic">
+            <HeaderMenuMedic :activePage="activePage" />
+            
         </div>
         <div v-else>
-            <HeaderMenuMedic :activePage="activePage" />
+            <HeaderMenuClient :activePage="activePage" />
         </div>
     </div>
     <div v-else>
@@ -32,23 +33,6 @@ export default {
         HeaderMenuMedic,
     },
     methods: {
-        loggedIn() {
-            if(this.$store.getters.isLoggedIn) {
-                this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
-                return true
-            }
-            this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
-            return false
-        },
-        regularAccount() {
-            var retval = false;
-            this.$nextTick(() => { 
-                if(this.$store.getters.userType == "client") {
-                    retval = true;
-                }
-            });
-            return retval;
-        }
     }
 }
 </script>

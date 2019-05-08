@@ -108,7 +108,7 @@ class Database:
                 self.relational_proxy.update_client_profile_data(
                     user,
                     data["password"],
-                    data["name"],
+                    data["full_name"],
                     data["email"],
                     data["health_number"],
                     data["birth_date"],
@@ -120,7 +120,7 @@ class Database:
                 self.relational_proxy.update_medic_profile_data(
                     user,
                     data["password"],
-                    data["name"],
+                    data["full_name"],
                     data["email"],
                     data["company"],
                     data["specialities"]

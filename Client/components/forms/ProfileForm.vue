@@ -36,14 +36,14 @@
                     <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.new_password_confirmation" type="password" name="new_password_confirmation" placeholder="Confirm New Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm New Password'">
                 </div>
             </div>
-            <!-- Public Health Personal Number & birth_date-->
-            <p v-if="!is_medic" class="title-form-wrap">Public Health Personal Number and birth_date</p>
+            <!-- Public Health Personal Number & Birth Date -->
+            <p v-if="!is_medic" class="title-form-wrap">Public Health Personal Number and Birth Date</p>
             <div v-if="!is_medic" class="row ">
                 <div class="input-group-icon mt-10 col-lg-6 col-md-6">
                     <div class="icon ml-15">
                         <i class="fa fa-plus" aria-hidden="true"></i>
                     </div>
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.health_number" type="text" name="health_number" placeholder="health_number" onfocus="this.placeholder = ''" onblur="this.placeholder = 'health_number'">
+                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.health_number" type="text" name="health_number" placeholder="PHPN" onfocus="this.placeholder = ''" onblur="this.placeholder = 'health_number'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
                     <datepicker placeholder="Date of Birth" v-model="filledform.birth_date" format="dd-MM-yyyy" :disabledDates="this.disabledDates" input-class="input-group-icon single-team single-input justify-content-center d-flex align-items-center"></datepicker>
@@ -223,12 +223,14 @@ export default {
                         .then(res => {
                             if(res.status != 0) {
                                 // warn which registration fields are invalid
+                                console.log(res);
                                 this.showToast("Update was invalid. Please make sure you fill in the form correctly.", 5000);
                             }
                             return res;
                         })
                         .catch(e => {
                             // unable to register
+                            console.log(e);
                             this.showToast("Something went wrong with the process. The server might be down at the moment. Please re-submit changes or try again later.", 7500);
                             return null;
                         });
