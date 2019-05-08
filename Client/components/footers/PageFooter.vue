@@ -42,7 +42,7 @@
                                         <input name="EMAIL" placeholder="Your Email Address" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Your Email Address '" required="" type="email">
                                     </div>
                                     <div class="col-lg-5 col-md-12">
-                                        <button class="nw-btn main_btn circle">get started
+                                        <button :class="css_class_btn">Get Started
                                             <span class="lnr lnr-arrow-right"></span>
                                         </button>
                                     </div>
@@ -58,7 +58,7 @@
                 <p class="col-lg-8 col-sm-12 footer-text m-0">
                     Copyright &copy; 2019 All rights reserved | ContinuousCare
                 </p>
-                <div class="col-lg-4 col-sm-12 footer-social">
+                <div :class="css_class_social">
                     <a href="https://drive.google.com/open?id=1SzGB95gpO4g3TtLYx_FPNkP1XkCdRs-V">
                         <i class="fa fa-google"></i>
                     </a>
@@ -79,6 +79,18 @@ export default {
     name: 'PageFooter',
     props: {
         
+    },
+    data() {
+        var css_class_btn = "nw-btn circle main_btn";
+        var css_class_social = "col-lg-4 col-sm-12 footer-social";
+        if(this.$store.getters.userType == "medic") {
+            css_class_btn += "_medic";
+            css_class_social += "_medic";
+        }
+        return {
+            css_class_btn,
+            css_class_social
+        }
     },
     methods: {
         onSubmit() {

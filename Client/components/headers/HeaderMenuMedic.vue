@@ -5,7 +5,7 @@
             <nav class="navbar navbar-expand-lg navbar-light">
                 <div class="container">
                     <!-- Brand and toggle get grouped for better mobile display -->
-                    <nuxt-link class="navbar-brand logo_h" to="/"> 
+                    <nuxt-link class="navbar-brand logo_h" to="/patients"> 
                         <img src="~/assets/img/logo/logo_cc_2.png" alt="">
                     </nuxt-link>
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
@@ -15,7 +15,7 @@
                         <span class="icon-bar"></span>
                     </button>
                     <!-- Collect the nav links, forms, and other content for toggling -->
-                    <div class="collapse navbar-collapse offset" id="navbarSupportedContent" >
+                    <div :class="account_class" class="collapse navbar-collapse offset" id="navbarSupportedContent" >
                         <div class="row ml-0 w-100">
                             <div class="col-lg-12 pr-0">
                                 <ul class="nav navbar-nav center_nav pull-right">
@@ -23,10 +23,10 @@
                                         <span class="nav-link">Patients</span>     <!-- ... !!! TO DO !!! ... -->
                                     </nuxt-link>
                                     <li class="nav-item submenu dropdown">
-                                        <a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Help</a>
+                                        <a href="" :class="{ active: isActive('Settings') }" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Help</a>
                                         <ul class="dropdown-menu">
-                                            <li class="nav-item" :class="{ active: isActive('Settings') }">
-                                                <nuxt-link class="nav-link" to="/settings">Account Settings</nuxt-link>
+                                            <li class="nav-item" >
+                                                <nuxt-link class="nav-link" to="/settings">Profile Settings</nuxt-link>
                                             </li>
                                             <li class="nav-item">
                                                 <nuxt-link class="nav-link" to="/contact">Contact Us</nuxt-link>
@@ -51,7 +51,7 @@
 import HeaderInfo from '@/components/headers/HeaderInfo.vue'
 
 export default {
-    name: 'HeaderMenuDoctor',
+    name: 'HeaderMenuMedic',
     props: {
         activePage: {
 			type: String,
@@ -64,9 +64,14 @@ export default {
     data() {
         var scrolled;
         var headerClass;
+        var account_class = "";
+        if(this.$store.getters.userType == "medic") {
+            account_class += "medic";
+        }
         return {
             scrolled: false,
-            headerClass: "header_area"
+            headerClass: "header_area",
+            account_class,
         };
     },
     methods: {

@@ -51,16 +51,16 @@
                     <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password_confirmation" type="password" name="password_confirmation" placeholder="Confirm Password *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm Password *'">
                 </div>
             </div>
-            <!-- Public Health Personal Number & Birthdate-->
+            <!-- Public Health Personal Number & birth_date-->
             <div v-if="!accountTypeChecked" class="row ">
                 <div class="input-group-icon mt-10 col-lg-6 col-md-6">
                     <div class="icon ml-15">
                         <i class="fa fa-plus" aria-hidden="true"></i>
                     </div>
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.phpn" type="text" name="phpn" placeholder="Public Health Personal Number *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Public Health Personal Number *'">
+                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.health_number" type="text" name="health_number" placeholder="Public Health Personal Number *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Public Health Personal Number *'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                    <datepicker placeholder="Date of Birth" v-model="filledform.birthdate" format="dd-MM-yyyy" :disabledDates="this.disabledDates" input-class="input-group-icon single-team single-input justify-content-center d-flex align-items-center"></datepicker>
+                    <datepicker placeholder="Date of Birth" v-model="filledform.birth_date" format="dd-MM-yyyy" :disabledDates="this.disabledDates" input-class="input-group-icon single-team single-input justify-content-center d-flex align-items-center"></datepicker>
                 </div>
             </div>
             <!-- Weight and Height -->
@@ -89,7 +89,7 @@
             <div class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-4 col-md-3 justify-content-center d-flex align-items-center">
                     <button v-if="accountTypeChecked" class="genric-btn primary radius text-uppercase" type="submit">Register</button>
-                    <button v-else class="genric-btn info radius text-uppercase" type="submit">Register</button>
+                    <button v-else                    class="genric-btn info    radius text-uppercase" type="submit">Register</button>
                 </div>
                 <div class="mt-10 col-lg-8 col-md-9">
                     <p class="mt-10">
@@ -118,81 +118,95 @@ export default {
                 from: new Date()
             },
             filledform: {
-                first_name: "",
-                last_name: "",
-                username: "",
-                email: "",
-                password: "",
-                password_confirmation: "",
+                first_name: null,
+                last_name: null,
+                username: null,
+                email: null,
+                password: null,
+                password_confirmation: null,
                 
-                phpn: "",
-                birdthdate: "",
+                health_number: null,
+                birdthdate: null,
                 weight: null,
                 height: null,
-                additional_info: "",
+                additional_info: null,
 
-                company: "",
-                specialities: "",
+                company: null,
+                specialities: null,
             }
         }
     },
     methods: {
         changeAccountType() {
             if(this.accountTypeChecked) {
-                this.accountTypeChecked = false
+                this.accountTypeChecked = false;
             } else {
-                this.accountTypeChecked = true
+                this.accountTypeChecked = true;
             }
         },
 
         async onSubmit() {
             /* Fields Validation */
-            //console.log(this.filledform);
             if(this.filledform.password != this.filledform.password_confirmation) {
-                this.$toasted.show('Password inputs must match!', 
-                    {position: 'bottom-center', duration: 2500});
+                this.showToast("Password inputs must match!", 2500);
                 return;
             }
             if(this.filledform.weight < 0) {
-                this.$toasted.show('Do you really weight less than 0kg?', 
-                    {position: 'bottom-center', duration: 2500});
+                this.showToast("Do you really weight less than 0kg?", 2500);
                 return;
             }
             if(this.filledform.height < 0) {
-                this.$toasted.show('Are you really negative centimeters high?', 
-                    {position: 'bottom-center', duration: 2500});
+                this.showToast("Are you really negative centimeters high?", 2500);
                 return;
             }
 
             /* Server Validation */
             var result;
             if(this.accountTypeChecked) {
-                result = await this.checkRegistration(this.filledform, 'doctor');
+                result = await this.checkRegistration(this.filledform, 'medic');
             } else {
                 result = await this.checkRegistration(this.filledform, 'client');
             }
-            if(result) {
-                if(result.status==0){
+            if(result) { 
+                if(result.status==0){ // registration successful
                     result = await this.checkLogin(this.filledform);
                     if(result) {
-                        if(result.status==0){
+                        if(result.status==0){ // login successful
+                            var profile = {
+                                full_name: this.filledform.first_name + " " + this.filledform.last_name,
+                                email: this.filledform.email,
+                                health_number: this.filledform.health_number,
+                                birth_date: this.filledform.birth_date,
+                                weight: this.filledform.weight,
+                                height: this.filledform.height,
+                                additional_info: this.filledform.additional_info,
+                                company: this.filledform.company,
+                                specialities: this.filledform.specialities
+                            };
                             this.$store.dispatch('setSessionToken', result.data.token);
+                            this.$store.dispatch('setProfile', profile);
                             if(this.accountTypeChecked) {
+                                this.$store.dispatch('setUserType', 'medic');
                                 this.$router.push("/patients");
                             } else {
+                                this.$store.dispatch('setUserType', 'client');
                                 this.$router.push("/");
                             }
                         } else {
+                            // deal with error
                             // this should never happen
                             return;
                         }
                     } else {
+                        // deal with error
                         return;
                     }
                 } else {
+                    // deal with error
                     return;
                 }
             } else {
+                // deal with error
                 return;
             }
         },
@@ -203,30 +217,26 @@ export default {
                 'name': filledform.first_name + " " + filledform.last_name,
                 'username': filledform.username,
                 'email': filledform.email,
-                'phpn': filledform.phpn,
+                'health_number': filledform.health_number,
                 'password': filledform.password,
-                'birth_date': this.convertDate(filledform.birthdate),
+                'birth_date': this.convertDate(filledform.birth_date),
                 'weight': this.convertNull(filledform.weight),
                 'height': this.convertNull(filledform.height),
-                'additional_information': filledform.additional_info,
+                'additional_info': filledform.additional_info,
                 'company': filledform.company,
                 'specialities': filledform.specialities,
             }
-            //console.log(config)
             return await this.$axios.$post("/signup",config)
                         .then(res => {
                             if(res.status != 0) {
                                 // warn which registration fields are invalid
-                                console.log(res)
-                                this.$toasted.show('Registration was invalid. Please make sure you fill in the form correctly.', 
-                                    {position: 'bottom-center', duration: 5000});
+                                this.showToast("Registration was invalid. Please make sure you fill in the form correctly.", 5000);
                             }
                             return res;
                         })
                         .catch(e => {
                             // unable to register
-                            this.$toasted.show('Something went wrong with the registration process. The server might be down at the moment. Please re-submit or try again later.', 
-                                {position: 'bottom-center', duration: 7500});
+                            this.showToast("Something went wrong with the registration process. The server might be down at the moment. Please re-submit or try again later.", 7500);
                             return null;
                         });
         },
@@ -238,9 +248,7 @@ export default {
             return await this.$axios.$post("/signin",config)
                         .then(res => {
                             if(res.status != 0) {
-                                console.log(res)
-                                this.$toasted.show('Something went terribly wrong with the registration process. Please try to login, if it does not work contact us through email.', 
-                                    {position: 'bottom-center', duration: 7500});
+                                this.showToast("Something went terribly wrong with the registration process. Please try to login, if it does not work contact us through email.", 7500);
                             }
                             return res;
                         })
@@ -249,11 +257,11 @@ export default {
                         });
         },
 
-        convertDate(birthdate) {
-            if(birthdate) {
-                var dd = birthdate.getDate();
-                var mm = birthdate.getMonth() + 1; //January is 0!
-                var yyyy = birthdate.getFullYear();
+        convertDate(birth_date) {
+            if(birth_date) {
+                var dd = birth_date.getDate();
+                var mm = birth_date.getMonth() + 1; //January is 0!
+                var yyyy = birth_date.getFullYear();
 
                 if (dd < 10) { dd = '0' + dd; } 
                 if (mm < 10) { mm = '0' + mm; } 
@@ -262,12 +270,14 @@ export default {
             }   
             return null;
         },
-
         convertNull(field) {
             if(field) {
                 return parseFloat(field);
             }
             return null;
+        },
+        showToast(message, duration) {
+            this.$toasted.show(message, {position: 'bottom-center', duration: duration});
         }
     }
 };

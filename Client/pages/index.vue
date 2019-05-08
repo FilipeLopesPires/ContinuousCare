@@ -23,11 +23,11 @@
             <ServiceBox icon="lnr lnr-map-marker" title1="Environment Analysis" title2="based on Geolocation" 
                         description="Install our ContinuousCare Mobile app to keep track of the air quality of the places you visit."/>
             <ServiceBox icon="lnr lnr-heart-pulse" title1="Real-time Health" title2="Status Tracking" 
-                        description="Visit ContinuousCare any time you wish to know your health conditions in any period of time."/>
+                        description="Visit your account on our website whenever you wish to know your health conditions for any time."/>
             <ServiceBox icon="lnr lnr-picture" title1="User Friendly" title2="Data Visualization" 
                         description="Take advantage of our intuitive features to know better your body and the environment you live in."/>
             <ServiceBox icon="lnr lnr-users" title1="Data Sharing" title2="for Medical Consultations" 
-                        description="Share relevant information with your local doctor to best understand, prevent and treat complaints and diseases."/>
+                        description="Share relevant information with your doctor to better understand, prevent and treat complaints and diseases."/>
           </div>
         </div>
       </section>
@@ -67,7 +67,7 @@ import ServiceBox from '@/components/boxes/ServiceBox.vue'
 import TagsArea from '@/components/boxes/TagsArea.vue'
 
 export default { 
-  middleware: 'check-log',
+  middleware: ['check-log', 'clients-only'],
   components: {
     HomeBanner,
     ServiceBox,
@@ -89,14 +89,10 @@ export default {
   },
   methods: {
     loggedIn() {
-      //console.log("Token:")
-      //console.log(this.$store.getters.sessionToken);
       if(this.$store.getters.isLoggedIn) {
-        //console.log("not logged in")
         this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
         return true
       }
-      //console.log("logged in")
       this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
       return false
     }

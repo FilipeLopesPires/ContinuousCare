@@ -7,13 +7,15 @@ const createStore = () => {
             sessionToken: null,
             userType: null,
             profile: {
-                client_id: null,
                 full_name: null,
                 email: null,
                 health_number: null,
                 birth_date: null,
                 weight: null,
-                height: null
+                height: null,
+                additional_info: null,
+                company: null,
+                specialities: null
             },
             loadedDevices: [],
             supportedDevices: [],
@@ -30,10 +32,11 @@ const createStore = () => {
                 state.userType = new_user_type;
             },
             setProfile(state, new_profile) {
-                state.profile = new_profile;
+                console.log("mutation setProfile");
+                console.log(new_profile);
             },
             setDevices(state, devices) {
-                state.loadedDevices = devices
+                state.loadedDevices = devices;
             },
             setSupportedDevices(state, devices) {
                 state.supportedDevices = devices
@@ -42,13 +45,15 @@ const createStore = () => {
                 state.sessionToken = null;
                 state.userType = null;
                 state.profile = {
-                    client_id: null,
                     full_name: null,
                     email: null,
                     health_number: null,
                     birth_date: null,
                     weight: null,
-                    height: null
+                    height: null,
+                    additional_info: null,
+                    company: null,
+                    specialities: null
                 };
                 state.loadedDevices = [];
                 state.supportedDevices = [];
@@ -72,6 +77,17 @@ const createStore = () => {
                 Cookie.set("session_user_type", new_user_type);
             },
             setProfile(vuexContext, new_profile) {
+                console.log("action setProfile");
+                console.log(new_profile);
+                /* full_name: null,
+                    email: null,
+                    health_number: null,
+                    birth_date: null,
+                    weight: null,
+                    height: null,
+                    additional_info: null,
+                    company: null,
+                    specialities: null */
                 vuexContext.commit("setProfile", new_profile);
                 if(process.client) {
                     localStorage.setItem("session_profile", new_profile);
@@ -112,7 +128,12 @@ const createStore = () => {
             initAuth(vuexContext, req) {
                 let token;
                 let expiration_date;
+                let userType;
+                let profile;
+                let loadedDevices;
+                let supportedDevices;
                 if(req) {
+                    /* // only interesting in universal mode
                     if (!req.headers.cookie) {
                         return;
                     }
@@ -127,28 +148,57 @@ const createStore = () => {
                         .split(";")
                         .find(c => c.trim().startsWith("session_token_expiration="))
                         .split("=")[1];
+                        */
                 } else if(process.client) {
                     token = localStorage.getItem("session_token");
                     expiration_date = localStorage.getItem("session_token_expiration");
+                    userType = localStorage.getItem("session_user_type");
+                    profile = localStorage.getItem("session_profile");
+                    loadedDevices = localStorage.getItem("session_loaded_devices");
+                    supportedDevices = localStorage.getItem("session_supported_devices");
                 } 
                 if(new Date().getTime() > +expiration_date || !token) {
                     vuexContext.dispatch("logout");
                     return;
                 }
                 vuexContext.commit("setSessionToken", token);
+                vuexContext.commit("setUserType", userType);
+                vuexContext.commit("setProfile", profile);
+                vuexContext.commit("setDevices", loadedDevices);
+                vuexContext.commit("setSupportedDevices", supportedDevices);
             }
         },
         getters: {          /* ========== getters ========== */
-            sessionToken(state) {
-                return state.sessionToken;
+            state(state) {
+                return state;
             },
+
             isLoggedIn(state) {
                 return state.sessionToken != null;
             },
+            isClient(state) {
+                if(state.userType == "client") {
+                    return true;
+                }
+                return false;
+            },
+            isMedic(state) {
+                if(state.userType == "medic") {
+                    return true;
+                }
+                return false;
+            },
+
+            sessionToken(state) {
+                return state.sessionToken;
+            },
+            
             userType(state) {
                 return state.userType;
             },
             profile(state) {
+                console.log("getter Profile");
+                console.log(state.profile);
                 return state.profile;
             },
             loadedDevices(state) {
@@ -156,7 +206,8 @@ const createStore = () => {
             },
             supportedDevices(state) {
                 return state.supportedDevices;
-            }
+            },
+            
         },
     })
 }

@@ -7,20 +7,20 @@
         <form class="form-wrap" @submit.prevent="onSubmit">
             <!-- Email -->
             <div class="mt-10">
-                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="email" type="email" name="email" placeholder="Email" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Email'">
+                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="mail.email" type="email" name="email" placeholder="Email" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Email'">
             </div>
             <!-- Subject -->
             <div class="mt-10">
-                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="subject" type="text" name="subject" placeholder="Subject" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Subject'">
+                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="mail.subject" type="text" name="subject" placeholder="Subject" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Subject'">
             </div>
             <!-- Message -->
             <div class="mt-10">
-                <textarea required class="single-textarea" v-bind="$attrs" v-on="$listeners" v-model="message" name="message" placeholder="Your message ..." onfocus="this.placeholder = ''" onblur="this.placeholder = 'Your message ...'"></textarea>
+                <textarea required class="single-textarea" v-bind="$attrs" v-on="$listeners" v-model="mail.message" name="message" placeholder="Your message ..." onfocus="this.placeholder = ''" onblur="this.placeholder = 'Your message ...'"></textarea>
             </div>
             <!-- Submit and Newsletter -->
             <div class="row container">
-                <div class="mt-10">
-                    <button class="genric-btn info radius text-uppercase" type="submit">Send</button>
+                <div class="mt-10"> 
+                    <button class="genric-btn radius text-uppercase" :class="btn_class" type="submit">Send</button>
                 </div>
                 <div class="mt-10 ml-15 switch-wrap d-flex justify-content-between">
                     <div class="mr-10 confirm-checkbox">
@@ -42,9 +42,17 @@ export default {
 
     },
     data() {
+        var btn_class = "info";
+        if(this.$store.getters.isMedic) {
+            btn_class = "primary";
+        }
         return {
-            email: "",
-            message: "",
+            btn_class,
+            mail: {
+                email: null,
+                subject: null,
+                message: null
+            }
         }
     },
     methods: {

@@ -1,38 +1,3 @@
-/*----------------------------------------------------
-@File: Default Styles
-@Author: Spondon IT
-
-This file contains the styling for the actual theme, this
-is the file you need to edit to change the look of the
-theme.
----------------------------------------------------- */
-/*=====================================================================
-@Template Name: Builder Construction 
-@Author: Spondon IT
-@Developed By: Naim Lasker
-
-@Default Styles
-
-Table of Content:
-01/ Variables
-02/ predefin
-03/ header
-04/ button
-05/ banner
-06/ breadcrumb
-07/ about
-08/ team
-09/ project 
-10/ price 
-11/ team 
-12/ blog 
-13/ video  
-14/ features  
-15/ career  
-16/ contact 
-17/ footer
-
-=====================================================================*/
 /*----------------------------------------------------*/
 /*font Variables*/
 /*Color Variables*/
@@ -295,6 +260,8 @@ a {
       margin: 0; }
     .header_area .navbar .right_nav .nav-item {
       margin: 0 !important; }
+    .header_area .navbar .right_nav .nav-item_medic {
+      margin: 0 !important; }
     .header_area .navbar .icons {
       font-size: 18px;
       line-height: 60px;
@@ -306,6 +273,9 @@ a {
       transition: all 300ms linear 0s; }
       .header_area .navbar .icons:hover {
         color: #3face4;
+        background: #e4e4e4; }
+      .header_area .navbar .medic .icons:hover {
+        color: #f8b600;
         background: #e4e4e4; }
     @media (max-width: 992px) {
       .header_area .navbar .nav {
@@ -322,6 +292,22 @@ a {
           display: none; }
       .header_area .navbar .nav .nav-item:hover .nav-link, .header_area .navbar .nav .nav-item.active .nav-link {
         color: #3face4; }
+      .header_area .navbar .medic .nav .nav-item:hover .nav-link, .header_area .navbar .medic .nav .nav-item.active .nav-link {
+        color: #f8b600; }
+    .header_area .navbar .nav .nav-item {
+      margin-right: 45px; }
+      .header_area .navbar .nav .nav-item .nav-link {
+        font: 500 12px/60px "Roboto", sans-serif;
+        text-transform: uppercase;
+        color: #000000;
+        padding: 0px;
+        display: inline-block; }
+        .header_area .navbar .nav .nav-item .nav-link:after {
+          display: none; }
+      .header_area .navbar .nav .nav-item:hover .nav-link, .header_area .navbar .nav .nav-item.active .nav-link {
+        color: #3face4; }
+      .header_area .navbar .medic .nav .nav-item:hover .nav-link, .header_area .navbar .medic .nav .nav-item.active .nav-link {
+        color: #f8b600; }
       .header_area .navbar .nav .nav-item.submenu {
         position: relative; }
         .header_area .navbar .nav .nav-item.submenu ul {
@@ -372,10 +358,20 @@ a {
               transition: all 150ms linear;
               display: block;
               margin-right: 0px; }
+            .header_area .navbar .nav .nav-item.submenu ul .nav-item .nav-link_medic {
+              line-height: 45px;
+              color: #000000;
+              padding: 0px 30px;
+              transition: all 150ms linear;
+              display: block;
+              margin-right: 0px; }
             .header_area .navbar .nav .nav-item.submenu ul .nav-item:last-child {
               border-bottom: none; }
             .header_area .navbar .nav .nav-item.submenu ul .nav-item:hover .nav-link {
               background: #3face4;
+              color: #fff; }
+            .header_area .navbar .medic .nav .nav-item.submenu ul .nav-item:hover .nav-link {
+              background: #f8b600;
               color: #fff; }
         @media (min-width: 992px) {
           .header_area .navbar .nav .nav-item.submenu:hover ul {
@@ -429,6 +425,7 @@ a {
       display: none; }
     .header_area.navbar_fixed .main_menu .navbar .nav .nav-item .nav-link {
       line-height: 60px; }
+
 
 /*---------------------------------------------------- */
 /*----------------------------------------------------*/
@@ -3042,6 +3039,29 @@ h6 {
     color: #3face4;
     border: 1px solid #3face4; }
 
+.main_btn_medic {
+  position: relative;
+  display: inline-block;
+  background: #f8b600;
+  padding: 0px 40px;
+  color: #fff;
+  font-family: "Roboto", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 48px;
+  border: 1px solid #f8b600;
+  outline: none !important;
+  box-shadow: none !important;
+  text-align: center;
+  cursor: pointer;
+  transition: all 300ms linear 0s;
+  border-radius: 5px;
+  text-transform: capitalize; }
+  .main_btn_medic:hover {
+    background: transparent;
+    color: #f8b600;
+    border: 1px solid #f8b600; }
+
 .main_btn2 {
   display: inline-block;
   background: #000000;
@@ -3292,6 +3312,24 @@ h6 {
   .footer-social i {
     color: #cccccc;
     transition: all 300ms linear 0s; }
+
+.footer-social_medic {
+  text-align: right; }
+  .footer-social_medic a {
+    background: #111111;
+    transition: all 300ms linear 0s;
+    width: 32px;
+    display: inline-block;
+    text-align: center;
+    padding: 1px 0px; }
+    .footer-social_medic a:hover {
+      background: #f8b600; }
+      .footer-social_medic a:hover i {
+        color: #fff; }
+  .footer-social_medic i {
+    color: #cccccc;
+    transition: all 300ms linear 0s; }
+    
 
 .single-footer-widget .footer-nav {
   list-style: none;

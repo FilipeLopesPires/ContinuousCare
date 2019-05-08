@@ -15,9 +15,12 @@
             <div v-if="device.type=='Add Device'" class="mt-10">
                 <h5>Type:</h5>
                 <div class="form-select" id="service-select">
-                    <select @change="activateChosenType($event)" v-bind="$attrs" v-on="$listeners" v-model="type" class="nice-select list">
+                    <select v-if="device.type=='Add Device'" @change="activateChosenType($event)" v-bind="$attrs" v-on="$listeners" v-model="type" class="nice-select list">
                         <option class="option" value="" selected>Choose Type</option>
-                        <option class="option" v-for="option in allOptions" :key="option.id" :value="option">{{ option }}</option>
+                        <option class="option" v-for="option in allOptions" :key="option.id" :value="option">{{ option }}</option> <!-- inactive if(device.type!='Add Device' && ) -->
+                    </select>
+                    <select v-else class="nice-select list">
+                        <option class="option" :value="device.type" selected>{{ device.type }}</option>
                     </select>
                 </div>
             </div>
@@ -37,7 +40,7 @@
                 <div class="col-lg-6 col-md-6 row justify-content-center">
                 </div>
                 <div class="col-lg-3 col-md-3 row justify-content-right">
-                    <button v-if="device.type!='Add Device'" class="genric-btn primary radius text-uppercase" @click="onRemove" type="button" >Remove</button>
+                    <button v-if="device.type!='Add Device'" class="genric-btn primary radius text-uppercase" @click="onRemove" type="submit" >Remove</button>
                 </div>
                 <div class="col-lg-3 col-md-3 row justify-content-right">
                     <button v-if="device.type!='Add Device'" class="genric-btn info radius text-uppercase" @click="onUpdate" type="submit" >Update</button>
@@ -92,9 +95,7 @@ export default {
         async onAdd() {
             /* Fields Validation */
             if(this.type == "") {
-                this.$toasted.show('Please choose a device type before submiting changes.', 
-                        {position: 'bottom-center',
-                        duration: 2500});
+                this.showToast("Please choose a device type before submiting changes.", 2500);
                 return;
             }
             var data = this.getData(this.type);
@@ -103,27 +104,49 @@ export default {
             }
             
             /* Server Validation */
-            /* var result = await this.sendDevice(data, this.$store.getters.sessionToken);
+            var result = await this.sendDevice(data, this.$store.getters.sessionToken);
             if(result) {
-                if(result.status==0){
+                if(result.status==0){ // device info retrieval successful
                     if(process.client) {
                         window.location.reload(true);
                     }
                 } else {
-                    // warn which device fields are invalid
-                    this.$toasted.show('Submission was invalid. Please make sure you fill in the fields correctly.', 
-                        {position: 'bottom-center',
-                        duration: 5000});
+                    this.showToast("Submission was invalid. Please make sure you fill in the fields correctly.", 5000);
                     return;
                 }
             } else {
+                // deal with error
                 return;
-            } */
+            } 
         },
-        onUpdate() {
-            // to do ...
+        async onUpdate() {
+            /* Fields Validation */
+            if(this.type == "") {
+                this.showToast("Please choose a device type before submiting changes.", 2500);
+                return;
+            }
+            var data = this.getData(this.type);
+            if(this.validateFields(data) != 0) {
+                return;
+            }
+            
+            /* Server Validation */
+            var result = await this.updateDevice(data, this.$store.getters.sessionToken);
+            if(result) {
+                if(result.status==0){ // device info retrieval successful
+                    if(process.client) {
+                        window.location.reload(true);
+                    }
+                } else {
+                    this.showToast("Submission was invalid. Please make sure you fill in the fields correctly.", 5000);
+                    return;
+                }
+            } else {
+                // deal with error
+                return;
+            } 
         },
-        onRemove() {
+        async onRemove() {
             // to do ...
         },
         async sendDevice(data,AuthToken) {
@@ -137,11 +160,15 @@ export default {
                         })
                         .catch(e => {
                             // unable to add device
-                            this.$toasted.show('Something went wrong while adding your device. The server might be down at the moment. Please try again later.', 
-                                {position: 'bottom-center',
-                                duration: 7500});
+                            this.showToast("Something went wrong while adding your device. The server might be down at the moment. Please try again later.", 7500);
                             return null;
                         });
+        },
+        async updateDevice(data,AuthToken) {
+            const config = {
+                headers: {'AuthToken': AuthToken},
+            }
+            // ... to do ...
         },
         getData(type) {
             var data = {}
@@ -185,28 +212,24 @@ export default {
             // check if values are in the correct format
             if(data.latitude) {
                 if(!String(data.latitude).match("^[-+]?(([1-8]?\d(\.\d+)?)|90(\.0+)?)$")) {
-                    this.$toasted.show("Latitude must follow the correct format!\n(e.g.: '10', '+180.0', '-127.5')", 
-                        {position: 'bottom-center',
-                        duration: 2500});
+                    this.showToast("Latitude must follow the correct format!\n(e.g.: '10', '+180.0', '-127.5')",2500);
                     return -2;
                 }
                 if(!String(data.longitude).match("^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$")) {
-                    this.$toasted.show("Longitude must follow the correct format!\n(e.g.: '47', '+90.0', '-180.00')", 
-                        {position: 'bottom-center',
-                        duration: 2500});
+                    this.showToast("Longitude must follow the correct format!\n(e.g.: '47', '+90.0', '-180.00')", 2500);
                     return -2;
                 }
             }
             if(data.authentication_fields && data.authentication_fields.refresh_token) {
                 if(data.authentication_fields.token == data.authentication_fields.refresh_token) {
-                    this.$toasted.show('Refresh Token must be different from the Token!', 
-                        {position: 'bottom-center',
-                        duration: 2500});
+                    this.showToast('Refresh Token must be different from the Token!', 2500);
                     return -3;
                 }
             }
-            //console.log("validated")
             return 0;
+        },
+        showToast(message, duration) {
+            this.$toasted.show(message, {position: 'bottom-center', duration: duration});
         }
     },
 }

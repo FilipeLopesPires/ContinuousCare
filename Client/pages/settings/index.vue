@@ -2,10 +2,10 @@
     <div style="overflow-x: none;">
         <body>
             <!--================ Header Menu Area =================-->
-            <HeaderMenu activePage="Settings" />
+            <HeaderMenu activePage="Profile Settings" />
 
             <!--================ Banner Area =================-->
-            <PageBanner parent_page="Home" page="Settings" />
+            <PageBanner parent_page="Home" page="Profile Settings" />
 
             <!--================ Profile Area =================-->
             <div class="row m0 justify-content-center align-items-center" >

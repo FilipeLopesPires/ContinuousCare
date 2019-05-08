@@ -4,7 +4,7 @@
             <HeaderMenuClient :activePage="activePage" />
         </div>
         <div v-else>
-            <HeaderMenuDoctor :activePage="activePage" />
+            <HeaderMenuMedic :activePage="activePage" />
         </div>
     </div>
     <div v-else>
@@ -16,6 +16,7 @@
 import HeaderInfo from '@/components/headers/HeaderInfo.vue'
 import HeaderMenuDefault from '@/components/headers/HeaderMenuDefault.vue'
 import HeaderMenuClient from '@/components/headers/HeaderMenuClient.vue'
+import HeaderMenuMedic from '@/components/headers/HeaderMenuMedic.vue'
 
 export default {
     name: 'HeaderMenu',
@@ -28,26 +29,22 @@ export default {
     components: {
         HeaderMenuDefault,
         HeaderMenuClient,
-        //HeaderMenuDoctor,
+        HeaderMenuMedic,
     },
     methods: {
         loggedIn() {
-            //console.log("Token:")
-            //console.log(this.$store.getters.sessionToken);
             if(this.$store.getters.isLoggedIn) {
-                //console.log("not logged in")
                 this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
                 return true
             }
-            //console.log("logged in")
             this.$nextTick(() => { this.$store.dispatch('setSessionToken', this.$store.getters.sessionToken) });
             return false
         },
         regularAccount() {
-            var retval = true;
+            var retval = false;
             this.$nextTick(() => { 
-                if(this.$store.getters.userType == "doctor") {
-                    retval = false;
+                if(this.$store.getters.userType == "client") {
+                    retval = true;
                 }
             });
             return retval;
