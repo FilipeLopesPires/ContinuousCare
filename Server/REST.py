@@ -3,6 +3,7 @@ import json
 from Processor import Processor
 from flask_cors import CORS
 import ssl
+import re
 '''
 Component responsable for defining and supporting the interface to the system.
 The API supports https and on authorized operations should receive the personal token on the header.
@@ -11,6 +12,90 @@ The API supports https and on authorized operations should receive the personal 
 app = Flask(__name__)
 CORS(app)
 processor=Processor()
+
+class ArgumentValidator:
+    """
+    Holds the functions that validate the arguments
+        of rest paths
+    """
+
+    @staticmethod
+    def _validate(data, validation):
+        """
+        Validates that data received on rest path
+            follow the expected arguments
+
+        :param data: data to validate
+        :type data: dict
+        :param validation: list of tuples with KEY of mandatory fields
+            EXPECTEDTYPES for those filds and if that field can receive a
+            null/None value
+        :type validation: list
+        :return: all errors presents on arguments
+        :rtype: list
+        """
+        errors = []
+        for key, expectedType, nullable in validation:
+            try:
+                value = data[key] # some values have value null that's why I didn't use get(key, default)
+            except KeyError:
+                if not nullable:
+                    errors.append("Missing key \"" + key + "\"")
+                continue
+
+            if not value and not nullable:
+                errors.append("Value \"" + key + "\" can't be null")
+                continue
+
+
+            if not isinstance(value, expectedType):
+                if isinstance(value, str):
+                    if  (expectedType == int and re.match(r"^[-+]?\d+$", value)) \
+                    or (expectedType == float and re.match(r"^[-+]?\d+(\.\d+)?$", value)):
+                        continue
+                elif isinstance(value, int) and expectedType == float:
+                    continue
+
+                errors.append("Value \"" + key + "\" is type "
+                              + type(value).__name__ + " but "
+                              + expectedType.__name__ + " was expected")
+
+        return errors
+
+    @staticmethod
+    def signup(userType, data):
+        """
+        Validates data on the signup path
+
+        :param userType: 'client' or 'medic'
+        :type userType: str
+        :param data: data to validate
+        :type data: dict
+        :return: all good or not
+        :rtype: bool
+        """
+        if userType == "client":
+            return ArgumentValidator._validate(
+                data, [
+                    ("username", str, False),
+                    ("password", str, False),
+                    ("name", str, False),
+                    ("email", str, False),
+                    ("health_number", int, False),
+                    ("birth_date", str, True),
+                    ("weight", float, True),
+                    ("height", float, True),
+                    ("additional_info", str, True)]
+            )
+        return ArgumentValidator._validate(
+            data, [
+                ("username", str, False),
+                ("password", str, False),
+                ("name", str, False),
+                ("email", str, False),
+                ("company", str, True),
+                ("specialities", str, True)]
+        )
 
 
 @app.route('/signup', methods = ['POST'])
@@ -24,22 +109,9 @@ def signup():
     if type not in ["client", "medic"]:
         return json.dumps({"status":2, "msg":"Type can only be \"client\" or \"medic\""}).encode("UTF-8")
 
-    """
-    if type == "client":
-        for key in [
-            ("username", str, False),
-            ("password", str, False),
-            ("name", str, False),
-            ("email", str, False),
-            ("health_number", (int, str), False),
-            ("birth_date", str, True),
-            ("weight", float, True),
-            ("height", float, True),
-            ("additional_info", str, True)]:
-            pass
-    else:
-        pass
-    """
+    argsErrors =  ArgumentValidator.signup(type, data)
+    if len(argsErrors) > 0:
+        return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
 
     return processor.signup(request.data)
 
