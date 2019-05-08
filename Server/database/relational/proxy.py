@@ -233,7 +233,7 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.VERIFY_CREDENTIALS, (username, password))
 
-            return next(cursor.stored_results()).fetchone()[0] == 1
+            return next(cursor.stored_results()).fetchone()[0]
         except Exception as e:
             raise RelationalDBException(str(e))
         finally:
@@ -599,7 +599,7 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def request_permission(self, medic, client, duration):
+    def request_permission(self, medic, client, health_number, duration):
         """
         A medic requests temporary permission to see a client's data
 
@@ -613,7 +613,7 @@ class MySqlProxy:
         try:
             conn, cursor = self._init_connection()
 
-            cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, duration))
+            cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, health_number, duration))
         except Exception as e:
             raise RelationalDBException(str(e))
         finally:
