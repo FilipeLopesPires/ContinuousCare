@@ -233,7 +233,7 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.VERIFY_CREDENTIALS, (username, password))
 
-            return next(cursor.stored_results()).fetchone()[0] == 1
+            return next(cursor.stored_results()).fetchone()[0]
         except Exception as e:
             raise RelationalDBException(str(e))
         finally:
@@ -562,10 +562,8 @@ class MySqlProxy:
             if "latitude" in data.keys(): # assume that if latitude is in dict, longitude is also
                 latitude = data["latitude"]
                 longitude = data["longitude"]
-                del data["latitude"]
-                del data["longitude"]
 
-            auth_fields = [(name, value) for name, value in data.items()]
+            auth_fields = [(name, value) for name, value in data["authentication_fields"].items()]
 
             conn, cursor = self._init_connection()
 

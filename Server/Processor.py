@@ -39,7 +39,7 @@ class Processor:
             userDevices=self.database.getAllDevices(user)
             for device in userDevices:
                 deviceType=device["type"].strip().replace(" ", "_")
-                userDevice=eval(deviceType+"(\""+device.get("token",str(None))+"\",\""+device.get("refresh_token",str(None))+"\",\""+device.get("uuid",str(None))+"\",\""+user+"\",\""+str(device.get("id", str(None)))+"\", ["+device.get("latitude",str(None))+","+device.get("longitude", str(None))+"])")
+                userDevice=eval(deviceType+"(\""+device.get("token",str(None))+"\",\""+device.get("refresh_token",str(None))+"\",\""+device.get("uuid",str(None))+"\",\""+user+"\",\""+str(device.get("id", str(None)))+"\", ["+str(device.get("latitude",str(None)))+","+str(device.get("longitude", str(None)))+"])")
                 for metric in userDevice.metrics:    
                     if metric.metricType not in metrics:
                         metrics[metric.metricType]=[]
@@ -118,7 +118,7 @@ class Processor:
         while token in tokenMap:
             token = "".join(choice(allchar) for x in range(randint(min_char, max_char)))
 
-        tokenMap[username] = token
+        tokenMap[token] = username
 
         return token
 
@@ -198,12 +198,13 @@ class Processor:
             id=str(self.database.addDevice(user, jsonData))
             print(id)
 
-            if jsonData["id"] not in [submetric.dataSource.id for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]]:
+            if id not in [submetric.dataSource.id for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]]:
                 deviceType=jsonData["type"].strip().replace(" ", "_")
-                metric=eval(deviceType+"(\""+jsonData["authentication_fields"].get("token",str(None))+"\",\""+jsonData["authentication_fields"].get("refresh_token",str(None))+"\",\""+jsonData["authentication_fields"].get("uuid",str(None))+"\",\""+user+"\",\""+str(id)+"\", ["+jsonData.get("latitude",str(None))+","+jsonData.get("longitude", str(None))+"])")
-                if metric.metricType not in self.userMetrics[user]:
-                    self.userMetrics[user][metric.metricType]=[]
-                self.userMetrics[user][metric.metricType].append(metric)
+                device=eval(deviceType+"(\""+jsonData["authentication_fields"].get("token",str(None))+"\",\""+jsonData["authentication_fields"].get("refresh_token",str(None))+"\",\""+jsonData["authentication_fields"].get("uuid",str(None))+"\",\""+user+"\",\""+str(id)+"\", ["+jsonData.get("latitude",str(None))+","+jsonData.get("longitude", str(None))+"])")
+                for metric in device.metrics:
+                    if metric.metricType not in self.userMetrics[user]:
+                        self.userMetrics[user][metric.metricType]=[]
+                    self.userMetrics[user][metric.metricType].append(metric)
 
 
                 print(self.userMetrics)
