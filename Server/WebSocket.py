@@ -3,7 +3,7 @@ import asyncio
 import websockets
 from threading import Thread
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 class WebSocket:
@@ -18,7 +18,7 @@ class WebSocket:
     def start(self):
         self.t=Thread(target=self.serve_forever)
         self.t.start()
-        logging.debug("WEBSOCKET STARTED IN "+self.host+":"+str(self.port))
+        logging.info("WEBSOCKET STARTED IN "+self.host+":"+str(self.port))
 
     def stop(self):
         self.t._stop()
@@ -33,15 +33,15 @@ class WebSocket:
     async def handler(self, websocket, path):
         while True:
             data = await websocket.recv()
-            logging.debug("WEBSOCKET RECEIVED "+data)
+            logging.info("WEBSOCKET RECEIVED "+data)
             jsonData=json.loads(data)
             token=jsonData["token"]
             self.processor.checkPermissions(token)
             self.sockets[token]=websocket
 
-    async def send(self, data, user):
-        if user in self.sockets:
-            await self.sockets[user].send(data)
+    async def send(self, data, token):
+        if token in self.sockets:
+            await self.sockets[token].send(data)
 
     def getUsers(self):
         return self.sockets.keys()

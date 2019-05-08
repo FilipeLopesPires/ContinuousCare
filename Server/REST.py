@@ -19,6 +19,10 @@ app = Flask(__name__)
 CORS(app)
 processor=Processor()
 
+@app.route('/teste/<t>', methods = ['GET'])
+def teste(t):
+    return processor._sendNotification("banana", t)
+
 @app.route('/signup', methods = ['POST'])
 def signup():
     return processor.signup(request.data)

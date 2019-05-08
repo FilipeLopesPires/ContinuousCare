@@ -323,6 +323,14 @@ class Processor:
 
         try:
             jsonData=json.loads(data)
+            target = jsonData["username"]
+            targetToken=None
+            for (k1, v1), (k2,v2) in zip(self.medicTokens.items(), self.clientTokens.items()):
+                if v1==target or v2==target:
+                    targetToken = (k1 if v1==target else k2) 
+
+            pendingBefore = self.database.allPermissionsData(target)["pending"]
+
             if client:
                 print(client)
                 if jsonData["type"]=="create":
@@ -333,9 +341,12 @@ class Processor:
             elif medic:
                 self.database.requestPermission(medic, jsonData)
 
-            target = jsonData["username"]
-            targetToken = ((k1 if v1==target else k2) for (k1, v1), (k2,v2) in zip(self.medicTokens.items(), self.clientTokens.items()) if v1==target or v2==target)
-            self._sendNotification(targetToken, data)
+            pendingAfter = self.database.allPermissionsData(target)["pending"]
+            diff = lambda l1,l2: [x for x in l1 if x not in l2]
+
+            pendingDiff = diff(pendingAfter, pendingBefore)
+            if len(pendingDiff)!=0:
+                permissionThread(pendingDiff, targetToken, self.socket).start()
 
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission uploaded with success."}).encode("UTF-8")
         except DatabaseException as e:
@@ -554,27 +565,44 @@ class Processor:
             self.userThreads[k].end()
         return ""
 
-    def _sendNotification(self, data, token):
-        loop = asyncio.new_event_loop()  
-        loop.run_until_complete(self.socket.send(data, token))  
-        loop.close() 
-
     def checkPermissions(self, token):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
+            logging.error("Invalid Token in check permissions of " + client if client else medic)
+            return
         try:
             data = self.database.allPermissionsData(client if client else medic)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":data["pending"]}).encode("UTF-8")
+            permissionThread(data["pending"], token, self.socket).start()
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            logging.error("Database error in check permissions of " + client if client else medic+" -> "+str(e))
+            return
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            print(e)
+            logging.error("Server error in check permissions of " + client if client else medic+" -> "+str(e))
+            return
         
 
+class permissionThread(threading.Thread):
 
+    def __init__(self, permissions, token, socket):
+        threading.Thread.__init__(self)
+        self.permissions=permissions
+        self.socket=socket
+        self.token=token
+
+    def run(self):
+        loop = asyncio.new_event_loop()  
+        asyncio.set_event_loop(loop)
+        asyncio.get_event_loop().run_until_complete(self.send())  
+        asyncio.get_event_loop().close() 
+
+    async def send(self):
+        if type(self.permissions) is list:
+            for permission in self.permissions:
+                await self.socket.send(str(permission), self.token)
+        elif type(self.permissions) is dict:
+            await self.socket.send(str(self.permissions), self.token)
     
 
 class myThread (threading.Thread):
