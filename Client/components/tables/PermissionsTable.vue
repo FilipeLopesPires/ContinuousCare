@@ -11,7 +11,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr v-for="permission in permissions" :key="permission.username">
+            <tr v-for="(permission, index) in permissions" :key="permission.username">
                 <td>{{ permission.username }}</td>
                 <td>{{ permission.full_name }}</td>
                 <td v-if="user_type === 'medic'">{{ permission.health_number }}</td>
@@ -21,31 +21,31 @@
                 <td>
                     <div v-if="title === 'pending'">
                         <div v-if="user_type === 'medic'">
-                            <a @click="remove_pending(permission.username)" class="genric-btn danger circle"><i class="fa fa-trash" aria-hidden="true"></i></a>
+                            <button @click="remove_pending(index, permission.username)" class="genric-btn primary radius"><i class="fa fa-trash" aria-hidden="true"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
-                            <a @click="accept_permission(permission.username)" class="genric-btn success circle">
+                            <button @click="accept_permission(index, permission.username)" class="genric-btn info radius">
                                 <i class="fa fa-check" aria-hidden="true"></i>
-                            </a>
-                            <a @click="reject_permission(permission.username)" class="genric-btn danger circle">
+                            </button>
+                            <button @click="reject_permission(index, permission.username)" class="genric-btn primary radius">
                                 <i class="fa fa-times" aria-hidden="true"></i>
-                            </a>
+                            </button>
                         </div>
                     </div>
                     <div v-else-if="title === 'accepted'">
                         <div v-if="user_type === 'medic'">
-                            <a class="genric-btn success circle"><i class="fa fa-play" aria-hidden="true"></i></a>
+                            <button class="genric-btn success radius"><i class="fa fa-play" aria-hidden="true"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
-                            <a @click="remove_accepted(permission.username)" class="genric-btn danger circle"><i class="fa fa-trash"></i></a>
+                            <button @click="remove_accepted(index, permission.username)" class="genric-btn primary radius"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
                     <div v-else-if="title === 'active'">
                         <div v-if="user_type === 'medic'">
-                            <a @click="remove_active(permission.username)" class="genric-btn warning circle"><i class="fa fa-pause"></i></a>
+                            <button @click="pause_active(index, permission.username)" class="genric-btn success radius"><i class="fa fa-pause"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
-                            <a @click="pause_active(permission.username)" class="genric-btn danger circle"><i class="fa fa-trash"></i></a>
+                            <button @click="remove_active(index, permission.username)" class="genric-btn warning radius"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
                 </td>
@@ -57,7 +57,7 @@
 <script>
 
 export default {
-    name: 'PermissionsBox',
+    name: 'PermissionsTable',
     props: {
         title: {
             type: String,
@@ -76,7 +76,26 @@ export default {
         /**
          * 
          */
-        async accept_permission(medic_username) {
+        async accept_permission(idx, medic_username) {
+            this.permissions.splice(idx, 1);
+
+            return await this.$axios.$post("/permission/accept", {
+
+            })
+            .then(res => {
+
+            })
+            .catch(e => {
+
+            })
+        },
+
+        /**
+         * 
+         */
+        async reject_permission(idx, medic_username) {
+            this.permissions.splice(idx, 1);
+
             return await this.$axios.$post("", {
 
             })
@@ -91,7 +110,9 @@ export default {
         /**
          * 
          */
-        async reject_permission(medic_username) {
+        async remove_pending(idx, client_username) {
+            this.permissions.splice(idx, 1);
+
             return await this.$axios.$post("", {
 
             })
@@ -106,7 +127,9 @@ export default {
         /**
          * 
          */
-        async remove_pending(client_username) {
+        async remove_accepted(idx, medic_username) {
+            this.permissions.splice(idx, 1);
+
             return await this.$axios.$post("", {
 
             })
@@ -121,7 +144,9 @@ export default {
         /**
          * 
          */
-        async remove_accepted(medic_username) {
+        async remove_active(idx, medic_username) {
+            this.permissions.splice(idx, 1);
+
             return await this.$axios.$post("", {
 
             })
@@ -136,22 +161,9 @@ export default {
         /**
          * 
          */
-        async remove_active(medic_username) {
-            return await this.$axios.$post("", {
+        async pause_active(idx, client_username) {
+            this.permissions.splice(idx, 1);
 
-            })
-            .then(res => {
-
-            })
-            .catch(e => {
-
-            })
-        },
-
-        /**
-         * 
-         */
-        async pause_active(client_username) {
             return await this.$axios.$post("", {
 
             })
