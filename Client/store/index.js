@@ -31,9 +31,35 @@ const createStore = () => {
             setUserType(state, new_user_type) {
                 state.userType = new_user_type;
             },
-            setProfile(state, new_profile) {
-                console.log("mutation setProfile");
-                console.log(new_profile);
+            setProfileFullName(state, full_name) {
+                state.profile.full_name = full_name;
+            },
+            setProfileEmail(state, email) {
+                state.profile.email = email;
+            },
+            setProfileEmail(state, email) {
+                state.profile.email = email;
+            },
+            setProfileHealthNumber(state, health_number) {
+                state.profile.health_number = health_number;
+            },
+            setProfileBirthdate(state, birth_date) {
+                state.profile.birth_date = birth_date;
+            },
+            setProfileWeight(state, weight) {
+                state.profile.weight = weight;
+            },
+            setProfileHeight(state, height) {
+                state.profile.height = height;
+            },
+            setProfileAdditionalInfo(state, additional_info) {
+                state.profile.additional_info = additional_info;
+            },
+            setProfileCompany(state, company) {
+                state.profile.company = company;
+            },
+            setProfileSpecialities(state, specialities) {
+                state.profile.specialities = specialities;
             },
             setDevices(state, devices) {
                 state.loadedDevices = devices;
@@ -79,20 +105,35 @@ const createStore = () => {
             setProfile(vuexContext, new_profile) {
                 console.log("action setProfile");
                 console.log(new_profile);
-                /* full_name: null,
-                    email: null,
-                    health_number: null,
-                    birth_date: null,
-                    weight: null,
-                    height: null,
-                    additional_info: null,
-                    company: null,
-                    specialities: null */
-                vuexContext.commit("setProfile", new_profile);
+                vuexContext.commit("setProfileFullName", new_profile.full_name);
+                vuexContext.commit("setProfileEmail", new_profile.email);
+                vuexContext.commit("setProfileHealthNumber", new_profile.health_number);
+                vuexContext.commit("setProfileBirthdate", new_profile.birth_date);
+                vuexContext.commit("setProfileWeight", new_profile.weight);
+                vuexContext.commit("setProfileHeight", new_profile.height);
+                vuexContext.commit("setProfileAdditionalInfo", new_profile.additional_info);
+                vuexContext.commit("setProfileCompany", new_profile.company);
+                vuexContext.commit("setProfileSpecialities", new_profile.specialities);
                 if(process.client) {
-                    localStorage.setItem("session_profile", new_profile);
+                    localStorage.setItem("session_profile_full_name", new_profile.full_name);
+                    localStorage.setItem("session_profile_email", new_profile.email);
+                    localStorage.setItem("session_profile_health_number", new_profile.health_number);
+                    localStorage.setItem("session_profile_birth_date", new_profile.birth_date);
+                    localStorage.setItem("session_profile_weight", new_profile.weight);
+                    localStorage.setItem("session_profile_height", new_profile.height);
+                    localStorage.setItem("session_profile_additional_info", new_profile.additional_info);
+                    localStorage.setItem("session_profile_company", new_profile.company);
+                    localStorage.setItem("session_profile_specialities", new_profile.specialities);
                 }
-                Cookie.set("session_profile", new_profile);
+                Cookie.set("session_profile_full_name", new_profile.full_name);
+                Cookie.set("session_profile_email", new_profile.email);
+                Cookie.set("session_profile_health_number", new_profile.health_number);
+                Cookie.set("session_profile_birth_date", new_profile.birth_date);
+                Cookie.set("session_profile_weight", new_profile.weight);
+                Cookie.set("session_profile_height", new_profile.height);
+                Cookie.set("session_profile_additional_info", new_profile.additional_info);
+                Cookie.set("session_profile_company", new_profile.company);
+                Cookie.set("session_profile_specialities", new_profile.specialities);
             },
             setDevices(vuexContext, devices) {
                 vuexContext.commit("setDevices", devices); 
@@ -113,14 +154,30 @@ const createStore = () => {
                 Cookie.remove("session_token");
                 Cookie.remove("session_token_expiration");
                 Cookie.remove("session_user_type");
-                Cookie.remove("session_profile");
+                Cookie.remove("session_profile_full_name");
+                Cookie.remove("session_profile_email");
+                Cookie.remove("session_profile_health_number");
+                Cookie.remove("session_profile_birth_date");
+                Cookie.remove("session_profile_weight");
+                Cookie.remove("session_profile_height");
+                Cookie.remove("session_profile_additional_info");
+                Cookie.remove("session_profile_company");
+                Cookie.remove("session_profile_specialities");
                 Cookie.remove("session_loaded_devices");
                 Cookie.remove("session_supported_devices");
                 if(process.client) {
                     localStorage.removeItem("session_token");
                     localStorage.removeItem("session_token_expiration");
                     localStorage.removeItem("session_user_type");
-                    localStorage.removeItem("session_profile");
+                    localStorage.removeItem("session_profile_full_name");
+                    localStorage.removeItem("session_profile_email");
+                    localStorage.removeItem("session_profile_health_number");
+                    localStorage.removeItem("session_profile_birth_date");
+                    localStorage.removeItem("session_profile_weight");
+                    localStorage.removeItem("session_profile_height");
+                    localStorage.removeItem("session_profile_additional_info");
+                    localStorage.removeItem("session_profile_company");
+                    localStorage.removeItem("session_profile_specialities");
                     localStorage.removeItem("session_loaded_devices");
                     localStorage.removeItem("session_supported_devices");
                 }
@@ -129,7 +186,17 @@ const createStore = () => {
                 let token;
                 let expiration_date;
                 let userType;
-                let profile;
+                let profile = {
+                    full_name: null,
+                    email: null,
+                    health_number: null,
+                    birth_date: null,
+                    weight: null,
+                    height: null,
+                    additional_info: null,
+                    company: null,
+                    specialities: null
+                };
                 let loadedDevices;
                 let supportedDevices;
                 if(req) {
@@ -153,7 +220,15 @@ const createStore = () => {
                     token = localStorage.getItem("session_token");
                     expiration_date = localStorage.getItem("session_token_expiration");
                     userType = localStorage.getItem("session_user_type");
-                    profile = localStorage.getItem("session_profile");
+                    profile.full_name = localStorage.getItem("session_profile_full_name");
+                    profile.email = localStorage.getItem("session_profile_email");
+                    profile.health_number = localStorage.getItem("session_profile_health_number");
+                    profile.birth_date = localStorage.getItem("session_profile_birth_date");
+                    profile.weight = localStorage.getItem("session_profile_weight");
+                    profile.height = localStorage.getItem("session_profile_height");
+                    profile.additional_info = localStorage.getItem("session_profile_additional_info");
+                    profile.company = localStorage.getItem("session_profile_company");
+                    profile.specialities = localStorage.getItem("session_profile_specialities");
                     loadedDevices = localStorage.getItem("session_loaded_devices");
                     supportedDevices = localStorage.getItem("session_supported_devices");
                 } 
@@ -163,7 +238,15 @@ const createStore = () => {
                 }
                 vuexContext.commit("setSessionToken", token);
                 vuexContext.commit("setUserType", userType);
-                vuexContext.commit("setProfile", profile);
+                vuexContext.commit("setProfileFullName", profile.full_name);
+                vuexContext.commit("setProfileEmail", profile.email);
+                vuexContext.commit("setProfileHealthNumber", profile.health_number);
+                vuexContext.commit("setProfileBirthdate", profile.birth_date);
+                vuexContext.commit("setProfileWeight", profile.weight);
+                vuexContext.commit("setProfileHeight", profile.height);
+                vuexContext.commit("setProfileAdditionalInfo", profile.additional_info);
+                vuexContext.commit("setProfileCompany", profile.company);
+                vuexContext.commit("setProfileSpecialities", profile.specialities);
                 vuexContext.commit("setDevices", loadedDevices);
                 vuexContext.commit("setSupportedDevices", supportedDevices);
             }
@@ -207,7 +290,6 @@ const createStore = () => {
             supportedDevices(state) {
                 return state.supportedDevices;
             },
-            
         },
     })
 }

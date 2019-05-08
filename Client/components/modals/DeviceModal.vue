@@ -156,6 +156,11 @@ export default {
             return await this.$axios.$post("/devices", data, config)
                         .then(res => {
                             console.log(res)
+                            
+                            if(res.status != 0) {
+                                // toast
+                                // if(res.status == 1) { toast only 1 bracelet per account }
+                            }
                             return res;
                         })
                         .catch(e => {
@@ -185,8 +190,8 @@ export default {
                     'authentication_fields': {
                         'uuid': document.querySelector("input[name=uuid]").value,
                         'token': document.querySelector("input[name=token]").value},
-                    'latitude': parseFloat(document.querySelector("input[name=latitude]").value),
-                    'longitude': parseFloat(document.querySelector("input[name=longitude]").value)
+                    'latitude': document.querySelector("input[name=latitude]").value,
+                    'longitude': document.querySelector("input[name=longitude]").value
                 }
             } else {
                 // this should never happen ...
@@ -211,12 +216,12 @@ export default {
             }
             // check if values are in the correct format
             if(data.latitude) {
-                if(!String(data.latitude).match("^[-+]?(([1-8]?\d(\.\d+)?)|90(\.0+)?)$")) {
-                    this.showToast("Latitude must follow the correct format!\n(e.g.: '10', '+180.0', '-127.5')",2500);
+                if(parseFloat(data.latitude)<-90 || parseFloat(data.latitude)>90) {
+                    this.showToast("Latitude must follow the correct format!\n(ranges from -90.0 to 90.0)",2500);
                     return -2;
                 }
-                if(!String(data.longitude).match("^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$")) {
-                    this.showToast("Longitude must follow the correct format!\n(e.g.: '47', '+90.0', '-180.00')", 2500);
+                if(parseFloat(data.longitude)<-180 || parseFloat(data.longitude)>180) {
+                    this.showToast("Longitude must follow the correct format!\n(ranges from -180.0 to 180.0)", 2500);
                     return -2;
                 }
             }

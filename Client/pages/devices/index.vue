@@ -97,7 +97,6 @@ export default {
     async mounted() {
         await this.getDevices(this.$store.getters.sessionToken);
         if(!this.requestError) {
-            this.insertPhotos();
             this.$store.dispatch('setDevices', this.loaded_devices);
         }
         await this.getSupportedDevices();
@@ -149,15 +148,6 @@ export default {
                 this.loaded_devices = new_devices.concat(this.loaded_devices);
             }
         },
-        insertPhotos() {
-            for(var i=0; i<this.loaded_devices.length-1; i++) {
-                if(this.loaded_devices[i].type == "FitBit Charge 3") {
-                    this.loaded_devices[i]["photo"] = "\"https://ss7.vzw.com/is/image/VerizonWireless/fitbit-charge3-graphite-black-fb409gmbk-a?$png8alpha256$&hei=410\"";
-                } else {
-                    this.loaded_devices[i]["photo"] = "\"https://cdn.shopify.com/s/files/1/0008/7330/0029/products/foobot_x700.jpg?v=1528342886\"";
-                }
-            }
-        }
     },
     head: {
         title: "Devices"

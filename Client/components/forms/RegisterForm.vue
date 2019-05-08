@@ -230,12 +230,17 @@ export default {
                         .then(res => {
                             if(res.status != 0) {
                                 // warn which registration fields are invalid
+                                console.log(res);
+                                if(res.status == 1) {
+                                    // warn that phpn must be uniuqe
+                                }
                                 this.showToast("Registration was invalid. Please make sure you fill in the form correctly.", 5000);
                             }
                             return res;
                         })
                         .catch(e => {
                             // unable to register
+                            console.log(e);
                             this.showToast("Something went wrong with the registration process. The server might be down at the moment. Please re-submit or try again later.", 7500);
                             return null;
                         });
@@ -248,11 +253,14 @@ export default {
             return await this.$axios.$post("/signin",config)
                         .then(res => {
                             if(res.status != 0) {
+                                console.log(res);
                                 this.showToast("Something went terribly wrong with the registration process. Please try to login, if it does not work contact us through email.", 7500);
                             }
                             return res;
                         })
                         .catch(e => {
+                            console.log(e);
+                            // toast
                             return null;
                         });
         },
