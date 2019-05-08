@@ -15,6 +15,32 @@ processor=Processor()
 
 @app.route('/signup', methods = ['POST'])
 def signup():
+    data = request.data
+
+    type = data.get("type", None).lower()
+    if not type:
+        return json.dumps({"status":2, "msg":"Missing \"type\" parameter"}).encode("UTF-8")
+
+    if type not in ["client", "medic"]:
+        return json.dumps({"status":2, "msg":"Type can only be \"client\" or \"medic\""}).encode("UTF-8")
+
+    """
+    if type == "client":
+        for key in [
+            ("username", str, False),
+            ("password", str, False),
+            ("name", str, False),
+            ("email", str, False),
+            ("health_number", (int, str), False),
+            ("birth_date", str, True),
+            ("weight", float, True),
+            ("height", float, True),
+            ("additional_info", str, True)]:
+            pass
+    else:
+        pass
+    """
+
     return processor.signup(request.data)
 
 @app.route('/signin', methods = ['POST'])

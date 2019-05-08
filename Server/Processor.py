@@ -11,12 +11,20 @@ import requests
 from geopy.distance import vincenty
 
 from database import *
-from database.exceptions import *
+from database.exceptions import DatabaseException, LogicException
 from devices import *
 
 '''
 Component responsable for doing all the information gathering and processing, scheduling all necessary operations.
 Is this component that is also responsable for answering all the requests that may come form the API.
+
+error codes
+ 0 - successfull
+-1 - internal error - database or server
+ 1 - logical error - i.e. username already exists. Important to show on the web page
+ 2 - arguments error - missing arguments
+ 3 - unauthorized error - user uses a path that he doesn't have access
+ 4 - authentication error - invalid token
 '''
 
 
@@ -82,16 +90,18 @@ class Processor:
                     self.userThreads[user].start()
 
             return json.dumps({"status":0, "msg":"Successfull operation."}).encode("UTF-8")
-        except DatabaseException as e:
+        except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+        except DatabaseException as e:
+            return json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def logout(self, token):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
         elif client:
             del self.clientTokens[token]
         elif medic:
@@ -141,13 +151,22 @@ class Processor:
         if not user:
             return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
 
-        devices=self.database.getAllDevices(user)
+        try:
+            devices=self.database.getAllDevices(user)
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+        except DatabaseException as e:
+            return json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":devices}).encode("UTF-8")
 
     def updateDevice(self, token, data):
+        if self.medicTokens.get(token, None):
+            return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
+
         user = self.clientTokens.get(token, None)
         if not user:
-            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             deviceConf=json.loads(data.decode("UTF-8"))
@@ -157,16 +176,21 @@ class Processor:
                     device.update(deviceConf["authentication_fields"].get("token",None),deviceConf["authentication_fields"].get("refresh_token",None), deviceConf["authentication_fields"].get("uuid",None), user, id, [deviceConf.get("latitude",None), deviceConf.get("longitude", None)])
             result=self.database.updateDevice(user, deviceConf)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": result}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
 
     def deleteDevice(self, token, data):
+        if self.medicTokens.get(token, None):
+            return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
+
         user = self.clientTokens.get(token, None)
         if not user:
-            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             deviceConf=json.loads(data.decode("UTF-8"))
@@ -182,15 +206,20 @@ class Processor:
             self.userThreads[user].start()
 
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": result}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def addDevice(self, token, data):
+        if self.medicTokens.get(token, None):
+            return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
+
         user = self.clientTokens.get(token, None)
         if not user:
-            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             jsonData=json.loads(data.decode("UTF-8"))
@@ -216,31 +245,35 @@ class Processor:
 
             
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def getData(self, token, function, datatype, start, end, interval):
         user = self.clientTokens.get(token, None)
         if not user:
-            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":2, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             values=eval("self.database."+function)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
-        return  json.dumps({"status":1, "msg":"Bad combination of arguments. It can only be start+end, start+interval or end+interval"}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+        return  json.dumps({"status":2, "msg":"Bad combination of arguments. It can only be start+end, start+interval or end+interval"}).encode("UTF-8")
                 
 
     def updateProfile(self, token, data):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
         elif client:
             user = client
         elif medic:
@@ -249,16 +282,18 @@ class Processor:
         try:
             self.database.updateProfile(user, json.loads(data.decode("UTF-8")))
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def getProfile(self, token):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
         elif client:
             user = client
         elif medic:
@@ -267,16 +302,18 @@ class Processor:
         try:
             profile=self.database.getProfile(user)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": profile}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def deleteProfile(self, token):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
         elif client:
             user = client
         elif medic:
@@ -285,19 +322,21 @@ class Processor:
         try:
             self.database.deleteProfile(user)
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def getSupportedDevices(self):
         try:
             values=self.database.getSupportedDevices()
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def permission(self, token, data):
         client = self.clientTokens.get(token, None)
@@ -312,10 +351,12 @@ class Processor:
                 self.database.requestPermission(medic, data)
 
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
         """
         Use by both medic and client

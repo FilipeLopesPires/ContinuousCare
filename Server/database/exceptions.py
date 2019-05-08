@@ -11,6 +11,14 @@ __all__ = [
 ]
 
 
+class LogicException(Exception):
+    """
+    Exception raised when some error happens on some internal logic
+     such as
+    """
+    pass
+
+
 class DatabaseException(Exception):
     """
     Base exception to wrap exceptions raised on code related

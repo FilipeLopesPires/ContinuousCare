@@ -3,7 +3,7 @@
 from database.time_series.proxy import *
 from database.relational.proxy import *
 
-from database.exceptions import ProxyException, InternalException
+from database.exceptions import ProxyException, InternalException, LogicException
 
 import datetime
 
@@ -68,7 +68,7 @@ class Database:
                 )
             else:
                 raise Exception("Unkown type of user!")
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -87,7 +87,7 @@ class Database:
                 data["username"],
                 data["password"]
             )
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -127,7 +127,7 @@ class Database:
                 )
             else:
                 raise Exception("Unkown type of user!")
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -144,7 +144,7 @@ class Database:
         """
         try:
             return self.relational_proxy.get_user_profile_data(user)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -158,7 +158,7 @@ class Database:
         """
         try:
             return self.relational_proxy.get_all_usernames()
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -182,7 +182,7 @@ class Database:
                 data.get("latitude", None), # TODO may not be this key
                 data.get("longitude", None) # TODO may not be this key
             )
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -203,7 +203,7 @@ class Database:
             del data["id"]
 
             self.relational_proxy.updtate_device(user, device_id, data)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -219,7 +219,7 @@ class Database:
         """
         try:
             self.relational_proxy.delete_device(user, device_id)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -236,7 +236,7 @@ class Database:
         """
         try:
             return self.relational_proxy.get_all_devices_of_user(user)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -252,7 +252,7 @@ class Database:
         """
         try:
             return self.relational_proxy.get_all_supported_devices()
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -340,7 +340,7 @@ class Database:
                     del data[key]
 
             return data
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -380,7 +380,7 @@ class Database:
                 # TODO maybe raise a costum exception. Mandatory to handle it
 
             return self.getData(measurement, client, start, end, interval)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -441,7 +441,7 @@ class Database:
                         "fields": data
                     }]
                 )
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -461,7 +461,7 @@ class Database:
                 data["username"],
                 data["health_number"],
                 datetime.timedelta(hours=int(data["duration"])))
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -491,7 +491,7 @@ class Database:
                 client,
                 data["username"],
                 datetime.timedelta(hours=int(data["duration"])))
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -507,7 +507,7 @@ class Database:
         """
         try:
             self.relational_proxy.accept_permission(client, medic)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -523,7 +523,7 @@ class Database:
         """
         try:
             self.relational_proxy.remove_accepted_permission(client, medic)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -539,7 +539,7 @@ class Database:
         """
         try:
             self.relational_proxy.reject_permission(client, medic)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -556,7 +556,7 @@ class Database:
         """
         try:
             self.relational_proxy.stop_active_permission(medic, client)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -573,7 +573,7 @@ class Database:
         """
         try:
             self.relational_proxy.remove_active_permission(client, medic)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -590,7 +590,7 @@ class Database:
         """
         try:
             return self.relational_proxy.get_historical_permissions(user)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
@@ -606,7 +606,7 @@ class Database:
         """
         try:
             return self.relational_proxy.get_all_permissions_data(user)
-        except InternalException:
+        except (InternalException, LogicException):
             raise
         except Exception as e:
             raise ProxyException(str(e))
