@@ -46,8 +46,9 @@ class ArgumentValidator:
                     errors.append("Missing key \"" + key + "\"")
                 continue
 
-            if not value and mandatory:
-                errors.append("Value \"" + key + "\" can't be null")
+            if not value:
+                if mandatory:
+                    errors.append("Value \"" + key + "\" can't be null")
                 continue
 
             if not isinstance(value, expectedType):
@@ -105,6 +106,8 @@ class ArgumentValidator:
             birth_date = data.get("birth_date")
             if birth_date and isinstance(birth_date, str):
                 return result + ArgumentValidator._validate_dates(birth_date)
+
+            return result
 
         return ArgumentValidator._validate(
             data, [
@@ -164,20 +167,22 @@ class ArgumentValidator:
 
 @app.route('/signup', methods = ['POST'])
 def signup():
-    data = request.data
+    data = json.loads(request.data.decode("UTF-8"))
 
+    print(data)
     argsErrors =  ArgumentValidator.signup(data)
     if len(argsErrors) > 0:
-        return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"Argument errors " + str(argsErrors)}).encode("UTF-8")
 
     return processor.signup(request.data)
 
 @app.route('/signin', methods = ['POST'])
 def signin():
+    data = json.loads(request.data.decode("UTF-8"))
 
-    argsErrors =  ArgumentValidator.signup(data)
+    argsErrors =  ArgumentValidator.signin(data)
     if len(argsErrors) > 0:
-        return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"Argument errors " + str(argsErrors)}).encode("UTF-8")
 
     return processor.signin(request.data)
 
@@ -196,27 +201,32 @@ def devices():
     if not authToken:
         return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
+    if request.data != b'':
+      data = json.loads(request.data.decode("UTF-8"))
+    else:
+      data = {}
+
     if request.method == 'GET':
         return processor.getAllDevices(authToken)
     elif request.method == 'POST':
 
         argsErrors =  ArgumentValidator.addDevice(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors " + str(argsErrors)}).encode("UTF-8")
 
         return processor.addDevice(authToken, request.data)
     elif request.method == 'PUT':
 
         argsErrors =  ArgumentValidator.updateDevice(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors " + str(argsErrors)}).encode("UTF-8")
 
         return processor.updateDevice(authToken, request.data)
     else:
 
         argsErrors =  ArgumentValidator.deleteDevice(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors " + str(argsErrors)}).encode("UTF-8")
 
         return processor.deleteDevice(authToken, request.data)
 

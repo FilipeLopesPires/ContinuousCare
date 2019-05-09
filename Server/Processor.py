@@ -37,7 +37,7 @@ RADIUS=50       #variable that defines the distance from the personal home devic
 class Processor:
 
     def __init__(self):
-        self.socket = WebSocket("127.0.0.1", 5678, self)
+        self.socket = WebSocket("0.0.0.0", 5678, self)
         self.socket.start()
         self.database=database.Database()
         self.externalAPI=ExternalAPI("","","","",None, None).metrics

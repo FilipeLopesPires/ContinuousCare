@@ -173,7 +173,7 @@ class MySqlProxy:
             return new_id
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -216,7 +216,7 @@ class MySqlProxy:
             return new_id
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -242,7 +242,7 @@ class MySqlProxy:
             return next(cursor.stored_results()).fetchone()[0]
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -280,7 +280,7 @@ class MySqlProxy:
             return next(cursor.stored_results()).fetchone()[0]
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -328,7 +328,7 @@ class MySqlProxy:
             return list(devices.values())
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -367,7 +367,7 @@ class MySqlProxy:
             return list(retval.values())
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -414,7 +414,7 @@ class MySqlProxy:
             return data
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -455,7 +455,7 @@ class MySqlProxy:
                                                                         additional_information))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -489,7 +489,7 @@ class MySqlProxy:
             conn.commit()
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -518,7 +518,7 @@ class MySqlProxy:
             conn.commit()
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -545,7 +545,7 @@ class MySqlProxy:
             return next(cursor.stored_results()).fetchall()
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -566,7 +566,7 @@ class MySqlProxy:
             return [username[0] for username in next(cursor.stored_results()).fetchall()]
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -602,7 +602,7 @@ class MySqlProxy:
             conn.commit()
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -622,7 +622,7 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.DELETE_DEVICE, (username, device_id))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -644,7 +644,7 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, health_number, duration))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -664,7 +664,7 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.DELETE_PERMISSION, (client, medic))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -686,7 +686,7 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.GRANT_PERMISSION, (client, medic, duration))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -706,7 +706,7 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.ACCEPT_PERMISSION, (client, medic))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -726,7 +726,7 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.REMOVE_ACCEPTED_PERMISSION, (client, medic))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -746,7 +746,7 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.REJECT_PERMISSION, (client, medic))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -770,7 +770,7 @@ class MySqlProxy:
             return next(cursor.stored_results()).fetchall()[0] == 1
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -791,7 +791,7 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.STOP_ACTIVE_PERMISSION, (medic, client))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -812,7 +812,7 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.REMOVE_ACTIVE_PERMISSION, (client, medic))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -891,7 +891,7 @@ class MySqlProxy:
             return self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 3)
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)
@@ -922,7 +922,7 @@ class MySqlProxy:
             return data
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(str(e))
+                raise LogicException(e.msg)
             raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)

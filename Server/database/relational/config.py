@@ -9,8 +9,7 @@ advised to change the permissions on this file
 chmod 600 config.py
 """
 
-#HOST      = "db_relational"
-HOST      = "localhost"
+HOST      = "db_relational"
 PORT      = 3306
 USERNAME  = "pi2019cc_flaskapp"
 PASSWORD  = "T)[-keLSh.9UFZcN58.+"
