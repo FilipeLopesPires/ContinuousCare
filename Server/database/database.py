@@ -458,8 +458,8 @@ class Database:
         try:
             self.relational_proxy.request_permission(
                 medic,
-                data["username"],
-                data["health_number"],
+                data.get("username",None),
+                data.get("health_number",None),
                 datetime.timedelta(hours=int(data["duration"])))
         except (InternalException, LogicException):
             raise
@@ -477,13 +477,13 @@ class Database:
         """
         self.relational_proxy.delete_request_permission(medic, client)
 
-    def grantPermission(self, client, medic, duration):
+    def grantPermission(self, client, data):
         """
         A clients grants temporary permission to a medic to let him see his data
 
         :param client: username of the client
         :type client: str
-        :param data: keys : {username:str, health_number: int, duration: int}
+        :param data: keys : {username:str, duration: int}
         :type data: dict
         """
         try:
@@ -544,7 +544,7 @@ class Database:
         except Exception as e:
             raise ProxyException(str(e))
 
-    def stopAcceptedPermission(self, medic, client):
+    def stopActivePermission(self, medic, client):
         """
         Allows a medic to stop an active permission so he can save the time
         to use another time
