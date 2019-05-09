@@ -4,11 +4,17 @@
             <!-- =============================== Modal =======================-->
             <b-modal ref="request_grant_permission_modal" hide-footer hide-header>
                 <div v-if="user_type === 'medic'">
-                    <h3  class="title_color text-center" >Request Permission</h3>
-                    <h5>Patient Username:</h5>
-                    <input ref="client_username_input" type="text" class="single-input"> 
-                    <h5>Patient Health Number:</h5>
-                    <input ref="health_number_input" type="number" class="single-input"> 
+                        <h3  class="title_color text-center" >Request Permission</h3>
+                        <h5>Patient Username:</h5>
+                    <b-form inline>
+                        <b-radio name="search_option" ref="client_username_check"></b-radio>
+                        <input ref="client_username_input" type="text" class="single-input"> 
+                    </b-form>
+                        <h5>Patient Health Number:</h5>
+                    <b-form inline>
+                        <b-radio name="search_option" ref="client_username_check"></b-radio>
+                        <input ref="health_number_input" type="number" class="single-input"> 
+                    </b-form>
                 </div>
                 <div v-else-if="user_type === 'client'">
                     <h3  class="title_color text-center" >Grant Permission</h3>
@@ -62,88 +68,63 @@ export default {
     },
     data() {
         return {
-            user_type: "client",
+            user_type: this.$store.getters.userType,
             permissions: {
                 "pending":[],
                 "accepted":[],
                 "active":[]
             },
             requests_header: {
-                headers: {'AuthToken': this.$store.getters.sessionToken},
+                headers: {AuthToken: this.$store.getters.sessionToken},
             }
         }
     },
     async mounted() {
-        this.permissions = {
-            pending: [
-                {
-                    full_name: "André Pedrosa",
-                    username: "aspedrosa",
-                    health_number: 111111111,
-                    company: "Hospital Leiria",
-                    duration: 10
-                },
-                {
-                    full_name: "André Pedrosa",
-                    username: "zonnax",
-                    health_number: 111111112,
-                    company: "Hospital Leiria",
-                    duration: 10
-                }
-            ],
-            accepted: [
-                {
-                    full_name: "André Pedrosa",
-                    username: "aspedrosa",
-                    health_number: 111111113,
-                    company: "Hospital Leiria",
-                    duration: 10
-                },
-                {
-                    full_name: "André Pedrosa",
-                    username: "zonnax",
-                    health_number: 111111114,
-                    company: "Hospital Leiria",
-                    duration: 10
-                }
-            ],
-            active: [
-                {
-                    full_name: "André Pedrosa",
-                    username: "aspedrosa",
-                    health_number: 111111115,
-                    company: "Hospital Leiria",
-                    duration: 10
-                },
-                {
-                    full_name: "André Pedrosa",
-                    username: "zonnax",
-                    health_number: 111111116,
-                    company: "Hospital Leiria",
-                    duration: 10
-                }
-            ]
-        }
 
-        return;
-
-        this.permissions = this.$axios.$get("", {
-
-        })
+        this.permissions = await this.$axios.$get("/permission", this.requests_header)
         .then(res => {
-            if(res.status != 0) {
-                this.requestError = true;
-                return {
-                    "pending" : [],
-                    "accepted": [],
-                    "active": []
-                };
+            if(res.status == 0)
+                return res.data;
+            else if (res.status == 1)
+                this.$toasted.show(
+                    res.msg,
+                    {
+                        position: 'bottom-center',
+                        duration: 7500
+                    }
+                );
+            else {
+                console.log("status code : " + res.status);
+                console.log("message : " + res.msg);
+                this.$toasted.show(
+                    'Error retrieving permissions.', 
+                    {
+                        position: 'bottom-center',
+                        duration: 7500
+                    }
+                );
             }
-            return res.data;
+            return {
+                pending: [],
+                accepted: [],
+                active: []
+            };
         })
         .catch(e => {
-
-        })
+            console.log(e);
+            this.$toasted.show(
+                'Error retrieving permissions.', 
+                {
+                    position: 'bottom-center',
+                    duration: 7500
+                }
+            );
+            return {
+                pending: [],
+                accepted: [],
+                active: []
+            };
+        });
     },
     methods: {
         /**
@@ -154,23 +135,52 @@ export default {
             let health_number = this.$refs.health_number_input.value;
             let duration = this.$refs.duration_input.value;
 
+            if (health_number === "")
+                health_number = null;
+
+            if (username === "")
+                username = null;
+
             this.close_modal();
 
-            await this.$axios.$post("/permission/request", {
+            await this.$axios.$post("/permission", {
                 username: username,
                 health_number: health_number,
                 duration: duration
             }, this.requests_header)
             .then(res => {
-                this.$toasted.show(
-                    'Permission requested.', 
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
+                if (res.status == 0) {
+                    this.$toasted.show(
+                        'Permission requested.', 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else if (res.status == 1) {
+                    this.$toasted.show(
+                        res.msg,
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else {
+                    console.log("status code : " + res.status);
+                    console.log("message : " + res.msg);
+                    this.$toasted.show(
+                        'Error granting permission. Try again later.', 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
             })
             .catch(e => {
+                console.log(e);
                 this.$toasted.show(
                     'Error granting permission. Try again later.', 
                     {
