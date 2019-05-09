@@ -111,10 +111,10 @@ class Database:
                     data["full_name"],
                     data["email"],
                     data["health_number"],
-                    data["birth_date"],
-                    data["weight"],
-                    data["height"],
-                    data["additional_info"]
+                    data.get("birth_date"),
+                    data.get("weight"),
+                    data.get("height"),
+                    data.get("additional_info")
                 )
             elif data["type"].lower() == "medic":
                 self.relational_proxy.update_medic_profile_data(
@@ -122,8 +122,8 @@ class Database:
                     data["password"],
                     data["full_name"],
                     data["email"],
-                    data["company"],
-                    data["specialities"]
+                    data.get("company"),
+                    data.get("specialities")
                 )
             else:
                 raise Exception("Unkown type of user!")
@@ -179,8 +179,8 @@ class Database:
                 user,
                 data["type"],
                 data["authentication_fields"],
-                data.get("latitude", None), # TODO may not be this key
-                data.get("longitude", None) # TODO may not be this key
+                data.get("latitude"),
+                data.get("longitude")
             )
         except (InternalException, LogicException):
             raise

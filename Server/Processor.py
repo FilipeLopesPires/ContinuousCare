@@ -193,13 +193,13 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            deviceConf=json.loads(data.decode("UTF-8"))
+            deviceId=json.loads(data.decode("UTF-8"))["id"]
             for metric in self.userMetrics[user]:
                 for submetric in self.userMetrics[user][metric]:
-                    if submetric.dataSource.id == deviceConf["id"]:
+                    if submetric.dataSource.id == deviceId:
                         self.userMetrics[user][metric].remove(submetric)
                 
-            result=self.database.deleteDevice(user, deviceConf)
+            result=self.database.deleteDevice(user, deviceId)
             if user in self.userThreads:
                 self.userThreads[user].end()
             self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)

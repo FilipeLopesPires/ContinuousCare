@@ -4,6 +4,7 @@ from Processor import Processor
 from flask_cors import CORS
 import ssl
 import re
+import datetime
 '''
 Component responsable for defining and supporting the interface to the system.
 The API supports https and on authorized operations should receive the personal token on the header.
@@ -28,25 +29,23 @@ class ArgumentValidator:
         :param data: data to validate
         :type data: dict
         :param validation: list of tuples with KEY of mandatory fields
-            EXPECTEDTYPES for those filds and if that field can receive a
-            null/None value
+            EXPECTEDTYPES for those filds and if that field is mandatory
         :type validation: list
         :return: all errors presents on arguments
         :rtype: list
         """
         errors = []
-        for key, expectedType, nullable in validation:
+        for key, expectedType, mandatory in validation:
             try:
                 value = data[key] # some values have value null that's why I didn't use get(key, default)
             except KeyError:
-                if not nullable:
+                if mandatory:
                     errors.append("Missing key \"" + key + "\"")
                 continue
 
-            if not value and not nullable:
+            if not value and mandatory:
                 errors.append("Value \"" + key + "\" can't be null")
                 continue
-
 
             if not isinstance(value, expectedType):
                 if isinstance(value, str):
@@ -63,38 +62,101 @@ class ArgumentValidator:
         return errors
 
     @staticmethod
-    def signup(userType, data):
-        """
-        Validates data on the signup path
+    def _validate_dates(date):
+        if not re.match(r"^\d{1,2}-\d{1,2}-\d{4}$", date):
+            return ["Invalid date format. Should follow dd-mm-yyyy."]
+        else:
+            try:
+                day, month, year = date.split("-")
+                datetime.date(day, month, year)
+            except ValueError:
+                return ["Invalid date."]
 
-        :param userType: 'client' or 'medic'
-        :type userType: str
-        :param data: data to validate
-        :type data: dict
-        :return: all good or not
-        :rtype: bool
-        """
+            return []
+
+    @staticmethod
+    def signup(data):
+        userType = data.get("type")
+        if not userType:
+            return ["Missing \"type\" parameter"]
+
+        userType = userType.lower()
+
+        if userType not in ["client", "medic"]:
+            return ["Type can only be \"client\" or \"medic\""]
+
         if userType == "client":
-            return ArgumentValidator._validate(
+            result =  ArgumentValidator._validate(
                 data, [
-                    ("username", str, False),
-                    ("password", str, False),
-                    ("name", str, False),
-                    ("email", str, False),
-                    ("health_number", int, False),
-                    ("birth_date", str, True),
-                    ("weight", float, True),
-                    ("height", float, True),
-                    ("additional_info", str, True)]
+                    ("username", str, True),
+                    ("password", str, True),
+                    ("name", str, True),
+                    ("email", str, True),
+                    ("health_number", int, True),
+                    ("birth_date", str, False),
+                    ("weight", float, False),
+                    ("height", float, False),
+                    ("additional_info", str, False)]
             )
+
+            birth_date = data.get("birth_date")
+            if birth_date and isinstance(birth_date, str):
+                return result + ArgumentValidator._validate_dates(birth_date)
+
         return ArgumentValidator._validate(
             data, [
-                ("username", str, False),
-                ("password", str, False),
-                ("name", str, False),
-                ("email", str, False),
-                ("company", str, True),
-                ("specialities", str, True)]
+                ("username", str, True),
+                ("password", str, True),
+                ("name", str, True),
+                ("email", str, True),
+                ("company", str, False),
+                ("specialities", str, False)]
+        )
+
+    @staticmethod
+    def signin(data):
+        return ArgumentValidator._validate(
+            data, [
+                ("username", str, True),
+                ("password", str, True)
+            ]
+        )
+
+    @staticmethod
+    def _addAndUpdateDevice(isAdd, data):
+        fields = [
+            ("authentication_fields", list, True),
+            ("latitude", float, False),
+            ("longitude", float, False)
+        ]
+
+        if isAdd:
+            fields.append(("type", str, True))
+        else:
+            fields.append(("id", int, True))
+
+        auth_fields = data.get("authentication_fields")
+        for value in auth_fields.values():
+            if not isinstance(value, str):
+                result.append("Authentication fields have to be strings.")
+                break
+
+        return result
+
+    @staticmethod
+    def addDevice(data):
+        return ArgumentValidator._addAndUpdateDevice(True, data)
+
+    @staticmethod
+    def updateDevice(data):
+        return ArgumentValidator._addAndUpdateDevice(False, data)
+
+    @staticmethod
+    def deleteDevice(data):
+        return ArgumentValidator._validate(
+            data, [
+                ("id", int, True)
+            ]
         )
 
 
@@ -102,14 +164,7 @@ class ArgumentValidator:
 def signup():
     data = request.data
 
-    type = data.get("type", None).lower()
-    if not type:
-        return json.dumps({"status":2, "msg":"Missing \"type\" parameter"}).encode("UTF-8")
-
-    if type not in ["client", "medic"]:
-        return json.dumps({"status":2, "msg":"Type can only be \"client\" or \"medic\""}).encode("UTF-8")
-
-    argsErrors =  ArgumentValidator.signup(type, data)
+    argsErrors =  ArgumentValidator.signup(data)
     if len(argsErrors) > 0:
         return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
 
@@ -117,24 +172,51 @@ def signup():
 
 @app.route('/signin', methods = ['POST'])
 def signin():
+
+    argsErrors =  ArgumentValidator.signup(data)
+    if len(argsErrors) > 0:
+        return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+
     return processor.signin(request.data)
 
 @app.route('/logout', methods = ['GET'])
 def logout():
-    userToken=request.headers["AuthToken"]
-    return processor.logout(userToken)
+
+    authToken = request.headers.get("AuthToken")
+    if not authToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
+    return processor.logout(authToken)
 
 @app.route('/devices', methods = ['GET', 'POST', 'PUT', 'DELETE'])
 def devices():
-    userToken=request.headers["AuthToken"]
+    authToken = request.headers.get("AuthToken")
+    if not authToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     if request.method == 'GET':
-        return processor.getAllDevices(userToken)
+        return processor.getAllDevices(authToken)
     elif request.method == 'POST':
-        return processor.addDevice(userToken, request.data)
+
+        argsErrors =  ArgumentValidator.addDevice(data)
+        if len(argsErrors) > 0:
+            return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+
+        return processor.addDevice(authToken, request.data)
     elif request.method == 'PUT':
-        return processor.updateDevice(userToken, request.data)
+
+        argsErrors =  ArgumentValidator.updateDevice(data)
+        if len(argsErrors) > 0:
+            return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+
+        return processor.updateDevice(authToken, request.data)
     else:
-        return processor.deleteDevice(userToken, request.data)
+
+        argsErrors =  ArgumentValidator.deleteDevice(data)
+        if len(argsErrors) > 0:
+            return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+
+        return processor.deleteDevice(authToken, request.data)
 
 @app.route('/environment', endpoint="Environment", methods = ['GET'])
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
