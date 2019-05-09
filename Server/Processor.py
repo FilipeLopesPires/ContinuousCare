@@ -76,8 +76,7 @@ class Processor:
         #urls["http://api.foobot.io/v2/device/240D676D40002482/datapoint/10/last/0/"]=[{"Accept":"application/json;charset=UTF-8","X-API-KEY-TOKEN":"eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiam9hby5wQHVhLnB0IiwiaWF0IjoxNTUyMDY2Njc5LCJ2YWxpZGl0eSI6LTEsImp0aSI6IjRiNmY2NzhiLWJjNTYtNDYxNi1hYmMyLTRiNjlkMTNkMjUzOSIsInBlcm1pc3Npb25zIjpbInVzZXI6cmVhZCIsImRldmljZTpyZWFkIl0sInF1b3RhIjoyMDAsInJhdGVMaW1pdCI6NX0.aeLLsrhh1-DVXSwl-Z_qDx1Xbr9oIid1IKsOyGQxwqQ"},1]
 
 
-    def signup(self, data):
-        jsonData=json.loads(data.decode("UTF-8"))
+    def signup(self, jsonData):
         try:
             self.database.register(jsonData)
 
@@ -137,8 +136,7 @@ class Processor:
 
         return token
 
-    def signin(self, data):
-        jsonData=json.loads(data.decode("UTF-8"))
+    def signin(self, jsonData):
         userType = self.database.verifyUser(jsonData)
 
         if userType == 0: # invalid login
@@ -168,7 +166,7 @@ class Processor:
 
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":devices}).encode("UTF-8")
 
-    def updateDevice(self, token, data):
+    def updateDevice(self, token, deviceConf):
         if self.medicTokens.get(token, None):
             return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
@@ -177,7 +175,6 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            deviceConf=json.loads(data.decode("UTF-8"))
             userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
             for device in userDevices:
                 if device.id==deviceConf["id"]:
@@ -201,7 +198,7 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            deviceId=json.loads(data.decode("UTF-8"))["id"]
+            deviceId=data["id"]
             for metric in self.userMetrics[user]:
                 for submetric in self.userMetrics[user][metric]:
                     if submetric.dataSource.id == deviceId:
@@ -221,7 +218,7 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def addDevice(self, token, data):
+    def addDevice(self, token, jsonData):
         if self.medicTokens.get(token, None):
             return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
@@ -230,8 +227,6 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            jsonData=json.loads(data.decode("UTF-8"))
-            
             id=str(self.database.addDevice(user, jsonData))
             print(id)
 
@@ -288,7 +283,7 @@ class Processor:
             user = medic
 
         try:
-            self.database.updateProfile(user, json.loads(data.decode("UTF-8")))
+            self.database.updateProfile(user, data)
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
