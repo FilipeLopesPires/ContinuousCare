@@ -136,7 +136,7 @@ class ArgumentValidator:
         :rtype: list
         """
         fields = [
-            ("authentication_fields", list, True),
+            ("authentication_fields", dict, True),
             ("latitude", float, False),
             ("longitude", float, False)
         ]
@@ -150,7 +150,7 @@ class ArgumentValidator:
 
         auth_fields = data.get("authentication_fields")
 
-        if auth_fields and isinstance(auth_fields, list):
+        if auth_fields and isinstance(auth_fields, dict):
             for value in auth_fields.values():
                 if not isinstance(value, str):
                     result.append("Authentication fields have to be strings.")
@@ -312,7 +312,7 @@ def permissions():
         client -> grant permission/accept permission
         medic -> asks for permission
         args:
-        requestBody - (client) {type:"grant"|"accept", username:str, duration:int(in case grant permit)}
+        requestBody - (client) {username:str, duration:int(in case grant permit)}
                       (medic) {username:str, health_number:int, duration:int}
     """
     userToken = request.headers.get("AuthToken")
@@ -331,6 +331,17 @@ def permissions():
         #    return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
         return processor.uploadPermission(userToken, data)
+
+@app.route('/permission/<string:medic>/accept', methods = ['GET'])
+def acceptPermission(medic):
+    """
+    Used only by the client, accepts a pending permission
+    """
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
+    return processor.acceptPermission(userToken, medic)
 
 @app.route('/permission/<string:medic>/reject', methods = ['GET'])
 def rejectPermission(medic):

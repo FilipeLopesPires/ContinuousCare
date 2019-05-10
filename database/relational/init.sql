@@ -1128,6 +1128,7 @@ CREATE PROCEDURE get_pending_permissions (
       SELECT TIME_FORMAT(pending_permission.duration, "%H"),
              user.username,
              user.full_name,
+             user.email,
              client.health_number
       FROM ((pending_permission JOIN medic_username ON medic_username.medic_id = pending_permission.medic_id)
       JOIN client ON client.client_id = pending_permission.client_id)
@@ -1138,6 +1139,7 @@ CREATE PROCEDURE get_pending_permissions (
       SELECT TIME_FORMAT(pending_permission.duration, "%H"),
              user.username,
              user.full_name,
+             user.email,
              NULL
       FROM ((pending_permission JOIN client_username ON client_username.client_id = pending_permission.client_id)
       JOIN medic ON medic.medic_id = pending_permission.medic_id)
@@ -1166,6 +1168,7 @@ CREATE PROCEDURE get_accepted_permissions (
       SELECT TIME_FORMAT(accepted_permission.duration, "%H:%i"),
              user.username,
              user.full_name,
+             user.email,
              client.health_number
       FROM ((accepted_permission JOIN medic_username ON medic_username.medic_id = accepted_permission.medic_id)
       JOIN client ON client.client_id = accepted_permission.client_id)
@@ -1176,6 +1179,7 @@ CREATE PROCEDURE get_accepted_permissions (
       SELECT TIME_FORMAT(accepted_permission.duration, "%H:%i"),
              user.username,
              user.full_name,
+             user.email,
              NULL
       FROM ((accepted_permission JOIN client_username ON client_username.client_id = accepted_permission.client_id)
       JOIN medic ON medic.medic_id = accepted_permission.medic_id)
@@ -1205,6 +1209,7 @@ CREATE PROCEDURE get_active_permissions (
              DATE_FORMAT(active_permission.expiration_date, "%Y-%m-%d %H:%i:%s"),
              user.username,
              user.full_name,
+             user.email,
              client.health_number
       FROM ((active_permission JOIN medic_username ON medic_username.medic_id = active_permission.medic_id)
       JOIN client ON client.client_id = active_permission.client_id)
@@ -1216,6 +1221,7 @@ CREATE PROCEDURE get_active_permissions (
              DATE_FORMAT(active_permission.expiration_date, "%Y-%m-%d %H:%i:%s"),
              user.username,
              user.full_name,
+             user.email,
              NULL
       FROM ((active_permission JOIN client_username ON client_username.client_id = active_permission.client_id)
       JOIN medic ON medic.medic_id = active_permission.medic_id)

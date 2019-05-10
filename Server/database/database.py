@@ -29,7 +29,7 @@ class Database:
         """
         Constructs a Database object, initializing the required specific proxies.
         """
-        #self.time_series_proxy = InfluxProxy()
+        self.time_series_proxy = InfluxProxy()
         self.relational_proxy = MySqlProxy()
 
     def register(self, data):

@@ -643,7 +643,9 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, health_number, duration))
 
-            return next(cursor.stored_results()).fetchall()[0]
+            result = next(cursor.stored_results()).fetchall()[0]
+
+            return {"name": result[0], "health_number":result[1]}
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -687,7 +689,9 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.GRANT_PERMISSION, (client, medic, duration))
 
-            return next(cursor.stored_results()).fetchall()[0]
+            result = next(cursor.stored_results()).fetchall()[0]
+
+            return {"name": result[0], "company": result[1]}
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -841,11 +845,12 @@ class MySqlProxy:
         """
         return_value = []
         if type in [0, 1]:
-            for duration, username, full_name, health_number in data:
+            for duration, username, full_name, email, health_number in data:
                 permission = {
                     "duration": duration,
                     "username": username,
-                    "full_name": full_name
+                    "name": full_name,
+                    "email": email
                 }
 
                 if health_number:
@@ -860,12 +865,13 @@ class MySqlProxy:
                 last_date_key = "end_date"
 
             for begin_date, \
-                last_date, username, full_name, health_number in data:
+                last_date, username, full_name, email, health_number in data:
                 permission = {
                     "begin_date": begin_date,
                     last_date_key: last_date,
                     "username": username,
-                    "full_name": full_name
+                    "name": full_name,
+                    "email": email
                 }
 
                 if health_number:

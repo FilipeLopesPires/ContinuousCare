@@ -341,6 +341,8 @@ class Processor:
         try:
             values=self.database.getSupportedDevices()
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
             return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
@@ -370,11 +372,7 @@ class Processor:
             pendingBefore = self.database.allPermissionsData(target)["pending"]
 
             if client:
-                if jsonData["type"]=="create":
-                    data = self.database.grantPermission(client, jsonData)
-                else:
-                    self.database.acceptPermission(client, jsonData["username"])
-                    data = None
+                data = self.database.grantPermission(client, jsonData)
             elif medic:
                 data = self.database.requestPermission(medic, jsonData)
         
@@ -407,10 +405,37 @@ class Processor:
         try:
             data = self.database.allPermissionsData(client if client else medic)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":data}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+
+    def acceptPermission(self, token, medic):
+        """
+        Used only by the client, accepts a pending permission
+
+        args:
+        token - str - token representing the user
+        medic - str - of the medic that he wants to reject request for permission
+        """
+        if self.medicTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+
+        client = self.clientTokens.get(token)
+        if not client:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+
+        try:
+            self.database.acceptPermission(client, medic)
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission accepted with success."}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+        except DatabaseException as e:
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+        except Exception as e:
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
 
     def rejectPermission(self, token, medic):
@@ -431,14 +456,16 @@ class Processor:
         try:
             self.database.rejectPermission(client, medic)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission rejected with success."}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def pausePermission(self, token, client):
+    def stopPermission(self, token, client):
         """
-        Used only by the medic, pauses an active permission so he can save time for later, still has permission
+        Used only by the medic, stops an active permission so he can save time for later, still has permission
 
         args
         token - str - token representing the user
@@ -454,10 +481,12 @@ class Processor:
         try:
             self.database.stopActivePermission(medic, client)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission paused with success."}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def removePendingPermission(self, token, client):
         """
@@ -477,10 +506,12 @@ class Processor:
         try:
             self.database.deleteRequestPermission(medic, client)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission removed with success."}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def removeAcceptedPermission(self, token, medic):
         """
@@ -500,10 +531,12 @@ class Processor:
         try:
             self.database.removeAcceptedPermission(client, medic)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission removed with success."}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def removeActivePermission(self, token, medic):
         """
@@ -523,10 +556,12 @@ class Processor:
         try:
             self.database.removeActivePermission(client, medic)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission removed with success."}).encode("UTF-8")
+        except LogicException as e:
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
-            return  json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
-            return  json.dumps({"status":1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def process(self, responses, user):
         normalData={}
