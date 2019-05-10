@@ -44,7 +44,7 @@
             <b-card no-body class="w-100">
                 <b-tabs card justified>
                     <b-tab title="Pending">
-                        <PermissionsTable title="pending" :user_type="user_type" :permissions="permissions.pending" />
+                        <PermissionsTable title="pending" :user_type="user_type" :permissions="permissions.pending" v-on:ola="accept_permission" />
                     </b-tab>
                     <b-tab title="Accepted">
                         <PermissionsTable title="accepted" :user_type="user_type" :permissions="permissions.accepted" />
@@ -204,6 +204,16 @@ export default {
                             duration: 7500
                         }
                     );
+                    this.permissions.pending.push(
+                        {
+                            username: res.data.username,
+                            name: res.data.name,
+                            email: res.data.email,
+                            health_number: res.data.health_number,
+                            duration: duration
+                        }
+                    )
+                    res.data
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
@@ -251,15 +261,46 @@ export default {
                 duration: duration
             }, this.requests_header)
             .then(res => {
-                this.$toasted.show(
-                    'Permission granted.', 
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
+                if (res.status == 0) {
+                    this.$toasted.show(
+                        'Permission granted.', 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                    this.permissions.accepted.push(
+                        {
+                            username: username,
+                            name: res.data.name,
+                            email: res.data.email,
+                            company: res.data.company,
+                            duration: duration
+                        }
+                    )
+                }
+                else if (res.status == 1)
+                    this.$toasted.show(
+                        res.msg,
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                else {
+                    console.log("status code: " + res.status)
+                    console.log("error msg: " + res.msg)
+                    this.$toasted.show(
+                        "Error granting permission. Try again later.",
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
             })
             .catch(e => {
+                console.log(e);
                 this.$toasted.show(
                     'Error granting permission. Try again later.', 
                     {
@@ -297,7 +338,60 @@ export default {
             
             this.request_by_username = change_to_username;
 
-        }
+        },
+
+        /**
+         * 
+         */
+        async accept_permission(idx, medic_username) {
+            return await this.$axios.$get("/permission/" + medic_username + "/accept", this.requests_header)
+            .then(res => {
+                if (res.status == 0) {
+                    this.$toasted.show(
+                        'Permission accepted', 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                    this.permissions.accepted.push(
+                        this.permissions.pending[idx]
+                    );
+                    this.permissions.pending.splice(idx, 1);
+                }
+                else if (res.status == 1) {
+                    this.$toasted.show(
+                        res.msg,
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else {
+                    console.log("status code: " + res.status);
+                    console.log("error msg: " + res.msg);
+                    this.$toasted.show(
+                        "Error accepting permission. Try again later.",
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+            })
+            .catch(e => {
+                console.log(e);
+                this.$toasted.show(
+                    "Error accepting permission. Try again later.",
+                    {
+                        position: 'bottom-center',
+                        duration: 7500
+                    }
+                );
+            })
+        },
+
     }
 }
 </script>

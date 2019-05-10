@@ -4,6 +4,7 @@
             <tr>
                 <th>Username</th>
                 <th>Full Name</th>
+                <th>Email</th>
                 <th v-if="user_type === 'medic'">Health Number</th>
                 <th v-if="user_type === 'client'">Company</th>
                 <th v-if="title === 'pending'">Duration</th>
@@ -13,7 +14,8 @@
         <tbody>
             <tr v-for="(permission, index) in permissions" :key="permission.username">
                 <td>{{ permission.username }}</td>
-                <td>{{ permission.full_name }}</td>
+                <td>{{ permission.name }}</td>
+                <td>{{ permission.email }}</td>
                 <td v-if="user_type === 'medic'">{{ permission.health_number }}</td>
                 <td v-if="user_type === 'client'">{{ permission.company }}</td>
                 <td>{{ permission.duration }}</td>
@@ -24,7 +26,7 @@
                             <button @click="remove_pending(index, permission.username)" class="genric-btn primary radius"><i class="fa fa-trash" aria-hidden="true"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
-                            <button @click="accept_permission(index, permission.username)" class="genric-btn info radius">
+                            <button @click="$emit('ola', index, permission.username)" class="genric-btn info radius">
                                 <i class="fa fa-check" aria-hidden="true"></i>
                             </button>
                             <button @click="reject_permission(index, permission.username)" class="genric-btn primary radius">
@@ -42,7 +44,7 @@
                     </div>
                     <div v-else-if="title === 'active'">
                         <div v-if="user_type === 'medic'">
-                            <button @click="pause_active(index, permission.username)" class="genric-btn success radius"><i class="fa fa-pause"></i></button>
+                            <button @click="stop_active(index, permission.username)" class="genric-btn success radius"><i class="fa fa-stop"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
                             <button @click="remove_active(index, permission.username)" class="genric-btn warning radius"><i class="fa fa-trash"></i></button>
@@ -76,41 +78,57 @@ export default {
         return {
             requests_header: {
                 headers: {AuthToken: this.$store.getters.sessionToken},
-            }
+            },
         }
     },
     methods: {
         /**
          * 
          */
-        async accept_permission(idx, medic_username) {
-            this.permissions.splice(idx, 1);
-
-            return await this.$axios.$post("/permission/accept", {
-
-            })
-            .then(res => {
-
-            })
-            .catch(e => {
-
-            })
-        },
-
-        /**
-         * 
-         */
         async reject_permission(idx, medic_username) {
-            this.permissions.splice(idx, 1);
 
-            return await this.$axios.$post("", {
-
-            })
+            return await this.$axios.$get("/permission/" + medic_username + "/reject", this.requests_header)
             .then(res => {
-
+                if (res.status == 0) {
+                    this.$toasted.show(
+                        'Permission rejected', 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                    this.permissions.splice(idx, 1);
+                }
+                else if (res.status == 1) {
+                    this.$toasted.show(
+                        res.msg, 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else {
+                    console.log("status code: " + res.status);
+                    console.log("error msg: " + res.msg);
+                    this.$toasted.show(
+                        "Error rejecting permission. Try again later.", 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
             })
             .catch(e => {
-
+                console.log(e);
+                this.$toasted.show(
+                    "Error rejecting permission. Try again later.", 
+                    {
+                        position: 'bottom-center',
+                        duration: 7500
+                    }
+                );
             })
         },
 
@@ -168,16 +186,48 @@ export default {
          * 
          */
         async remove_accepted(idx, medic_username) {
-            this.permissions.splice(idx, 1);
-
-            return await this.$axios.$post("", {
-
-            })
+            return await this.$axios.$delete("/permission/" + medic_username + "/accepted", this.requests_header)
             .then(res => {
-
+                if (res.status == 0) {
+                    this.permissions.splice(idx, 1);
+                    this.$toasted.show(
+                        "Accepted permissiosn deleted.",
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else if (res.status == 1) {
+                    this.$toasted.show(
+                        res.msg,
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else {
+                    console.log("status code: " + res.status);
+                    console.log("error msg: " + res.msg);
+                    this.$toasted.show(
+                        "Error deleting accepted permission. Try again later.",
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
             })
             .catch(e => {
-
+                console.log(e);
+                this.$toasted.show(
+                    "Error deleting accepted permission. Try again later.",
+                    {
+                        position: 'bottom-center',
+                        duration: 7500
+                    }
+                );
             })
         },
 
@@ -186,26 +236,58 @@ export default {
          */
         async remove_active(idx, medic_username) {
 
-            return await this.$axios.$post("", {
-
-            })
+            return await this.$axios.$delete("/permission/" + medic_username + "/active", this.requests_header)
             .then(res => {
-
+                if (res.status == 0) {
+                    this.permissions.splice(idx, 1);
+                    this.$toasted.show(
+                        "Active permissiosn deleted.",
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else if (res.status == 1) {
+                    this.$toasted.show(
+                        res.msg,
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else {
+                    console.log("status code: " + res.status);
+                    console.log("error msg: " + res.msg);
+                    this.$toasted.show(
+                        "Error deleting active permission. Try again later.",
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
             })
             .catch(e => {
-
+                console.log(e);
+                this.$toasted.show(
+                    "Error deleting active permission. Try again later.",
+                    {
+                        position: 'bottom-center',
+                        duration: 7500
+                    }
+                );
             })
         },
 
         /**
          * 
          */
-        async pause_active(idx, client_username) {
+        async stop_active(idx, client_username) {
             this.permissions.splice(idx, 1);
 
-            return await this.$axios.$post("", {
-
-            })
+            return await this.$axios.$post("", this.requests_header)
             .then(res => {
 
             })
