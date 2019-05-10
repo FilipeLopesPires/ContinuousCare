@@ -642,6 +642,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, health_number, duration))
+
+            return next(cursor.stored_results()).fetchall()[0]
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -684,6 +686,8 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.GRANT_PERMISSION, (client, medic, duration))
+
+            return next(cursor.stored_results()).fetchall()[0]
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)

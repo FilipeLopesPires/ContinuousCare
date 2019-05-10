@@ -313,7 +313,7 @@ def permissions():
         medic -> asks for permission
         args:
         requestBody - (client) {type:"grant"|"accept", username:str, duration:int(in case grant permit)}
-                      (medic) {username:str}
+                      (medic) {username:str, health_number:int, duration:int}
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
@@ -327,10 +327,10 @@ def permissions():
             data = {}
 
         #argsErrors =  ArgumentValidator.(data) # TODO
-        if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+        #if len(argsErrors) > 0:
+        #    return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
-        return processor.uploadPermission(userToken, request.data)
+        return processor.uploadPermission(userToken, data)
 
 @app.route('/permission/<string:medic>/reject', methods = ['GET'])
 def rejectPermission(medic):

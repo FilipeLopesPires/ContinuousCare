@@ -717,11 +717,25 @@ CREATE PROCEDURE request_permission (
     IN _duration time)
   BEGIN
     DECLARE __client_id, __medic_id VARCHAR(30);
+    DECLARE __full_name VARCHAR(55);
+    DECLARE __health_number INTEGER;
 
     IF _client IS NULL THEN
-      SELECT username INTO _client
+      SELECT username, full_name, health_number INTO _client, __full_name, __health_number
       FROM user JOIN client ON user.user_id = client.user_id
-      WHERE client.health_number = _health_number;
+      WHERE health_number = _health_number;
+
+      IF _client IS NULL THEN
+        SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no patient with the given health number.";
+      END IF;
+    ELSE
+      IF NOT EXISTS(SELECT * FROM client_username WHERE username = _client) THEN
+        SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no patient with the given username.";
+      END IF;
+
+      SELECT full_name, health_number INTO __full_name, __health_number
+      FROM user JOIN client ON user.user_id = client.user_id
+      WHERE username = _client;
     END IF;
 
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
@@ -737,6 +751,8 @@ CREATE PROCEDURE request_permission (
     ELSE
       -- Insert otherwise
       INSERT INTO pending_permission VALUES (__client_id, __medic_id, _duration);
+
+      SELECT __full_name, __health_number;
     END IF;
 
     COMMIT;
@@ -754,6 +770,10 @@ CREATE PROCEDURE grant_permission (
   BEGIN
     DECLARE __client_id, __medic_id VARCHAR(30);
 
+    IF NOT EXISTS (SELECT * FROM medic_username where username = _medic) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no medic with the given username";
+    END IF;
+
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
 
     START TRANSACTION;
@@ -765,6 +785,10 @@ CREATE PROCEDURE grant_permission (
                          AND medic_id = __medic_id) THEN
       -- Insert
       INSERT INTO accepted_permission VALUES (__client_id, __medic_id, _duration);
+
+      SELECT full_name, company
+      FROM user JOIN medic ON user.user_id = medic.user_id
+      WHERE username = _medic;
     ELSE
       -- Otherwise fail
       SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "A permission grant already exists";
@@ -783,6 +807,10 @@ CREATE PROCEDURE accept_permission (
   BEGIN
     DECLARE __client_id, __medic_id VARCHAR(30);
     DECLARE __pending_duration TIME;
+
+    IF NOT EXISTS (SELECT * FROM medic_username where username = _medic) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no medic with the given username";
+    END IF;
 
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
 
@@ -836,6 +864,10 @@ CREATE PROCEDURE remove_accepted_permission (
   BEGIN
     DECLARE __client_id, __medic_id VARCHAR(30);
 
+    IF NOT EXISTS (SELECT * FROM medic_username where username = _medic) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no medic with the given username";
+    END IF;
+
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
 
     START TRANSACTION;
@@ -867,6 +899,12 @@ CREATE PROCEDURE delete_permission (
   BEGIN
     DECLARE __client_id, __medic_id VARCHAR(30);
 
+    IF NOT EXISTS (SELECT * FROM client_username WHERE username = _client) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no patient with the given username.";
+    ELSEIF NOT EXISTS (SELECT * FROM medic_username WHERE username = _medic) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no medic with the given username.";
+    END IF;
+
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
 
     START TRANSACTION;
@@ -897,6 +935,10 @@ CREATE PROCEDURE has_permission (
     DECLARE __client_id, __medic_id VARCHAR(30);
     DECLARE __has_permission BOOLEAN;
     DECLARE __pending_duration TIME;
+
+    IF NOT EXISTS (SELECT * FROM client_username where username = _client) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no patient with the given username.";
+    END IF;
 
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
 
@@ -953,6 +995,10 @@ CREATE PROCEDURE stop_active_permission (
     DECLARE __client_id, __medic_id VARCHAR(30);
     DECLARE __not_used_duration TIME;
 
+    IF NOT EXISTS (SELECT * FROM client_username where username = _client) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no patient with the given username.";
+    END IF;
+
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
 
     START TRANSACTION;
@@ -999,6 +1045,10 @@ CREATE PROCEDURE remove_active_permission (
     IN _medic VARCHAR(30))
   BEGIN
     DECLARE __client_id, __medic_id VARCHAR(30);
+
+    IF NOT EXISTS (SELECT * FROM medic_username where username = _medic) THEN
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no medic with the given username.";
+    END IF;
 
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
 

@@ -9,10 +9,10 @@ advised to change the permissions on this file
 chmod 600 config.py
 """
 
-HOST      = "db_relational"
-PORT      = 3306
+HOST      = "localhost"
+PORT      = 33060
 USERNAME  = "pi2019cc_flaskapp"
 PASSWORD  = "T)[-keLSh.9UFZcN58.+"
 DATABASE  = "db"
 POOL_NAME = "flaskapp_conenction_pool"
-POOL_SIZE = 10 #TODO search error "to many connections"
+POOL_SIZE = 5 #TODO search error "to many connections"

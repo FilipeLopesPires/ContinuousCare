@@ -150,7 +150,7 @@ class Processor:
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":{"token":token}}).encode("UTF-8")
 
     def getAllDevices(self, token):
-        if self.medicTokens.get(token, None):
+        if self.medicTokens.get(token):
             return  json.dumps({"status":1, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
         user = self.clientTokens.get(token, None)
@@ -167,7 +167,7 @@ class Processor:
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":devices}).encode("UTF-8")
 
     def updateDevice(self, token, deviceConf):
-        if self.medicTokens.get(token, None):
+        if self.medicTokens.get(token):
             return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
         user = self.clientTokens.get(token, None)
@@ -190,7 +190,7 @@ class Processor:
 
 
     def deleteDevice(self, token, data):
-        if self.medicTokens.get(token, None):
+        if self.medicTokens.get(token):
             return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
         user = self.clientTokens.get(token, None)
@@ -219,7 +219,7 @@ class Processor:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
     def addDevice(self, token, jsonData):
-        if self.medicTokens.get(token, None):
+        if self.medicTokens.get(token):
             return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
         user = self.clientTokens.get(token, None)
@@ -341,7 +341,7 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def uploadPermission(self, token, data):
+    def uploadPermission(self, token, jsonData):
         """
         Use by both medic and client
         grants/requests for a permission. calls 'grantPermission' and 'requestPermission' on database.py
@@ -353,10 +353,9 @@ class Processor:
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            jsonData=json.loads(data)
             target = jsonData["username"]
             targetToken=None
             for (k1, v1), (k2,v2) in zip(self.medicTokens.items(), self.clientTokens.items()):
@@ -366,14 +365,13 @@ class Processor:
             pendingBefore = self.database.allPermissionsData(target)["pending"]
 
             if client:
-                print(client)
                 if jsonData["type"]=="create":
-                    print("create")
-                    self.database.grantPermission(client, jsonData)
+                    data = self.database.grantPermission(client, jsonData)
                 else:
                     self.database.acceptPermission(client, jsonData["username"])
+                    data = None
             elif medic:
-                self.database.requestPermission(medic, jsonData)
+                data = self.database.requestPermission(medic, jsonData)
         
             pendingAfter = self.database.allPermissionsData(target)["pending"]
             diff = lambda l1,l2: [x for x in l1 if x not in l2]
@@ -382,7 +380,7 @@ class Processor:
             if len(pendingDiff)!=0:
                 permissionThread(pendingDiff, targetToken, self.socket).start()
 
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission uploaded with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":data}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -399,7 +397,7 @@ class Processor:
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
         
         try:
             data = self.database.allPermissionsData(client if client else medic)
@@ -418,10 +416,12 @@ class Processor:
         token - str - token representing the user
         medic - str - of the medic that he wants to reject request for permission
         """
-        if token not in self.clientTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        client =  self.clientTokens[token]
+        if self.medicTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+
+        client = self.clientTokens.get(token)
+        if not client:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.rejectPermission(client, medic)
@@ -439,10 +439,12 @@ class Processor:
         token - str - token representing the user
         client - str - of the client that he wants to pause the active permission
         """
-        if token not in self.medicTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        medic =  self.medicTokens[token]
+        if self.medicTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+
+        medic = self.medicTokens.get(token)
+        if not medic:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.stopActivePermission(medic, client)
@@ -460,10 +462,12 @@ class Processor:
         token - str - token representing the user
         client - str - of the client that he wants to remove the active permission
         """
-        if token not in self.medicTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        medic =  self.medicTokens[token]
+        if self.clientTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to medics"}).encode("UTF-8")
+
+        medic = self.medicTokens.get(token)
+        if not medic:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.deleteRequestPermission(medic, client)
@@ -481,11 +485,12 @@ class Processor:
         token - str - token representing the user
         username - str - of the medic that he wants to remove an accepted permission
         """
-        print("XCVBOMISRXDCTFVYGUBH")
-        if token not in self.clientTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        client =  self.clientTokens[token]
+        if self.medicTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+
+        client = self.clientTokens.get(token)
+        if not client:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.removeAcceptedPermission(client, medic)
@@ -503,10 +508,12 @@ class Processor:
         token - str - token representing the user
         username - str - of the medic that he wants to remove and active permission
         """
-        if token not in self.clientTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        client =  self.clientTokens[token]
+        if self.medicTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+
+        client = self.clientTokens.get(token)
+        if not client:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.removeActivePermission(client, medic)
