@@ -4,17 +4,17 @@
             <!-- =============================== Modal =======================-->
             <b-modal ref="request_grant_permission_modal" hide-footer hide-header>
                 <div v-if="user_type === 'medic'">
-                        <h3  class="title_color text-center" >Request Permission</h3>
-                        <h5>Patient Username:</h5>
-                    <b-form inline>
-                        <b-radio name="search_option" ref="client_username_check"></b-radio>
-                        <input ref="client_username_input" type="text" class="single-input"> 
-                    </b-form>
-                        <h5>Patient Health Number:</h5>
-                    <b-form inline>
-                        <b-radio name="search_option" ref="client_username_check"></b-radio>
-                        <input ref="health_number_input" type="number" class="single-input"> 
-                    </b-form>
+                    <h3  class="title_color text-center" >Request Permission</h3>
+                    <h5>Patient Username:</h5>
+                    <div class="form-inline">
+                        <input @click="on_request_option_change(true)" type="radio" class="col-md-1" name="request_option" />
+                        <b-input v-model="client_username" ref="client_username_input" class="single-input col-md-11" :disabled="!request_by_username"></b-input>
+                    </div>
+                    <h5>Patient Health Number:</h5>
+                    <div class="form-inline">
+                        <input @click="on_request_option_change(false)" type="radio" class="col-md-1" name="request_option" checked />
+                        <b-input v-model="health_number" ref="health_number_input" class="single-input col-md-11" :disabled="request_by_username"></b-input> 
+                    </div>
                 </div>
                 <div v-else-if="user_type === 'client'">
                     <h3  class="title_color text-center" >Grant Permission</h3>
@@ -24,12 +24,12 @@
                     </div>
                 </div>
                 <h5>Duration:</h5>
-                <input ref="duration_input" type="number" class="single-input">
+                <input ref="duration_input" class="single-input">
                 <div class="mt-10 row justify-content-center d-flex align-items-center">
                     <div class="row">
                         <button @click="close_modal" data-dismiss="modal" class="genric-btn primary radius text-uppercase ml-10 mr-10" type="button" >Cancel</button>
-                        <button v-if="user_type === 'medic'" @click="request_permission" class="genric-btn info radius text-uppercase ml-10 mr-10" type="submit" >Add</button>
-                        <button v-else-if="user_type === 'client'" @click="grant_permission" class="genric-btn info radius text-uppercase ml-10 mr-10" type="submit" >Add</button>
+                        <button v-if="user_type === 'medic'" @click="request_permission" class="genric-btn info radius text-uppercase ml-10 mr-10" type="button" >Add</button>
+                        <button v-else-if="user_type === 'client'" @click="grant_permission" class="genric-btn info radius text-uppercase ml-10 mr-10" type="button" >Add</button>
                     </div>
                 </div>
             </b-modal>
@@ -76,7 +76,10 @@ export default {
             },
             requests_header: {
                 headers: {AuthToken: this.$store.getters.sessionToken},
-            }
+            },
+            request_by_username: false,
+            health_number: "",
+            client_username: ""
         }
     },
     async mounted() {
@@ -135,11 +138,55 @@ export default {
             let health_number = this.$refs.health_number_input.value;
             let duration = this.$refs.duration_input.value;
 
-            if (health_number === "")
-                health_number = null;
+            if (this.request_by_username) {
+                if (username == "") {
+                    this.$toasted.show(
+                        'Insert a username.', 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                    return;
+                }
 
-            if (username === "")
+                health_number = null;
+            }
+            else {
+                if (health_number == "") {
+                    this.$toasted.show(
+                        'Insert a health number.', 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                    return;
+                }
+                else if (! /^\d+$/.test(health_number)) {
+                    this.$toasted.show(
+                        'Invalid health number.', 
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                    return;
+                }
+
                 username = null;
+            }
+
+            if (! /^\d+$/.test(duration)) {
+                this.$toasted.show(
+                    'Invalid duration.', 
+                    {
+                        position: 'bottom-center',
+                        duration: 7500
+                    }
+                );
+                return;
+            }
 
             this.close_modal();
 
@@ -237,6 +284,19 @@ export default {
             this.$refs.duration_input.value = "";
 
             this.$refs.request_grant_permission_modal.hide();
+        },
+
+        on_request_option_change(change_to_username) {
+            if (this.request_by_username == change_to_username)
+                return;
+
+            if (this.request_by_username)
+                this.client_username = "";
+            else
+                this.health_number = "";
+            
+            this.request_by_username = change_to_username;
+
         }
     }
 }

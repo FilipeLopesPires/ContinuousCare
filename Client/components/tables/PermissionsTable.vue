@@ -72,6 +72,13 @@ export default {
             required: true
         }
     },
+    data() {
+        return {
+            requests_header: {
+                headers: {AuthToken: this.$store.getters.sessionToken},
+            }
+        }
+    },
     methods: {
         /**
          * 
@@ -111,16 +118,49 @@ export default {
          * 
          */
         async remove_pending(idx, client_username) {
-            this.permissions.splice(idx, 1);
 
-            return await this.$axios.$post("", {
-
-            })
+            return await this.$axios.$delete("/permission/" + client_username + "/pending", this.requests_header)
             .then(res => {
-
+                if (res.status == 0) {
+                    this.permissions.splice(idx, 1);
+                    this.$toasted.show(
+                        "Pending permissiosn deleted.",
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else if (res.status == 1) {
+                    this.$toasted.show(
+                        res.msg,
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
+                else {
+                    console.log("status code" + res.status);
+                    console.log("error message" + res.msg);
+                    this.$toasted.show(
+                        "Error deleting pending permission. Try again later.",
+                        {
+                            position: 'bottom-center',
+                            duration: 7500
+                        }
+                    );
+                }
             })
             .catch(e => {
-
+                console.log(e);
+                this.$toasted.show(
+                    "Error deleting pending permission. Try again later.",
+                    {
+                        position: 'bottom-center',
+                        duration: 7500
+                    }
+                );
             })
         },
 
@@ -145,7 +185,6 @@ export default {
          * 
          */
         async remove_active(idx, medic_username) {
-            this.permissions.splice(idx, 1);
 
             return await this.$axios.$post("", {
 
