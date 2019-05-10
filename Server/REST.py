@@ -327,8 +327,8 @@ def permissions():
             data = {}
 
         #argsErrors =  ArgumentValidator.(data) # TODO
-        if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+        #if len(argsErrors) > 0:
+        #    return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
         return processor.uploadPermission(userToken, request.data)
 
