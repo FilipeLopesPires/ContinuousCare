@@ -4,6 +4,8 @@ import Cookie from "js-cookie";
 const createStore = () => {
     return new Vuex.Store({
         state: {            /* ========== state ========== */
+            reloadControl: null,
+            vue:null,
             sessionToken: null,
             userType: null,
             profile: {
@@ -21,6 +23,28 @@ const createStore = () => {
             supportedDevices: [],
         },
         mutations: {        /* ========== mutations ========== */
+            SOCKET_ONOPEN (state,event)  {
+                console.log("entrou")
+                event.currentTarget.send('{\"token\":\"'+state.sessionToken+'\"}')
+            },
+            SOCKET_ONCLOSE (state,event)  {
+                console.log("fechado")
+            },
+            SOCKET_ONMESSAGE (state, message)  {
+                var jsonData = JSON.parse(message.data.replace(/'/g,"\""));
+                state.vue.$notify({
+                group: 'permissions',
+                title: 'Pending Permission',
+                text: 'User: '+jsonData.full_name +'<br/>Duration(Hours): '+jsonData.duration,
+                duration: 5000,
+                });
+            },
+            setReloadControl(state, value) {
+                state.reloadControl = value;
+            },
+            setVue(state, vue) {
+                state.vue = vue;
+            },
             setSessionToken(state, new_token) {
                 if(new_token == "null") {
                     state.sessionToken = null;
@@ -86,6 +110,12 @@ const createStore = () => {
             }
         },
         actions: {          /* ========== actions ========== */
+            setReloadControl(vuexContext) {
+                vuexContext.commit("setReloadControl", true);
+            },
+            setVue(vuexContext, vue) {
+                vuexContext.commit("setVue", vue);
+            },
             setSessionToken(vuexContext, new_token) {
                 vuexContext.commit("setSessionToken", new_token);
                 if(process.client) {
@@ -119,7 +149,7 @@ const createStore = () => {
                     localStorage.setItem("session_profile_email", new_profile.email);
                     localStorage.setItem("session_profile_health_number", new_profile.health_number);
                     localStorage.setItem("session_profile_birth_date", new_profile.birth_date);
-                    localStorage.setItem("session_profile_weight", new_profile.weight);
+                    localStorage.setItem("session_profilappe_weight", new_profile.weight);
                     localStorage.setItem("session_profile_height", new_profile.height);
                     localStorage.setItem("session_profile_additional_info", new_profile.additional_info);
                     localStorage.setItem("session_profile_company", new_profile.company);
@@ -252,6 +282,12 @@ const createStore = () => {
             }
         },
         getters: {          /* ========== getters ========== */
+            getReloadControl(state){
+                return state.reloadControl;
+            },
+            getVue(state){
+                return state.vue;
+            },
             state(state) {
                 return state;
             },

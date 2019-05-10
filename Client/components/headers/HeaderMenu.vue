@@ -1,15 +1,18 @@
 <template>
-    <div v-if="this.$store.getters.isLoggedIn">
-        <div v-if="this.$store.getters.isMedic">
-            <HeaderMenuMedic :activePage="activePage" />
-            
+    <div>
+        <notifications group="permissions" style="margin-top:100px"/>
+        <div v-if="this.$store.getters.isLoggedIn" >
+            <div v-if="this.$store.getters.isMedic">
+                <HeaderMenuMedic :activePage="activePage" />
+                
+            </div>
+            <div v-else>
+                <HeaderMenuClient :activePage="activePage" />
+            </div>
         </div>
         <div v-else>
-            <HeaderMenuClient :activePage="activePage" />
+            <HeaderMenuDefault :activePage="activePage" />
         </div>
-    </div>
-    <div v-else>
-        <HeaderMenuDefault :activePage="activePage" />
     </div>
 </template>
 
@@ -32,7 +35,13 @@ export default {
         HeaderMenuClient,
         HeaderMenuMedic,
     },
-    methods: {
+    mounted: function(){
+        if(this.$store.getters.getReloadControl==null && this.$store.getters.isLoggedIn){
+            this.$store.dispatch("setVue", this)
+            this.$store.dispatch("setReloadControl")
+            console.log("Connecting to WebSocket");
+            this.$connect('ws://mednat.ieeta.pt:8344', {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
+        }
     }
 }
 </script>

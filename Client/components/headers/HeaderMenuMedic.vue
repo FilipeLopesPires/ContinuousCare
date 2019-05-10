@@ -79,6 +79,7 @@ export default {
             return this.activePage === menuItem;
         },
         logout() {
+            this.$disconnect()
             this.$nextTick(() => { 
                 this.$store.dispatch('logout'),
                 this.$router.push("/login")
