@@ -132,6 +132,11 @@ class Processor:
         while token in tokenMap:
             token = "".join(choice(allchar) for x in range(randint(min_char, max_char)))
 
+        aux=tokenMap.copy()
+        for t, n in aux.items():
+                if n==username:
+                    self.socket.delToken(t)
+                    del tokenMap[t]
         tokenMap[token] = username
 
         return token
@@ -615,6 +620,8 @@ class Processor:
             logging.error("Invalid Token in check permissions of " + client if client else medic)
             return
         try:
+            print(self.clientTokens)
+            print(self.medicTokens)
             data = self.database.allPermissionsData(client if client else medic)
             permissionThread(data["pending"], token, self.socket).start()
         except DatabaseException as e:
