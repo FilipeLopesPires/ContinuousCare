@@ -46,8 +46,9 @@ class ArgumentValidator:
                     errors.append("Missing key \"" + key + "\"")
                 continue
 
-            if not value and mandatory:
-                errors.append("Value \"" + key + "\" can't be null")
+            if not value:
+                if mandatory:
+                    errors.append("Value \"" + key + "\" can't be null")
                 continue
 
             if not isinstance(value, expectedType):
@@ -65,20 +66,7 @@ class ArgumentValidator:
         return errors
 
     @staticmethod
-    def _validate_dates(date):
-        if not re.match(r"^\d{1,2}-\d{1,2}-\d{4}$", date):
-            return ["Invalid date format. Should follow dd-mm-yyyy."]
-        else:
-            try:
-                day, month, year = date.split("-")
-                datetime.date(day, month, year)
-            except ValueError:
-                return ["Invalid date."]
-
-            return []
-
-    @staticmethod
-    def signup(data):
+    def signupAndUpdateProfile(data):
         userType = data.get("type")
         if not userType:
             return ["Missing \"type\" parameter"]
@@ -104,7 +92,16 @@ class ArgumentValidator:
 
             birth_date = data.get("birth_date")
             if birth_date and isinstance(birth_date, str):
-                return result + ArgumentValidator._validate_dates(birth_date)
+                if not re.match(r"^\d{1,2}-\d{1,2}-\d{4}$", birth_date):
+                    result.append("Invalid date format. Should follow dd-mm-yyyy.")
+                else:
+                    try:
+                        day, month, year = birth_date.split("-")
+                        datetime.date(day, month, year)
+                    except ValueError:
+                        result.append("Invalid date.")
+
+            return result
 
         return ArgumentValidator._validate(
             data, [
@@ -127,6 +124,17 @@ class ArgumentValidator:
 
     @staticmethod
     def _addAndUpdateDevice(isAdd, data):
+        """
+        Use to validate arguments for both addDevice and updateDevice
+
+        :param isAdd: true if it's to validate addDevice fields,
+            or false if it's to validate updateDevice
+        :type isAdd: bool
+        :param data: data to validate
+        :type data: dict
+        :return: list of errors
+        :rtype: list
+        """
         fields = [
             ("authentication_fields", list, True),
             ("latitude", float, False),
@@ -138,11 +146,15 @@ class ArgumentValidator:
         else:
             fields.append(("id", int, True))
 
+        result = ArgumentValidator._validate(data, fields)
+
         auth_fields = data.get("authentication_fields")
-        for value in auth_fields.values():
-            if not isinstance(value, str):
-                result.append("Authentication fields have to be strings.")
-                break
+
+        if auth_fields and isinstance(auth_fields, list):
+            for value in auth_fields.values():
+                if not isinstance(value, str):
+                    result.append("Authentication fields have to be strings.")
+                    break
 
         return result
 
@@ -164,22 +176,27 @@ class ArgumentValidator:
 
 @app.route('/signup', methods = ['POST'])
 def signup():
-    data = request.data
+    data = request.json
+    if not data:
+        data = {}
 
-    argsErrors =  ArgumentValidator.signup(data)
+    argsErrors =  ArgumentValidator.signupAndUpdateProfile(data)
     if len(argsErrors) > 0:
-        return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
-    return processor.signup(request.data)
+    return processor.signup(data)
 
 @app.route('/signin', methods = ['POST'])
 def signin():
+    data = request.json
+    if not data:
+        data = {}
 
-    argsErrors =  ArgumentValidator.signup(data)
+    argsErrors =  ArgumentValidator.signin(data)
     if len(argsErrors) > 0:
-        return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
-    return processor.signin(request.data)
+    return processor.signin(data)
 
 @app.route('/logout', methods = ['GET'])
 def logout():
@@ -196,29 +213,33 @@ def devices():
     if not authToken:
         return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
+    data = request.json
+    if not data:
+        data = {}
+
     if request.method == 'GET':
         return processor.getAllDevices(authToken)
     elif request.method == 'POST':
 
         argsErrors =  ArgumentValidator.addDevice(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
-        return processor.addDevice(authToken, request.data)
+        return processor.addDevice(authToken, data)
     elif request.method == 'PUT':
 
         argsErrors =  ArgumentValidator.updateDevice(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
-        return processor.updateDevice(authToken, request.data)
+        return processor.updateDevice(authToken, data)
     else:
 
         argsErrors =  ArgumentValidator.deleteDevice(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors " + argsErrors}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
-        return processor.deleteDevice(authToken, request.data)
+    return processor.deleteDevice(authToken, data)
 
 @app.route('/environment', endpoint="Environment", methods = ['GET'])
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
@@ -241,9 +262,20 @@ def getData(datatype=None):
 
 @app.route('/profile', methods = ['GET', 'POST', 'DELETE'])
 def profile():
-    userToken=request.headers["AuthToken"]
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     if request.method == 'POST':
-        return processor.updateProfile(userToken, request.data)
+        data = request.json
+        if not data:
+            data = {}
+
+        argsErrors =  ArgumentValidator.signupAndUpdateProfile(data)
+        if len(argsErrors) > 0:
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
+        return processor.updateProfile(userToken, data)
     elif request.method == 'GET':
         return processor.getProfile(userToken)
     else:
@@ -256,7 +288,10 @@ def supportedDevices():
 
 @app.route('/sleep', methods = ['GET'])
 def userGPSCoordinates():
-    userToken=request.headers["AuthToken"]
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     start=request.args.get('start', default="*", type=str)
     start=start if start!="*" else None
     end=request.args.get('end', default="*", type=str)
@@ -277,21 +312,35 @@ def permissions():
         client -> grant permission/accept permission
         medic -> asks for permission
         args:
-        requestBody - (client) {type:"create"|"accept", username:str, duration:int(in case grant permit)}
-                      (medic) {username:str}
+        requestBody - (client) {type:"grant"|"accept", username:str, duration:int(in case grant permit)}
+                      (medic) {username:str, health_number:int, duration:int}
     """
-    userToken=request.headers["AuthToken"]
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     if request.method == 'GET':
         return processor.getAllPermissions(userToken)
     elif request.method == 'POST':
-        return processor.uploadPermission(userToken, request.data)
+        data = request.json
+        if not data:
+            data = {}
+
+        #argsErrors =  ArgumentValidator.(data) # TODO
+        #if len(argsErrors) > 0:
+        #    return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
+        return processor.uploadPermission(userToken, data)
 
 @app.route('/permission/<string:medic>/reject', methods = ['GET'])
 def rejectPermission(medic):
     """
     Used only by the client, rejects a pending permission
     """
-    userToken=request.headers["AuthToken"]
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     return processor.rejectPermission(userToken, medic)
 
 @app.route('/permission/<string:client>/pause', methods = ['GET'])
@@ -299,7 +348,10 @@ def pausePermission(client):
     """
     Used only by the medic, pauses an active permission so he can save time for later, still has permission
     """
-    userToken=request.headers["AuthToken"]
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     return processor.pausePermission(userToken, client)
 
 @app.route('/permission/<string:client>/pending', methods = ['DELETE'])
@@ -307,7 +359,10 @@ def removePendingPermission(client):
     """
     Used only by the medic, removes a pending permission (requests not responded by the client)
     """
-    userToken=request.headers["AuthToken"]
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     return processor.removePendingPermission(userToken, client)
 
 @app.route('/permission/<string:medic>/accepted', methods = ['DELETE'])
@@ -315,7 +370,10 @@ def removeAcceptedPermission(medic):
     """
     Used only by the client, removes an accepted permission
     """
-    userToken=request.headers["AuthToken"]
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     return processor.removeAcceptedPermission(userToken, medic)
 
 @app.route('/permission/<string:medic>/active', methods = ['DELETE'])
@@ -323,7 +381,10 @@ def removeActivePermission(medic):
     """
     Used only by the client, removes and active permission, accepted permission are not removed
     """
-    userToken=request.headers["AuthToken"]
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     return processor.removeActivePermission(userToken, medic)
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)

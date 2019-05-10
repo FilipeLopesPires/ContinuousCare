@@ -3,6 +3,8 @@ requests
 flask_cors
 geopy
 cryptography
+websockets
+gevent
 
 # databases drivers
 influxdb

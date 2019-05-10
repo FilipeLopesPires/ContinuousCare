@@ -12,6 +12,7 @@ services:
     image: backend
     ports:
       - "8082:5000"
+      - "8084:5678"
     networks:
       - all
     depends_on:

@@ -37,7 +37,7 @@ RADIUS=50       #variable that defines the distance from the personal home devic
 class Processor:
 
     def __init__(self):
-        self.socket = WebSocket("127.0.0.1", 5678, self)
+        self.socket = WebSocket("0.0.0.0", 5678, self)
         self.socket.start()
         self.database=database.Database()
         self.externalAPI=ExternalAPI("","","","",None, None).metrics
@@ -76,8 +76,7 @@ class Processor:
         #urls["http://api.foobot.io/v2/device/240D676D40002482/datapoint/10/last/0/"]=[{"Accept":"application/json;charset=UTF-8","X-API-KEY-TOKEN":"eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiam9hby5wQHVhLnB0IiwiaWF0IjoxNTUyMDY2Njc5LCJ2YWxpZGl0eSI6LTEsImp0aSI6IjRiNmY2NzhiLWJjNTYtNDYxNi1hYmMyLTRiNjlkMTNkMjUzOSIsInBlcm1pc3Npb25zIjpbInVzZXI6cmVhZCIsImRldmljZTpyZWFkIl0sInF1b3RhIjoyMDAsInJhdGVMaW1pdCI6NX0.aeLLsrhh1-DVXSwl-Z_qDx1Xbr9oIid1IKsOyGQxwqQ"},1]
 
 
-    def signup(self, data):
-        jsonData=json.loads(data.decode("UTF-8"))
+    def signup(self, jsonData):
         try:
             self.database.register(jsonData)
 
@@ -133,12 +132,16 @@ class Processor:
         while token in tokenMap:
             token = "".join(choice(allchar) for x in range(randint(min_char, max_char)))
 
+        aux=tokenMap.copy()
+        for t, n in aux.items():
+                if n==username:
+                    self.socket.delToken(t)
+                    del tokenMap[t]
         tokenMap[token] = username
 
         return token
 
-    def signin(self, data):
-        jsonData=json.loads(data.decode("UTF-8"))
+    def signin(self, jsonData):
         userType = self.database.verifyUser(jsonData)
 
         if userType == 0: # invalid login
@@ -152,7 +155,7 @@ class Processor:
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":{"token":token}}).encode("UTF-8")
 
     def getAllDevices(self, token):
-        if self.medicTokens.get(token, None):
+        if self.medicTokens.get(token):
             return  json.dumps({"status":1, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
         user = self.clientTokens.get(token, None)
@@ -168,8 +171,8 @@ class Processor:
 
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":devices}).encode("UTF-8")
 
-    def updateDevice(self, token, data):
-        if self.medicTokens.get(token, None):
+    def updateDevice(self, token, deviceConf):
+        if self.medicTokens.get(token):
             return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
         user = self.clientTokens.get(token, None)
@@ -177,7 +180,6 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            deviceConf=json.loads(data.decode("UTF-8"))
             userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
             for device in userDevices:
                 if device.id==deviceConf["id"]:
@@ -193,7 +195,7 @@ class Processor:
 
 
     def deleteDevice(self, token, data):
-        if self.medicTokens.get(token, None):
+        if self.medicTokens.get(token):
             return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
         user = self.clientTokens.get(token, None)
@@ -201,7 +203,7 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            deviceId=json.loads(data.decode("UTF-8"))["id"]
+            deviceId=data["id"]
             for metric in self.userMetrics[user]:
                 for submetric in self.userMetrics[user][metric]:
                     if submetric.dataSource.id == deviceId:
@@ -221,8 +223,8 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def addDevice(self, token, data):
-        if self.medicTokens.get(token, None):
+    def addDevice(self, token, jsonData):
+        if self.medicTokens.get(token):
             return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
 
         user = self.clientTokens.get(token, None)
@@ -230,8 +232,6 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            jsonData=json.loads(data.decode("UTF-8"))
-            
             id=str(self.database.addDevice(user, jsonData))
             print(id)
 
@@ -288,7 +288,7 @@ class Processor:
             user = medic
 
         try:
-            self.database.updateProfile(user, json.loads(data.decode("UTF-8")))
+            self.database.updateProfile(user, data)
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
@@ -346,7 +346,7 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def uploadPermission(self, token, data):
+    def uploadPermission(self, token, jsonData):
         """
         Use by both medic and client
         grants/requests for a permission. calls 'grantPermission' and 'requestPermission' on database.py
@@ -358,10 +358,9 @@ class Processor:
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            jsonData=json.loads(data)
             target = jsonData["username"]
             targetToken=None
             for (k1, v1), (k2,v2) in zip(self.medicTokens.items(), self.clientTokens.items()):
@@ -371,14 +370,13 @@ class Processor:
             pendingBefore = self.database.allPermissionsData(target)["pending"]
 
             if client:
-                print(client)
                 if jsonData["type"]=="create":
-                    print("create")
-                    self.database.grantPermission(client, jsonData)
+                    data = self.database.grantPermission(client, jsonData)
                 else:
                     self.database.acceptPermission(client, jsonData["username"])
+                    data = None
             elif medic:
-                self.database.requestPermission(medic, jsonData)
+                data = self.database.requestPermission(medic, jsonData)
         
             pendingAfter = self.database.allPermissionsData(target)["pending"]
             diff = lambda l1,l2: [x for x in l1 if x not in l2]
@@ -387,7 +385,7 @@ class Processor:
             if len(pendingDiff)!=0:
                 permissionThread(pendingDiff, targetToken, self.socket).start()
 
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission uploaded with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":data}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -404,7 +402,7 @@ class Processor:
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
         
         try:
             data = self.database.allPermissionsData(client if client else medic)
@@ -423,10 +421,12 @@ class Processor:
         token - str - token representing the user
         medic - str - of the medic that he wants to reject request for permission
         """
-        if token not in self.clientTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        client =  self.clientTokens[token]
+        if self.medicTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+
+        client = self.clientTokens.get(token)
+        if not client:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.rejectPermission(client, medic)
@@ -444,10 +444,12 @@ class Processor:
         token - str - token representing the user
         client - str - of the client that he wants to pause the active permission
         """
-        if token not in self.medicTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        medic =  self.medicTokens[token]
+        if self.medicTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+
+        medic = self.medicTokens.get(token)
+        if not medic:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.stopActivePermission(medic, client)
@@ -465,10 +467,12 @@ class Processor:
         token - str - token representing the user
         client - str - of the client that he wants to remove the active permission
         """
-        if token not in self.medicTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        medic =  self.medicTokens[token]
+        if self.clientTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to medics"}).encode("UTF-8")
+
+        medic = self.medicTokens.get(token)
+        if not medic:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.deleteRequestPermission(medic, client)
@@ -486,11 +490,12 @@ class Processor:
         token - str - token representing the user
         username - str - of the medic that he wants to remove an accepted permission
         """
-        print("XCVBOMISRXDCTFVYGUBH")
-        if token not in self.clientTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        client =  self.clientTokens[token]
+        if self.medicTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+
+        client = self.clientTokens.get(token)
+        if not client:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.removeAcceptedPermission(client, medic)
@@ -508,10 +513,12 @@ class Processor:
         token - str - token representing the user
         username - str - of the medic that he wants to remove and active permission
         """
-        if token not in self.clientTokens:
-            return json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
-        
-        client =  self.clientTokens[token]
+        if self.medicTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+
+        client = self.clientTokens.get(token)
+        if not client:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             self.database.removeActivePermission(client, medic)
@@ -613,6 +620,8 @@ class Processor:
             logging.error("Invalid Token in check permissions of " + client if client else medic)
             return
         try:
+            print(self.clientTokens)
+            print(self.medicTokens)
             data = self.database.allPermissionsData(client if client else medic)
             permissionThread(data["pending"], token, self.socket).start()
         except DatabaseException as e:

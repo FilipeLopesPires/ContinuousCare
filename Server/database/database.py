@@ -29,7 +29,7 @@ class Database:
         """
         Constructs a Database object, initializing the required specific proxies.
         """
-        self.time_series_proxy = InfluxProxy()
+        #self.time_series_proxy = InfluxProxy()
         self.relational_proxy = MySqlProxy()
 
     def register(self, data):
@@ -376,8 +376,7 @@ class Database:
         """
         try:
             if not self.relational_proxy.has_permission(medic, client):
-                raise Exception("You don't have permission to acces this data")
-                # TODO maybe raise a costum exception. Mandatory to handle it
+                raise LogicException("You don't have permission to acces this data")
 
             return self.getData(measurement, client, start, end, interval)
         except (InternalException, LogicException):
@@ -456,10 +455,10 @@ class Database:
         :type data: dict
         """
         try:
-            self.relational_proxy.request_permission(
+            return self.relational_proxy.request_permission(
                 medic,
-                data.get("username",None),
-                data.get("health_number",None),
+                data.get("username"),
+                data.get("health_number"),
                 datetime.timedelta(hours=int(data["duration"])))
         except (InternalException, LogicException):
             raise
@@ -487,7 +486,7 @@ class Database:
         :type data: dict
         """
         try:
-            self.relational_proxy.grant_permission(
+            return self.relational_proxy.grant_permission(
                 client,
                 data["username"],
                 datetime.timedelta(hours=int(data["duration"])))

@@ -46,6 +46,10 @@ class WebSocket:
     def getUsers(self):
         return self.sockets.keys()
 
+    def delToken(self, token):
+        if token in self.sockets:
+            self.sockets[token].close()
+            del self.sockets[token]
 
 
 '''

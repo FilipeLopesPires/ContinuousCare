@@ -169,7 +169,11 @@ class TestDatabaseProxy(unittest.TestCase):
 
     @unittest.skip
     def test_requestPermission(self):
-        self.db.requestPermission("medic", "zonnax", 2)
+        print(self.db.requestPermission("medic", {
+            "username":"fpyjdd88888888",
+            "health_number": None,
+            "duration": 2
+        }))
 
     @unittest.skip
     def test_deleteRequestPermission(self):
