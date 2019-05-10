@@ -9,3 +9,10 @@ Vue.component('PageFooter', PageFooter)
 
 import Toasted from 'vue-toasted'
 Vue.use(Toasted)
+
+import VueApexCharts from 'vue-apexcharts';
+Vue.component('apexchart', VueApexCharts);
+Vue.use(VueApexCharts);
+
+import VueHorizontalTimeline from 'vue-horizontal-timeline'
+Vue.use(VueHorizontalTimeline)

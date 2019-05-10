@@ -12,7 +12,8 @@ export default {
       { hid: 'description', name: 'description', content: pkg.description }
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/logo.ico' }
+      { rel: 'icon', type: 'image/x-icon', href: '/logo.ico' },
+      { rel: 'stylesheet', href: 'https://unpkg.com/leaflet@1.2.0/dist/leaflet.css' },
     ],
     script: [
       { src: '/js/jquery-3.2.1.min.js'},
@@ -51,13 +52,14 @@ export default {
     /* { src: '~node_modules/vue-js-modal', ssr: false },
     { src: '~node_modules/apexcharts', ssr: false },
     { src: '~node_modules/vue-apexcharts', ssr: false }, 
-    { src: '~node_modules/vue-toasted', ssr:false }, */
+    { src: '~node_modules/vue-toasted', ssr:false } */
   ],
 
   /* Nuxt.js modules */
   modules: [
     '@nuxtjs/axios',
     'bootstrap-vue/nuxt',
+    'nuxt-leaflet',
   ],
  
   /* Axios module configuration */
