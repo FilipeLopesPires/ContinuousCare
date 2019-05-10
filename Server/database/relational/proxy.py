@@ -645,7 +645,7 @@ class MySqlProxy:
 
             result = next(cursor.stored_results()).fetchall()[0]
 
-            return {"name": result[0], "health_number":result[1]}
+            return {key: result[ind] for ind, key in ["username", "name", "email", "health_number"]}
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -691,7 +691,7 @@ class MySqlProxy:
 
             result = next(cursor.stored_results()).fetchall()[0]
 
-            return {"name": result[0], "company": result[1]}
+            return {key: result[ind] for ind, key in enumerate(["name", "email", "company"])}
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -845,18 +845,14 @@ class MySqlProxy:
         """
         return_value = []
         if type in [0, 1]:
-            for duration, username, full_name, email, health_number in data:
-                permission = {
+            for duration, username, full_name, email, neutral in data:
+                return_value.append({
                     "duration": duration,
                     "username": username,
                     "name": full_name,
-                    "email": email
-                }
-
-                if health_number:
-                    permission["health_number"] = health_number
-
-                return_value.append(permission)
+                    "email": email,
+                    "neutral": neutral
+                })
 
         elif type in [2, 3]:
             if type == 2:
@@ -865,13 +861,14 @@ class MySqlProxy:
                 last_date_key = "end_date"
 
             for begin_date, \
-                last_date, username, full_name, email, health_number in data:
+                last_date, username, full_name, email, neutral in data:
                 permission = {
                     "begin_date": begin_date,
                     last_date_key: last_date,
                     "username": username,
                     "name": full_name,
-                    "email": email
+                    "email": email,
+                    "neutral": neutral
                 }
 
                 if health_number:
