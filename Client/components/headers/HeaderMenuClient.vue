@@ -31,6 +31,9 @@
                                     <nuxt-link :class="{ active: isActive('Devices') }" class="nav-item" to="/devices">
                                         <span class="nav-link">Devices</span>
                                     </nuxt-link>
+                                    <nuxt-link :class="{ active: isActive('Permissions') }" class="nav-item" to="/permissions">
+                                        <span class="nav-link">Permissions</span>
+                                    </nuxt-link>
                                     <li class="nav-item submenu dropdown">
                                         <a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Help</a>
                                         <ul class="dropdown-menu">
