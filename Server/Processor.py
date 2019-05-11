@@ -11,6 +11,8 @@ from random import *
 import requests
 from geopy.distance import vincenty
 
+from validation import ArgumentValidator
+
 from database import *
 from database.exceptions import DatabaseException, LogicException
 from devices import *
@@ -362,6 +364,10 @@ class Processor:
         if not client and not medic:
             return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
+        argsErrors = ArgumentValidator.uploadPermissions("medic" if medic else "client", data)
+        if len(argsErrors) > 0:
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
         try:
             target = jsonData["username"]
             targetToken=None
@@ -376,12 +382,7 @@ class Processor:
             elif medic:
                 data = self.database.requestPermission(medic, jsonData)
         
-            pendingAfter = self.database.allPermissionsData(target)["pending"]
-            diff = lambda l1,l2: [x for x in l1 if x not in l2]
-
-            pendingDiff = diff(pendingAfter, pendingBefore)
-            if len(pendingDiff)!=0:
-                permissionThread(pendingDiff, targetToken, self.socket).start()
+            permissionThread(data, targetToken, self.socket).start()
 
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":data}).encode("UTF-8")
         except LogicException as e:
@@ -469,7 +470,7 @@ class Processor:
 
         args
         token - str - token representing the user
-        client - str - of the client that he wants to pause the active permission
+        client - str - of the client that he wants to stop the active permission
         """
         if self.medicTokens.get(token):
             return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
@@ -480,7 +481,7 @@ class Processor:
 
         try:
             self.database.stopActivePermission(medic, client)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission paused with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission stoped with success."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -683,11 +684,7 @@ class permissionThread(threading.Thread):
         asyncio.get_event_loop().close() 
 
     async def send(self):
-        if type(self.permissions) is list:
-            for permission in self.permissions:
-                await self.socket.send(str(permission), self.token)
-        elif type(self.permissions) is dict:
-            await self.socket.send(str(self.permissions), self.token)
+        await self.socket.send(str(self.permissions), self.token)
     
 
 class myThread (threading.Thread):
