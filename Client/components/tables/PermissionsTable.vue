@@ -8,7 +8,7 @@
                 <th v-if="user_type === 'medic'">Health Number</th>
                 <th v-if="user_type === 'client'">Company</th>
                 <th v-if="title === 'pending'">Duration</th>
-                <th v-else-if="title === 'accepted' || title === 'active'">Time Left</th>
+                <th v-else-if="title === 'accepted' || title === 'active'">Time Left (Hours)</th>
             </tr>
         </thead>
         <tbody>
@@ -17,7 +17,7 @@
                 <td>{{ permission.name }}</td>
                 <td>{{ permission.email }}</td>
                 <td v-if="user_type === 'medic'">{{ permission.health_number }}</td>
-                <td v-if="user_type === 'client'">{{ permission.company }}</td>
+                <td v-else-if="user_type === 'client'">{{ permission.company }}</td>
                 <td>{{ permission.duration }}</td>
 
                 <td>
