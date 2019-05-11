@@ -44,7 +44,7 @@
       <HeaderMenu activePage="Home" />
 
       <!--================ Banner Area =================-->
-      <PageBanner parent_page="Home" page="Profile" />
+      <PageBanner parent_page="Home" page="Profile" :name="full_name" />
 
       <!--================ Tags Area =================-->
       <div class="row justify-content-center d-flex align-items-center">
@@ -75,6 +75,7 @@ export default {
   },
   data() {
     return {
+      full_name: this.$store.getters.profile.full_name,
       tags_area: [
         {area: {
           title: "How Are You Feeling Today?",
@@ -84,9 +85,12 @@ export default {
           title: "Would You Like To Take Note Of Any Complaints?",
           tags: ["Cold / Respiratory Pain","Insomnia / Difficult Night","Migraine / Headache","Muscle Soreness or Injury","Allergies","Back or Joint Pain","Skin Conditions","Stomache or Intestinal Disconforts","Overstress / Heart Disconfort"]
         }}
-      ]
+      ],
     }
   },
+ /* mounted() {
+    this.full_name = this.$store.getters.profile.full_name;
+  }, */
   methods: {
     loggedIn() {
       if(this.$store.getters.isLoggedIn) {

@@ -32,7 +32,7 @@
                                         <span class="nav-link">Devices</span>
                                     </nuxt-link>
                                     <li class="nav-item submenu dropdown">
-                                        <a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Help</a>
+                                        <a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account</a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item" :class="{ active: isActive('Settings') }">
                                                 <nuxt-link class="nav-link" to="/settings">Profile Settings</nuxt-link>

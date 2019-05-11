@@ -19,6 +19,7 @@ Vue.use(VueApexCharts);
 
 import VueHorizontalTimeline from 'vue-horizontal-timeline'
 Vue.use(VueHorizontalTimeline)
+
 import Notifications from 'vue-notification'
 Vue.use(Notifications)
 

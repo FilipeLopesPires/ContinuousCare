@@ -3,7 +3,8 @@
 		<div class="banner_inner d-flex align-items-center">
 			<div class="container">
 				<div class="banner_content text-left">
-					<h2>{{ page }}</h2>
+					<h2 v-if="name == null">{{ page }}</h2>
+					<h2 v-else>Hi {{ name }}!</h2>
 					<div class="page_link">
 						<nuxt-link to="/">{{ parent_page }}</nuxt-link>
 						<nuxt-link to="/">{{ page }}</nuxt-link>
@@ -25,6 +26,10 @@ export default {
 		page: {
 			type: String,
 			required: true
+		},
+		name: {
+			type: String,
+			required: false
 		}
 	}
 }
