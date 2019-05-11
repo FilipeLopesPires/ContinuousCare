@@ -2,10 +2,10 @@
     <div style="overflow-x: none;">
         <body>
             <!--================ Header Menu Area =================-->
-            <HeaderMenu activePage="Patients" />
+            <HeaderMenu activePage="Permissions" />
 
             <!--================ Banner Area =================-->
-            <PageBanner parent_page="Home" page="Patients" />
+            <PageBanner parent_page="Home" page="Permissions" />
 
             <!--================ Permissions Boxes Area ============-->
             <PermissionsDiv />
@@ -22,12 +22,12 @@
 import PermissionsDiv from '@/components/boxes/PermissionsDiv.vue'
 
 export default {
-    middleware: ['check-log', 'log', 'medics-only'],
+    middleware: ['check-log', 'log', 'clients-only'],
     components: {
         PermissionsDiv
     },
     head: {
-        title: "Patients"
+        title: "Permissions"
     }
 }
 </script>
