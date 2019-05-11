@@ -92,10 +92,12 @@ class Database:
         except Exception as e:
             raise ProxyException(str(e))
 
-    def updateProfile(self, user, data):
+    def updateProfile(self, user_type, user, data):
         """
         Updates the profile data of a client with the username received from the arguments
 
+        :param user_type: user type
+        :type user_type: str
         :param user: username of the client to update
         :type user: str
         :param data: common : [type:str, username:str, password:str, new_password:str name:str, email:str]
@@ -104,7 +106,7 @@ class Database:
         :type data: dict
         """
         try:
-            if data["type"].lower() == "client":
+            if user_type == "client":
                 self.relational_proxy.update_client_profile_data(
                     user,
                     data.get("password"),
@@ -117,7 +119,7 @@ class Database:
                     data.get("height"),
                     data.get("additional_info")
                 )
-            elif data["type"].lower() == "medic":
+            elif user_type == "medic":
                 self.relational_proxy.update_medic_profile_data(
                     user,
                     data.get("password"),

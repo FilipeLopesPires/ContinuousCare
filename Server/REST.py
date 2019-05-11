@@ -25,7 +25,7 @@ def signup():
     if not data:
         data = {}
 
-    argsErrors =  ArgumentValidator.signupAndUpdateProfile(False, data)
+    argsErrors =  ArgumentValidator.signup(data)
     if len(argsErrors) > 0:
         return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 

@@ -294,7 +294,7 @@ class Processor:
             return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
         try:
-            self.database.updateProfile(user, data)
+            self.database.updateProfile("client" if client else "medic", user, data)
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
