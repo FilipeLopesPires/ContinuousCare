@@ -1,6 +1,6 @@
 <template>
     <div class="profile-form" >
-        <h1 class="mt-10 mb-30 title_color text-center">My Profile</h1>
+        <h1 class="mt-10 mb-30 title_color text-center">Your Profile</h1>
         <form class="form-wrap" @submit.prevent="onSubmit">
             <!-- Account Type -->
             <p v-if="!is_medic" class="title-form-wrap">Account type: Regular User</p>
@@ -24,16 +24,16 @@
             <p class="title-form-wrap">Password:</p>
             <div class="row d-flex ">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password" type="password" name="password" placeholder="Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password" type="password" name="password" placeholder="Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password'">
                 </div>
             </div>
             <p class="title-form-wrap">New Password:</p>
             <div class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.new_password" type="password" name="new_password" placeholder="New Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'New Password'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.new_password" type="password" name="new_password" placeholder="New Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'New Password'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team ">
-                    <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.new_password_confirmation" type="password" name="new_password_confirmation" placeholder="Confirm New Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm New Password'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.new_password_confirmation" type="password" name="new_password_confirmation" placeholder="Confirm New Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm New Password'">
                 </div>
             </div>
             <!-- Public Health Personal Number & Birth Date -->
@@ -131,19 +131,25 @@ export default {
     methods: {
         async onSubmit() {
             /* Fields Validation */
-            if(this.filledform.password != this.filledform.password_confirmation) {
-                this.showToast("Password inputs must match!", 2500);
-                return;
+            if(this.filledform.new_password) {
+                if(this.filledform.new_password != this.filledform.new_password_confirmation) {
+                    this.showToast("Password inputs must match!", 2500);
+                    return;
+                }
             }
-            if(this.filledform.weight < 0) {
-                this.showToast("Do you really weight less than 0kg?", 2500);
-                return;
+            if(this.filledform.weight) {
+                if(this.filledform.weight < 0) {
+                    this.showToast("Do you really weight less than 0kg?", 2500);
+                    return;
+                }
             }
-            if(this.filledform.height < 0) {
-                this.showToast("Are you really negative centimeters high?", 2500);
-                return;
+            if(this.filledform.height) {
+                if(this.filledform.height < 0) {
+                    this.showToast("Are you really negative centimeters high?", 2500);
+                    return;
+                }
             }
-
+            
             /* Server Validation */
             var result = await this. checkUpdateProfile(this.filledform, this.$store.getters.sessionToken);
             if(result) {
@@ -211,9 +217,10 @@ export default {
                     'email': filledform.email,
                     'health_number': filledform.health_number,
                     'password': filledform.password,
+                    'new_password': filledform.new_password,
                     'birth_date': this.convertDate(filledform.birth_date),
-                    'weight': this.convertNull(filledform.weight),
-                    'height': this.convertNull(filledform.height),
+                    'weight': filledform.weight,
+                    'height': filledform.height,
                     'additional_info': filledform.additional_info,
                     'company': filledform.company,
                     'specialities': filledform.specialities,
@@ -250,12 +257,6 @@ export default {
             return "00-00-0000";
         },
 
-        convertNull(field) {
-            if(field) {
-                return parseFloat(field);
-            }
-            return -1;
-        },
         showToast(message, duration) {
             this.$toasted.show(message, {position: 'bottom-center', duration: duration});
         }

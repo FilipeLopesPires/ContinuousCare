@@ -419,7 +419,7 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def update_client_profile_data(self, username, password, full_name, email, health_number,
+    def update_client_profile_data(self, username, password, new_password, full_name, email, health_number,
                                        birth_date, weight, height, additional_information):
         """
         Updates the profile information for a user. The function receives all information
@@ -427,8 +427,10 @@ class MySqlProxy:
 
         :param username: of the client to update the data
         :type username: str
-        :param password: clear text password
+        :param password: old clear text password
         :type password: str
+        :param new_password: new clear text password
+        :type new_password: str
         :param full_name: full name of the client
         :type full_name: str
         :param email: email of the client
@@ -449,8 +451,9 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             password = self._hash_password(password)
+            new_password = self._hash_password(new_password)
 
-            cursor.callproc(StoredProcedures.UPDATE_CLIENT_PROFILE_DATA, (username, password, full_name, email,
+            cursor.callproc(StoredProcedures.UPDATE_CLIENT_PROFILE_DATA, (username, password, new_password, full_name, email,
                                                                         health_number, birth_date, weight, height,
                                                                         additional_information))
         except Exception as e:
@@ -460,7 +463,7 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def update_medic_profile_data(self, username, password, full_name, email,
+    def update_medic_profile_data(self, username, password, new_password, full_name, email,
                                    company, specialities):
         """
         Updates the profile information for a user. The function receives all information
@@ -468,8 +471,10 @@ class MySqlProxy:
 
         :param username: of the client to update the data
         :type username: str
-        :param password: clear text password
+        :param password: old clear text password
         :type password: str
+        :param new_password: new clear text password
+        :type new_password: str
         :param full_name: full name of the client
         :type full_name: str
         :param email: email of the client
@@ -483,9 +488,10 @@ class MySqlProxy:
             conn, cursor = self._init_connection()
 
             password = self._hash_password(password)
+            new_password = self._hash_password(new_password)
 
-            cursor.callproc(StoredProcedures.UPDATE_MEDIC_PROFILE_DATA, (username, password, full_name, email,
-                                                                        company, specialities))
+            cursor.callproc(StoredProcedures.UPDATE_MEDIC_PROFILE_DATA, (username, password, new_password,
+                                                                         full_name, email, company, specialities))
             conn.commit()
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
@@ -643,7 +649,9 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, health_number, duration))
 
-            return next(cursor.stored_results()).fetchall()[0]
+            result = next(cursor.stored_results()).fetchall()[0]
+
+            return {key: result[ind] for ind, key in enumerate(["username", "name", "email", "health_number"])}
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -687,7 +695,9 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.GRANT_PERMISSION, (client, medic, duration))
 
-            return next(cursor.stored_results()).fetchall()[0]
+            result = next(cursor.stored_results()).fetchall()[0]
+
+            return {key: result[ind] for ind, key in enumerate(["name", "email", "company"])}
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -840,32 +850,28 @@ class MySqlProxy:
         :rtype: list
         """
         return_value = []
-        if type in [0, 1]:
-            for duration, username, full_name, health_number in data:
-                permission = {
+        if type in [0, 1, 2]:
+            for duration, username, full_name, email, neutral in data:
+                return_value.append({
                     "duration": duration,
                     "username": username,
-                    "full_name": full_name
-                }
+                    "name": full_name,
+                    "email": email,
+                    "health_number": neutral,
+                    "company": neutral
+                })
 
-                if health_number:
-                    permission["health_number"] = health_number
-
-                return_value.append(permission)
-
-        elif type in [2, 3]:
-            if type == 2:
-                last_date_key = "expiration_date"
-            else:
-                last_date_key = "end_date"
-
+        elif type == 3:
             for begin_date, \
-                last_date, username, full_name, health_number in data:
+                last_date, username, full_name, email, neutral in data:
                 permission = {
                     "begin_date": begin_date,
-                    last_date_key: last_date,
+                    "end_date": last_date,
                     "username": username,
-                    "full_name": full_name
+                    "name": full_name,
+                    "email": email,
+                    "health_number": neutral,
+                    "company": neutral
                 }
 
                 if health_number:
@@ -893,6 +899,28 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.GET_HISTORICAL_PERMISSIONS, [user])
 
             return self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 3)
+        except Exception as e:
+            if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
+                raise LogicException(e.msg)
+            raise RelationalDBException(str(e))
+        finally:
+            self._close_conenction(conn, cursor)
+
+    def get_pending_permissions(self, user):
+        """
+        Gets existing pending permissions
+
+        :param user: username
+        :type user: str
+        :return: all pending permissions associated with a user
+        :rtype: list
+        """
+        try:
+            conn, cursor = self._init_connection()
+
+            cursor.callproc(StoredProcedures.GET_PENDING_PERMISSIONS_OF_USER, [user])
+
+            return self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 0)
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)

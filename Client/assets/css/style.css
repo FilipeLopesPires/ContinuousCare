@@ -98,8 +98,14 @@ a {
 .pt-30 {
   padding-top: 30px !important; }
 
+.mb--20 {
+  margin-bottom: -20px; } 
+
 .mb-20 {
   margin-bottom: 20px; }
+
+.mb-30 {
+  margin-bottom: 30px; }
 
 .mb-50 {
   margin-bottom: 50px; }
@@ -1744,11 +1750,7 @@ a {
 
 
 
-.mb-20 {
-  margin-bottom: 20px; }
 
-.mb-30 {
-  margin-bottom: 30px; }
 
 .sample-text-area {
   padding: 100px 0px; }
@@ -3416,5 +3418,4 @@ h6 {
   color: #3face4; }
 
 /*---------------------------------------------------- */
-
-/*# sourceMappingURL=style.css.map */
+/*----------------------------------------------------*/

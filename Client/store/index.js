@@ -6,6 +6,7 @@ const createStore = () => {
         state: {            /* ========== state ========== */
             reloadControl: null,
             vue:null,
+            
             sessionToken: null,
             userType: null,
             profile: {
@@ -135,8 +136,6 @@ const createStore = () => {
                 Cookie.set("session_user_type", new_user_type);
             },
             setProfile(vuexContext, new_profile) {
-                console.log("action setProfile");
-                console.log(new_profile);
                 vuexContext.commit("setProfileFullName", new_profile.full_name);
                 vuexContext.commit("setProfileEmail", new_profile.email);
                 vuexContext.commit("setProfileHealthNumber", new_profile.health_number);
@@ -318,8 +317,6 @@ const createStore = () => {
                 return state.userType;
             },
             profile(state) {
-                console.log("getter Profile");
-                console.log(state.profile);
                 return state.profile;
             },
             loadedDevices(state) {

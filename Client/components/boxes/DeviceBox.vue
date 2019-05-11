@@ -4,7 +4,7 @@
         <div class="categories_post">
             <img v-if="device.photo==''" src="~assets/img/elements/device-plus.png" alt="Procedure" height="200px" width="200px">
             <img v-else :src="device.photo" alt="Procedure" height="200px" width="200px">
-            <div class="categories_details" @click="showModal($modal, device.token)">
+            <div class="categories_details" @click="showModal($modal, device.id)">
                 <div class="categories_text">
                     <div class="border_line"></div>
                         <h5>{{ device.type }}</h5>
@@ -33,8 +33,8 @@ export default {
         },
     },
     methods: {
-        showModal($modal, token) {
-            var device_modal = "device-modal-" + token;
+        showModal($modal, id) {
+            var device_modal = "device-modal-" + id ;
             $modal.show(device_modal);
         }
     }

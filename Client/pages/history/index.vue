@@ -7,13 +7,7 @@
             <!--================ Banner Area =================-->
             <PageBanner parent_page="Home" page="History" />
 
-            <!--================ Testing Area =================-->
-            <!-- <div class="testing">
-                <p> {{ jsonData }} </p>
-            </div> -->
-
             <!--================ Graphics Area =================-->
-            
             <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
                 <div class="blog_right_sidebar">
                     <form class="form-wrap" @submit.prevent="onLoadChart">
@@ -52,6 +46,17 @@
                     <div v-else><h1>Unable to load information.</h1></div>
                     <!-- <button class="genric-btn info" @click="updateChart">Update!</button> -->
                     <PaginationBox />
+                    
+                </div>
+            </div>
+
+            <!--================ Map Area =================-->
+            <LeafletMap />
+            
+            <!--================ Timeline Area =================-->
+            <div>
+                <div class="container justify-content-center  align-items-center col-lg-9 col-md-9 blog_right_sidebar mb-60 timeline-div">
+                    <vue-horizontal-timeline :items="items" clickable="true" @click="onClickTimeline(this.content-attr)" class="timeline"/>
                 </div>
             </div>
 
@@ -64,17 +69,18 @@
 </template>
 
 <script>
-import Vue from 'vue'
-import VueApexCharts from 'vue-apexcharts'
-Vue.component('apexchart', VueApexCharts)
-Vue.use(VueApexCharts)
+
+// https://uicookies.com/horizontal-timeline/
+// https://www.npmjs.com/package/vue-horizontal-timeline
 
 import PaginationBox from '@/components/boxes/PaginationBox.vue'
+import LeafletMap from '@/components/maps/LeafletMap.vue'
 
 export default {
     middleware: ['check-log', 'log', 'clients-only'],
     components: {
         PaginationBox,
+        LeafletMap,
     },
     data() {
         /* var answer = {"status": 0, "error": "Successfull operation.", 
@@ -91,7 +97,22 @@ export default {
         
         var requestError = false;
         var showChart = false;
-        var serverData = {}
+        var serverData = {};
+
+        const example1 = {
+            title: 'Title example 1',
+            content: 'Lorem ipsum dolor sit amet.'
+        };
+        const example2 = {
+            title: 'Title example 2',
+            content: 'Lorem ipsum dolor sit amet.'
+        };
+        const example3 = {
+            title: 'Title example 3',
+            content: 'Lorem ipsum dolor sit amet.'
+        };
+        const items = [example1, example2, example3];
+
         return {
             chartSource,
 
@@ -111,10 +132,13 @@ export default {
                     categories: environment.time, */
                 },
             },
+
             series: [{
                 /* name: 'AQI',
                 data: environment.aqi, */
-            }]
+            }],
+
+            items,
         }
     },
     async mounted() {
@@ -145,7 +169,6 @@ export default {
     },
     methods: {
         async onLoadChart() {
-            //console.log(this.chartSource)
             await this.getServerData(this.filledform.start, this.filledform.end, this.filledform.interval, this.$store.getters.sessionToken, this.chartSource)
             if(!this.requestError) {
                 this.showChart = true;
@@ -197,6 +220,9 @@ export default {
                 this.chartSource = "/healthstatus";
             }
             this.onLoadChart();
+        },
+        onClickTimeline(content) {
+            console.log(content)
         }
         /* onGoBack() {
             this.$router.push("/")
@@ -237,5 +263,10 @@ export default {
 </script>
 
 <style scoped>
-
+.timeline-div {
+    height: 300px;
+}
+.timeline {
+    height: 300px;
+}
 </style>

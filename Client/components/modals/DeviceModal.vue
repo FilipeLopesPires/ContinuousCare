@@ -27,7 +27,7 @@
             <div v-if="device.type!='Add Device'">
                 <div class="mt-10" v-for="field in Object.keys(device)" :key="field.id" :field="field"> 
                     <h5 v-if="field != 'photo' && field != 'type' && field != 'id'">{{ field }}:</h5>
-                    <input v-if="field != 'photo' && field != 'type' && field != 'id'" type="text" :value="device[field]" :placeholder="device[field]" class="single-input"> 
+                    <input v-if="field != 'photo' && field != 'type' && field != 'id'" type="text" :value="device[field]" :placeholder="device[field]" :name="field" class="single-input"> 
                 </div>
             </div>
             <div v-else>
@@ -44,7 +44,7 @@
                 </div>
                 <div class="col-lg-3 col-md-3 row justify-content-right">
                     <button v-if="device.type!='Add Device'" class="genric-btn info radius text-uppercase" @click="onUpdate" type="submit" >Update</button>
-                    <button v-else class="genric-btn info radius text-uppercase" @click="onAdd" type="submit" >Add</button>
+                    <button v-else                           class="genric-btn info radius text-uppercase" @click="onAdd" type="submit" >Add</button>
                 </div>
             </div>
         </form>
@@ -80,10 +80,9 @@ export default {
     },
     methods: {
         getName(d) {
-            return "device-modal-" + d.token;
+            return "device-modal-" + d.id;
         },
         activateChosenType(event) {
-            //console.log(event.target.value)
             if(event.target.value==this.allOptions[0]) {
                 this.chosenDeviceFields = ["token","refresh_token"];
             } else if(event.target.value==this.allOptions[1]) {
@@ -100,10 +99,12 @@ export default {
             }
             var data = this.getData(this.type);
             if(this.validateFields(data) != 0) {
+
                 return;
             }
             
             /* Server Validation */
+            
             var result = await this.sendDevice(data, this.$store.getters.sessionToken);
             if(result) {
                 if(result.status==0){ // device info retrieval successful
@@ -121,11 +122,7 @@ export default {
         },
         async onUpdate() {
             /* Fields Validation */
-            if(this.type == "") {
-                this.showToast("Please choose a device type before submiting changes.", 2500);
-                return;
-            }
-            var data = this.getData(this.type);
+            var data = this.getData(this.device.type);
             if(this.validateFields(data) != 0) {
                 return;
             }
@@ -147,24 +144,44 @@ export default {
             } 
         },
         async onRemove() {
-            // to do ...
+            /* Server Validation */
+            var data = {'id': this.device.id};
+            var result = await this.removeDevice(data, this.$store.getters.sessionToken);
+            if(result) {
+                if(result.status==0){ // device removal successful
+                    if(process.client) {
+                        window.location.reload(true);
+                    }
+                } else {
+                    this.showToast("Error while completing the operation. Please check if the device has been removed, if not try again.", 5000);
+                    return;
+                }
+            } else {
+                // deal with error
+                return;
+            } 
         },
         async sendDevice(data,AuthToken) {
+            
             const config = {
                 headers: {'AuthToken': AuthToken},
             }
             return await this.$axios.$post("/devices", data, config)
                         .then(res => {
-                            console.log(res)
-                            
                             if(res.status != 0) {
-                                // toast
-                                // if(res.status == 1) { toast only 1 bracelet per account }
+                                if(res.status == 1) { 
+                                    this.showToast(res.msg, 5000);
+                                    this.showToast("It is only possible to add 1 bracelet per account.", 5000);
+                                } else {
+                                    this.showToast("Something went wrong while adding your device. Please try again later.", 5000);
+                                }
+                                console.log(res);
+                                return null;
                             }
                             return res;
                         })
                         .catch(e => {
-                            // unable to add device
+                            console.log(e);
                             this.showToast("Something went wrong while adding your device. The server might be down at the moment. Please try again later.", 7500);
                             return null;
                         });
@@ -173,12 +190,46 @@ export default {
             const config = {
                 headers: {'AuthToken': AuthToken},
             }
-            // ... to do ...
+            return await this.$axios.$put("/devices", data, config)
+                        .then(res => {
+                            if(res.status != 0) {
+                                console.log(res);
+                                this.showToast("Something went wrong while updating your device. Please try again later.", 5000);
+                                return null;
+                            }
+                            return res;
+                        })
+                        .catch(e => {
+                            console.log(e);
+                            this.showToast("Something went wrong while updating your device. The server might be down at the moment. Please try again later.", 7500);
+                            return null;
+                        });
+        },
+        async removeDevice(data,AuthToken) {
+            const config = {
+                headers: {'AuthToken': AuthToken, "Content-Type":"application/json"},
+                data: data,
+            }
+            return await this.$axios.$delete("/devices", config)
+                        .then(res => {
+                            if(res.status != 0) {
+                                console.log(res);
+                                this.showToast("Something went wrong while removing your device. Please try again later.", 5000);
+                                return null;
+                            }
+                            return res;
+                        })
+                        .catch(e => {
+                            console.log(e);
+                            this.showToast("Something went wrong while removing your device. The server might be down at the moment. Please try again later.", 7500);
+                            return null;
+                        });
         },
         getData(type) {
-            var data = {}
+            var data = {};
             if(type == this.allOptions[0]) {
                 data = {
+                    'id': this.device.id,
                     'type': type,
                     'authentication_fields': {
                         'token': document.querySelector("input[name=token]").value, 
@@ -186,6 +237,7 @@ export default {
                 }
             } else if (type == this.allOptions[1]) {
                  data = {
+                    'id': this.device.id,
                     'type': type,
                     'authentication_fields': {
                         'uuid': document.querySelector("input[name=uuid]").value,
@@ -203,6 +255,7 @@ export default {
             var data_values = Object.values(data);
             for(var i=0; i<data_values.length; i++) {
                 if(data_values[i] == null || data_values[i] == "") {
+                    this.showToast("Please fill in the fields correctly.", 2500);
                     return -1;
                 }
             }
@@ -210,6 +263,7 @@ export default {
                 var data_auth_values = Object.values(data.authentication_fields);
                 for(var i=0; i<data_auth_values.length; i++) {
                     if(data_auth_values[i] == null || data_auth_values[i] == "") {
+                        this.showToast("Please fill in the fields correctly.", 2500);
                         return -1;
                     }
                 }

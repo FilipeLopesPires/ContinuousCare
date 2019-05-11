@@ -39,10 +39,10 @@
                                                         :device="device">
                         <h3 class="text-heading title_color">{{device.brand}} {{device.model}}</h3>
                         <p class="sample-text">
-                            Type: {{device.type}}
+                            Type: {{formatType(device.type)}}
                         </p>
                         <p class="sample-text">
-                            Supported Metrics: {{device.metrics}}
+                            Supported Metrics: {{formatMetrics(device.metrics)}}
                         </p>
                     </div>
                 </div>
@@ -74,7 +74,7 @@ export default {
     },
     data() {
         var requestError = false;
-        var loaded_devices = [{id: 0, type: "Add Device", token: "", photo: ""}];
+        var loaded_devices = [{id: 1000, type: "Add Device", token: "", photo: ""}];
         var supported_devices = [];
 
         return {
@@ -148,6 +148,29 @@ export default {
                 this.loaded_devices = new_devices.concat(this.loaded_devices);
             }
         },
+        formatType(type) {
+            var formatedType;
+            if(type == "bracelet") {
+                formatedType = "Smart Bracelet";
+            } else if(type == "home_device") {
+                formatedType = "Home Device";
+            } else {
+                formatedType = type;
+            }
+            return formatedType;
+        },
+        formatMetrics(metrics) {
+            var retval = "";
+            for(var i=0; i<metrics.length; i++) {
+                retval += metrics[i].name + " (in " + metrics[i].unit + ")";
+                if(i!=metrics.length-1) {
+                    retval += ", ";
+                } else {
+                    retval += ".";
+                }
+            }
+            return retval;
+        }
     },
     head: {
         title: "Devices"
