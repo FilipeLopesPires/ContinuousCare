@@ -38,7 +38,7 @@ class ArgumentValidator:
                     errors.append("Missing key \"" + key + "\"")
                 continue
 
-            if not value:
+            if value == None:
                 if mandatory:
                     errors.append("Value \"" + key + "\" can't be null")
                 continue
@@ -58,19 +58,9 @@ class ArgumentValidator:
         return errors
 
     @staticmethod
-    def signupAndUpdateProfile(isUpdateProfile, data):
-        userType = data.get("type")
-        if not userType:
-            return ["Missing \"type\" parameter"]
-
-        userType = userType.lower()
-
-        if userType not in ["client", "medic"]:
-            return ["Type can only be \"client\" or \"medic\""]
-
-        if userType == "client":
+    def signupAndUpdateProfile(isClient, isUpdateProfile, data):
+        if isClient:
             fields = [
-                    ("username", str, True),
                     ("password", str, False),
                     ("name", str, True),
                     ("email", str, True),
@@ -81,7 +71,9 @@ class ArgumentValidator:
                     ("additional_info", str, False)]
 
             if isUpdateProfile:
-                fields.append(("new_password"), str, False)
+                fields.append(("new_password", str, False))
+            else:
+                fields.append(("username", str, True))
 
             result =  ArgumentValidator._validate(
                 data, fields
@@ -94,14 +86,13 @@ class ArgumentValidator:
                 else:
                     try:
                         day, month, year = birth_date.split("-")
-                        datetime.date(day, month, year)
+                        datetime.date(int(year), int(month), int(day))
                     except ValueError:
                         result.append("Invalid date.")
 
             return result
 
         fields = [
-                ("username", str, True),
                 ("password", str, True),
                 ("name", str, True),
                 ("email", str, True),
@@ -110,10 +101,25 @@ class ArgumentValidator:
 
         if isUpdateProfile:
             fields.append(("new_password", str, False))
+        else:
+            fields.append(("username", str, True))
 
         return ArgumentValidator._validate(
             data, fields
         )
+
+    @staticmethod
+    def signup(data):
+        userType = data.get("type")
+        if not userType:
+            return ["Missing \"type\" parameter"]
+
+        userType = userType.lower()
+
+        if userType not in ["client", "medic"]:
+            return ["Type can only be \"client\" or \"medic\""]
+
+        return ArgumentValidator.signupAndUpdateProfile(userType == "client", False, data)
 
     @staticmethod
     def signin(data):

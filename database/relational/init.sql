@@ -439,6 +439,8 @@ CREATE PROCEDURE update_client_info (
                FROM client
                WHERE client_id != __client_id AND health_number = _health_number) THEN
 	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Health number already exists.";
+    ELSE IF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email)
+	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
     END IF;
 
     IF _password IS NOT NULL AND _new_password IS NOT NULL THEN
@@ -494,6 +496,10 @@ CREATE PROCEDURE update_medic_info (
     SELECT medic_id INTO __medic_id
     FROM medic_username
     where username = _username;
+
+    IF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email)
+	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
+    END IF;
 
     IF _password IS NOT NULL AND _new_password IS NOT NULL THEN
       IF NOT EXISTS (SELECT *

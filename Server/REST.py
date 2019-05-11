@@ -116,10 +116,6 @@ def profile():
         if not data:
             data = {}
 
-        argsErrors =  ArgumentValidator.signupAndUpdateProfile(True, data)
-        if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
-
         return processor.updateProfile(userToken, data)
     elif request.method == 'GET':
         return processor.getProfile(userToken)

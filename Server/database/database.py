@@ -109,7 +109,7 @@ class Database:
                     user,
                     data.get("password"),
                     data.get("new_password"),
-                    data["full_name"],
+                    data["name"],
                     data["email"],
                     data["health_number"],
                     data.get("birth_date"),
@@ -122,7 +122,7 @@ class Database:
                     user,
                     data.get("password"),
                     data.get("new_password"),
-                    data["full_name"],
+                    data["name"],
                     data["email"],
                     data.get("company"),
                     data.get("specialities")

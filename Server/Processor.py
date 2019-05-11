@@ -289,6 +289,10 @@ class Processor:
         elif medic:
             user = medic
 
+        argsErrors = ArgumentValidator.signupAndUpdateProfile(True if client else False, True, data)
+        if len(argsErrors) > 0:
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
         try:
             self.database.updateProfile(user, data)
             return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")

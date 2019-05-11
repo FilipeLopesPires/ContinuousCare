@@ -450,8 +450,10 @@ class MySqlProxy:
         try:
             conn, cursor = self._init_connection()
 
-            password = self._hash_password(password)
-            new_password = self._hash_password(new_password)
+            if password:
+                password = self._hash_password(password)
+            if new_password:
+                new_password = self._hash_password(new_password)
 
             cursor.callproc(StoredProcedures.UPDATE_CLIENT_PROFILE_DATA, (username, password, new_password, full_name, email,
                                                                         health_number, birth_date, weight, height,
@@ -487,8 +489,10 @@ class MySqlProxy:
         try:
             conn, cursor = self._init_connection()
 
-            password = self._hash_password(password)
-            new_password = self._hash_password(new_password)
+            if password:
+                password = self._hash_password(password)
+            if new_password:
+                new_password = self._hash_password(new_password)
 
             cursor.callproc(StoredProcedures.UPDATE_MEDIC_PROFILE_DATA, (username, password, new_password,
                                                                          full_name, email, company, specialities))
