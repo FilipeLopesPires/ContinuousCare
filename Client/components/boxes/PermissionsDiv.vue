@@ -13,18 +13,23 @@
                     <h5>Patient Health Number:</h5>
                     <div class="form-inline">
                         <input @click="on_request_option_change(false)" type="radio" class="col-md-1" name="request_option" checked />
-                        <b-input v-model="health_number" ref="health_number_input" class="single-input col-md-11" :disabled="request_by_username"></b-input> 
+                        <b-input v-model="health_number" ref="health_number_input" class="single-input col-md-11" :disabled="request_by_username"></b-input>
                     </div>
                 </div>
                 <div v-else-if="user_type === 'client'">
                     <h3  class="title_color text-center" >Grant Permission</h3>
-                    <div class="mt-10"> 
+                    <div class="mt-10">
                         <h5>Medic Username:</h5>
-                        <input ref="medic_username_input" type="text" class="single-input"> 
+                        <input ref="medic_username_input" type="text" class="single-input">
                     </div>
                 </div>
                 <h5>Duration:</h5>
-                <input ref="duration_input" class="single-input">
+                <div class="form-inline">
+                    <span class="col-md-3">Hours</span>
+                    <input ref="duration_hours_input" class="single-input col-md-3">
+                    <span class="col-md-3">Minutes</span>
+                    <input ref="duration_minutes_input" class="single-input col-md-3">
+                </div>
                 <div class="mt-10 row justify-content-center d-flex align-items-center">
                     <div class="row">
                         <button @click="close_modal" data-dismiss="modal" class="genric-btn primary radius text-uppercase ml-10 mr-10" type="button" >Cancel</button>
@@ -127,25 +132,63 @@ export default {
                 console.log(error_data);
             else {
                 console.log("status code: " + error_data.status);
-                console.log("error data: " + error_data.status);
+                console.log("error data: " + error_data.msg);
             }
 
             this.$toasted.show(
-                'Error ' + error_message + ". Try again later or refresh the page.", 
+                'Error ' + error_message + ". Try again later or refresh the page.",
                 this.toast_configs
             );
+        },
+
+        /**
+         * Parses both hours and minutes and converts to minutes.
+         * Returns -1 in case some of the inputs are not in number
+         *  format. Otherwise returns the number of minutes parsed.
+         *  It should be checked if this functino returned a number
+         *  lower or equal than 0 to abort requests
+         */
+        parse_duration(hours, minutes) {
+            if (! /^\d+$/.test(hours) && hours !== "") {
+                this.$toasted.show(
+                    'Invalid hours.',
+                    this.toast_configs
+                );
+                return -1;
+            }
+            if (! /^\d+$/.test(minutes) && minutes !== "") {
+                this.$toasted.show(
+                    'Invalid minutes.',
+                    this.toast_configs
+                );
+                return -1;
+            }
+
+            minutes = minutes === "" ? 0 : parseInt(minutes);
+            minutes += hours === "" ? 0 : parseInt(hours);
+
+            if (!(minutes > 0)) {
+                this.$toasted.show(
+                    'Insert a duration higher than 0',
+                    this.toast_configs
+                );
+                return -1;
+            }
+
+            return minutes;
         },
 
         async request_permission() {
             let username = this.$refs.client_username_input.value;
             let health_number = this.$refs.health_number_input.value;
-            let duration = this.$refs.duration_input.value;
+            let hours = this.$refs.duration_hours_input.value;
+            let minutes = this.$refs.duration_minutes_input.value;
 
             // ARGUMENTS VALIDATION vv
             if (this.request_by_username) {
                 if (username == "") {
                     this.$toasted.show(
-                        'Insert a username.', 
+                        'Insert a username.',
                         this.toast_configs
                     );
                     return;
@@ -156,14 +199,14 @@ export default {
             else {
                 if (health_number == "") {
                     this.$toasted.show(
-                        'Insert a health number.', 
+                        'Insert a health number.',
                         this.toast_configs
                     );
                     return;
                 }
                 else if (! /^\d+$/.test(health_number)) {
                     this.$toasted.show(
-                        'Invalid health number.', 
+                        'Invalid health number.',
                         this.toast_configs
                     );
                     return;
@@ -172,13 +215,8 @@ export default {
                 username = null;
             }
 
-            if (! /^\d+$/.test(duration)) {
-                this.$toasted.show(
-                    'Invalid duration.', 
-                    this.toast_configs
-                );
+            if ((minutes = this.parse_duration(hours, minutes)) <= 0)
                 return;
-            }
             // ARGUMENTS VALIDATION ^^
 
             this.close_modal();
@@ -186,12 +224,12 @@ export default {
             await this.$axios.$post("/permission", {
                 username: username,
                 health_number: health_number,
-                duration: duration
+                duration: minutes
             }, this.requests_header)
             .then(res => {
                 if (res.status == 0) {
                     this.$toasted.show(
-                        'Permission requested.', 
+                        'Permission requested.',
                         this.toast_configs
                     );
                     this.permissions.pending.push(
@@ -219,35 +257,32 @@ export default {
 
         async grant_permission() {
             let username = this.$refs.medic_username_input.value;
-            let duration = this.$refs.duration_input.value;
+            let hours = this.$refs.duration_hours_input.value;
+            let minutes = this.$refs.duration_minutes_input.value;
 
             // ARGUMENTS VALIDATION vv
             if (username == "") {
                 this.$toasted.show(
-                    'Insert a username.', 
+                    'Insert a username.',
                     this.toast_configs
                 );
                 return;
             }
-            if (! /^\d+$/.test(duration)) {
-                this.$toasted.show(
-                    'Invalid duration.', 
-                    this.toast_configs
-                );
+
+            if ((minutes = this.parse_duration(hours, minutes)) <= 0)
                 return;
-            }
             // ARGUMENTS VALIDATION ^^
 
             this.close_modal();
 
             await this.$axios.$post("/permission", {
                 username: username,
-                duration: duration
+                duration: minutes
             }, this.requests_header)
             .then(res => {
                 if (res.status == 0) {
                     this.$toasted.show(
-                        'Permission granted.', 
+                        'Permission granted.',
                         this.toast_configs
                     );
                     this.permissions.accepted.push(
@@ -282,7 +317,8 @@ export default {
             else if (this.user_type === "client")
                 this.$refs.medic_username_input.value = "";
 
-            this.$refs.duration_input.value = "";
+            this.$refs.duration_hours_input.value = "";
+            this.$refs.duration_minutes_input.value = "";
 
             this.$refs.request_grant_permission_modal.hide();
         },
@@ -301,9 +337,43 @@ export default {
                 this.client_username = "";
             else
                 this.health_number = "";
-            
+
             this.request_by_username = change_to_username;
 
+        },
+
+        /**
+         * Merge permissions related to the same user by adding
+         *  the duration
+         */
+        merge_permissions(source, destination, idx, username_of_moved) {
+            let permission = destination.find(permission => {
+                return permission.username === username_of_moved;
+            });
+
+            // If an source permissiosn exists merge the durations with the one on the destination
+            if (permission !== undefined) {
+                let destination_duration = permission.duration.split(":");
+                let destination_hours = parseInt(duration[0]);
+                let destination_minutes = parseInt(duration[1]);
+
+                let source_duration = source[idx].duration.split(":");
+                let source_hours = parseInt(duration[0]);
+                let source_minutes = parseInt(duration[1]);
+
+                if (source_minutes + destination_minutes > 60)
+                    permission.duration = (source_hours + destination_hours + 1) + ":" + (source_minutes + source_minutes - 60);
+                else
+                    permission.duration = (source_hours + destination_hours) + ":" + (source_minutes + source_minutes);
+            }
+            // Else just move the permission
+            else {
+                destination.push(
+                    source[idx]
+                );
+            }
+
+            source.splice(idx, 1);
         },
 
         async accept_permission(idx, medic_username) {
@@ -311,13 +381,11 @@ export default {
             .then(res => {
                 if (res.status == 0) {
                     this.$toasted.show(
-                        'Permission accepted', 
+                        'Permission accepted',
                         this.toast_configs
                     );
-                    this.permissions.accepted.push(
-                        this.permissions.pending[idx]
-                    );
-                    this.permissions.pending.splice(idx, 1);
+
+                    merge_permissions(this.permissions.pending, this.permissions.accepted, idx, medic_username);
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
@@ -345,6 +413,8 @@ export default {
                         "Permission started.",
                         this.toast_configs
                     );
+
+                    //merge_permissions(this.permissions.accepted, this.permissions.active, idx, client_username); //maybe some times no
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
@@ -367,11 +437,7 @@ export default {
                         this.toast_configs
                     );
 
-                    this.permissions.accepted.push(
-                        this.permissions.active[idx]
-                    )
-
-                    this.permissions.active.splice(idx, 1);
+                    merge_permissions(this.permissions.active, this.permissions.accepted, idx, client_username);
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
