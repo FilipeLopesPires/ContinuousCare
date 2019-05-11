@@ -964,7 +964,7 @@ CREATE PROCEDURE has_permission (
 
         -- By adding the duration of the accepted pending permission
         INSERT INTO active_permission (client_id, medic_id, begin_date, expiration_date)
-        VALUES (__client_id, __medic_id, NOW(), NOW() + __pending_duration);
+        VALUES (__client_id, __medic_id, NOW(), ADDTIME(NOW(), __pending_duration));
 
         -- Delete the accepted permission
         DELETE FROM accepted_permission

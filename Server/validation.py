@@ -195,7 +195,7 @@ class ArgumentValidator:
                 ("username", str, True),
                 ("health_number", int, True),
             ])
-            if len(results_both) > 0:
+            if len(results_both) == 0:
                 return ["Send only health number or patient username"]
 
             return []

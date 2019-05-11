@@ -364,7 +364,7 @@ class Processor:
         if not client and not medic:
             return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
-        argsErrors = ArgumentValidator.uploadPermissions("medic" if medic else "client", data)
+        argsErrors = ArgumentValidator.uploadPermissions("medic" if medic else "client", jsonData)
         if len(argsErrors) > 0:
             return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
@@ -472,8 +472,8 @@ class Processor:
         token - str - token representing the user
         client - str - of the client that he wants to stop the active permission
         """
-        if self.medicTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+        if self.clientTokens.get(token):
+            return json.dumps({"status":1, "msg":"Only accessible to medics"}).encode("UTF-8")
 
         medic = self.medicTokens.get(token)
         if not medic:
