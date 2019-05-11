@@ -645,7 +645,7 @@ class MySqlProxy:
 
             result = next(cursor.stored_results()).fetchall()[0]
 
-            return {key: result[ind] for ind, key in ["username", "name", "email", "health_number"]}
+            return {key: result[ind] for ind, key in enumerate(["username", "name", "email", "health_number"])}
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -844,31 +844,28 @@ class MySqlProxy:
         :rtype: list
         """
         return_value = []
-        if type in [0, 1]:
+        if type in [0, 1, 2]:
             for duration, username, full_name, email, neutral in data:
                 return_value.append({
                     "duration": duration,
                     "username": username,
                     "name": full_name,
                     "email": email,
-                    "neutral": neutral
+                    "health_number": neutral,
+                    "company": neutral
                 })
 
-        elif type in [2, 3]:
-            if type == 2:
-                last_date_key = "expiration_date"
-            else:
-                last_date_key = "end_date"
-
+        elif type == 3:
             for begin_date, \
                 last_date, username, full_name, email, neutral in data:
                 permission = {
                     "begin_date": begin_date,
-                    last_date_key: last_date,
+                    "end_date": last_date,
                     "username": username,
                     "name": full_name,
                     "email": email,
-                    "neutral": neutral
+                    "health_number": neutral,
+                    "company": neutral
                 }
 
                 if health_number:

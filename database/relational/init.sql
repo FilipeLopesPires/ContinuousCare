@@ -1114,7 +1114,7 @@ CREATE PROCEDURE get_historical_permissions (
              user.username,
              user.full_name,
              user.email,
-             user.company
+             medic.company
       FROM ((expired_permission JOIN client_username ON client_username.client_id = expired_permission.client_id)
       JOIN medic ON medic.medic_id = expired_permission.medic_id)
       JOIN user on user.user_id = medic.user_id
@@ -1154,7 +1154,7 @@ CREATE PROCEDURE get_pending_permissions (
              user.username,
              user.full_name,
              user.email,
-             user.company
+             medic.company
       FROM ((pending_permission JOIN client_username ON client_username.client_id = pending_permission.client_id)
       JOIN medic ON medic.medic_id = pending_permission.medic_id)
       JOIN user on user.user_id = medic.user_id
@@ -1194,7 +1194,7 @@ CREATE PROCEDURE get_accepted_permissions (
              user.username,
              user.full_name,
              user.email,
-             user.company
+             medic.company
       FROM ((accepted_permission JOIN client_username ON client_username.client_id = accepted_permission.client_id)
       JOIN medic ON medic.medic_id = accepted_permission.medic_id)
       JOIN user on user.user_id = medic.user_id
@@ -1234,7 +1234,7 @@ CREATE PROCEDURE get_active_permissions (
              user.username,
              user.full_name,
              user.email,
-             user.company
+             medic.company
       FROM ((active_permission JOIN client_username ON client_username.client_id = active_permission.client_id)
       JOIN medic ON medic.medic_id = active_permission.medic_id)
       JOIN user on user.user_id = medic.user_id
