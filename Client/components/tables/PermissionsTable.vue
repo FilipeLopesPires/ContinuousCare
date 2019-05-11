@@ -26,7 +26,7 @@
                             <button @click="remove_pending(index, permission.username)" class="genric-btn primary radius"><i class="fa fa-trash" aria-hidden="true"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
-                            <button @click="$emit('ola', index, permission.username)" class="genric-btn info radius">
+                            <button @click="$emit('accept', index, permission.username)" class="genric-btn info radius">
                                 <i class="fa fa-check" aria-hidden="true"></i>
                             </button>
                             <button @click="reject_permission(index, permission.username)" class="genric-btn primary radius">
@@ -36,7 +36,7 @@
                     </div>
                     <div v-else-if="title === 'accepted'">
                         <div v-if="user_type === 'medic'">
-                            <button class="genric-btn success radius"><i class="fa fa-play" aria-hidden="true"></i></button>
+                            <button @click="$emit('start', index, permissions.username)" class="genric-btn success radius"><i class="fa fa-play" aria-hidden="true"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
                             <button @click="remove_accepted(index, permission.username)" class="genric-btn primary radius"><i class="fa fa-trash"></i></button>
@@ -44,7 +44,7 @@
                     </div>
                     <div v-else-if="title === 'active'">
                         <div v-if="user_type === 'medic'">
-                            <button @click="stop_active(index, permission.username)" class="genric-btn success radius"><i class="fa fa-stop"></i></button>
+                            <button @click="$emit('stop', index, permission.username)" class="genric-btn success radius"><i class="fa fa-stop"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
                             <button @click="remove_active(index, permission.username)" class="genric-btn warning radius"><i class="fa fa-trash"></i></button>
@@ -79,12 +79,34 @@ export default {
             requests_header: {
                 headers: {AuthToken: this.$store.getters.sessionToken},
             },
+            toast_configs: {
+                position: 'bottom-center',
+                duration: 7500
+            }
         }
     },
     methods: {
         /**
-         * 
+         * Function to reduce some code duplication.
+         * Prints the error data accordingly if it is an
+         *  exception or a status code other than 0 or 1.
+         * Also displays a toast, building the massage with the
+         *  rest of the message received.
          */
+        display_error_toasts(is_exception, error_data, error_message) {
+            if (is_exception)
+                console.log(error_data);
+            else {
+                console.log("status code: " + error_data.status);
+                console.log("error data: " + error_data.status);
+            }
+
+            this.$toasted.show(
+                'Error ' + error_message + ". Try again later or refresh the page.", 
+                this.toast_configs
+            );
+        },
+
         async reject_permission(idx, medic_username) {
 
             return await this.$axios.$get("/permission/" + medic_username + "/reject", this.requests_header)
@@ -92,49 +114,22 @@ export default {
                 if (res.status == 0) {
                     this.$toasted.show(
                         'Permission rejected', 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                     this.permissions.splice(idx, 1);
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
                         res.msg, 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                 }
-                else {
-                    console.log("status code: " + res.status);
-                    console.log("error msg: " + res.msg);
-                    this.$toasted.show(
-                        "Error rejecting permission. Try again later.", 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
-                    );
-                }
+                else
+                    this.display_error_toasts(false, res, "rejecting permission");
             })
-            .catch(e => {
-                console.log(e);
-                this.$toasted.show(
-                    "Error rejecting permission. Try again later.", 
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
-            })
+            .catch(e => this.display_error_toasts(true, e, "rejecting permission"));
         },
 
-        /**
-         * 
-         */
         async remove_pending(idx, client_username) {
 
             return await this.$axios.$delete("/permission/" + client_username + "/pending", this.requests_header)
@@ -143,48 +138,21 @@ export default {
                     this.permissions.splice(idx, 1);
                     this.$toasted.show(
                         "Pending permissiosn deleted.",
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
                         res.msg,
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                 }
-                else {
-                    console.log("status code" + res.status);
-                    console.log("error message" + res.msg);
-                    this.$toasted.show(
-                        "Error deleting pending permission. Try again later.",
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
-                    );
-                }
+                else
+                    this.display_error_toasts(false, res, "deleting pending permission")
             })
-            .catch(e => {
-                console.log(e);
-                this.$toasted.show(
-                    "Error deleting pending permission. Try again later.",
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
-            })
+            .catch(e => this.display_error_toasts(true, e, "deleting pending permission"));
         },
 
-        /**
-         * 
-         */
         async remove_accepted(idx, medic_username) {
             return await this.$axios.$delete("/permission/" + medic_username + "/accepted", this.requests_header)
             .then(res => {
@@ -192,48 +160,21 @@ export default {
                     this.permissions.splice(idx, 1);
                     this.$toasted.show(
                         "Accepted permissiosn deleted.",
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
                         res.msg,
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                 }
-                else {
-                    console.log("status code: " + res.status);
-                    console.log("error msg: " + res.msg);
-                    this.$toasted.show(
-                        "Error deleting accepted permission. Try again later.",
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
-                    );
-                }
+                else
+                    this.display_error_toasts(false, res, "deleting accepted permission")
             })
-            .catch(e => {
-                console.log(e);
-                this.$toasted.show(
-                    "Error deleting accepted permission. Try again later.",
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
-            })
+            .catch(e => this.display_error_toasts(true, e, "deleting accepted permission"));
         },
 
-        /**
-         * 
-         */
         async remove_active(idx, medic_username) {
 
             return await this.$axios.$delete("/permission/" + medic_username + "/active", this.requests_header)
@@ -242,58 +183,20 @@ export default {
                     this.permissions.splice(idx, 1);
                     this.$toasted.show(
                         "Active permissiosn deleted.",
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
                         res.msg,
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                 }
                 else {
-                    console.log("status code: " + res.status);
-                    console.log("error msg: " + res.msg);
-                    this.$toasted.show(
-                        "Error deleting active permission. Try again later.",
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
-                    );
+                    this.display_error_toasts(false, res, "deleting active permission")
                 }
             })
-            .catch(e => {
-                console.log(e);
-                this.$toasted.show(
-                    "Error deleting active permission. Try again later.",
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
-            })
-        },
-
-        /**
-         * 
-         */
-        async stop_active(idx, client_username) {
-            this.permissions.splice(idx, 1);
-
-            return await this.$axios.$post("", this.requests_header)
-            .then(res => {
-
-            })
-            .catch(e => {
-
-            })
+            .catch(e => this.display_error_toasts(true, e, "deleting active permission"));
         }
     }
 }

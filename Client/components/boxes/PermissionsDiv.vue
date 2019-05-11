@@ -44,13 +44,13 @@
             <b-card no-body class="w-100">
                 <b-tabs card justified>
                     <b-tab title="Pending">
-                        <PermissionsTable title="pending" :user_type="user_type" :permissions="permissions.pending" v-on:ola="accept_permission" />
+                        <PermissionsTable title="pending" :user_type="user_type" :permissions="permissions.pending" v-on:accept="accept_permission" />
                     </b-tab>
                     <b-tab title="Accepted">
-                        <PermissionsTable title="accepted" :user_type="user_type" :permissions="permissions.accepted" />
+                        <PermissionsTable title="accepted" :user_type="user_type" :permissions="permissions.accepted" v-on:start="start_permission" />
                     </b-tab>
                     <b-tab title="Active">
-                        <PermissionsTable title="active" :user_type="user_type" :permissions="permissions.active" />
+                        <PermissionsTable title="active" :user_type="user_type" :permissions="permissions.active" v-on:stop="stop_permission" />
                     </b-tab>
                 </b-tabs>
             </b-card>
@@ -79,7 +79,11 @@ export default {
             },
             request_by_username: false,
             health_number: "",
-            client_username: ""
+            client_username: "",
+            toast_configs: {
+                position: 'bottom-center',
+                duration: 7500
+            }
         }
     },
     async mounted() {
@@ -91,22 +95,10 @@ export default {
             else if (res.status == 1)
                 this.$toasted.show(
                     res.msg,
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
+                    this.toast_configs
                 );
-            else {
-                console.log("status code : " + res.status);
-                console.log("message : " + res.msg);
-                this.$toasted.show(
-                    'Error retrieving permissions.', 
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
-            }
+            else
+                this.display_error_toasts(false, res, "retrieving permissions");
             return {
                 pending: [],
                 accepted: [],
@@ -114,14 +106,7 @@ export default {
             };
         })
         .catch(e => {
-            console.log(e);
-            this.$toasted.show(
-                'Error retrieving permissions.', 
-                {
-                    position: 'bottom-center',
-                    duration: 7500
-                }
-            );
+            this.display_error_toasts(true, e, "retrieving permissions");
             return {
                 pending: [],
                 accepted: [],
@@ -131,21 +116,37 @@ export default {
     },
     methods: {
         /**
-         * 
+         * Function to reduce some code duplication.
+         * Prints the error data accordingly if it is an
+         *  exception or a status code other than 0 or 1.
+         * Also displays a toast, building the massage with the
+         *  rest of the message received.
          */
+        display_error_toasts(is_exception, error_data, error_message) {
+            if (is_exception)
+                console.log(error_data);
+            else {
+                console.log("status code: " + error_data.status);
+                console.log("error data: " + error_data.status);
+            }
+
+            this.$toasted.show(
+                'Error ' + error_message + ". Try again later or refresh the page.", 
+                this.toast_configs
+            );
+        },
+
         async request_permission() {
             let username = this.$refs.client_username_input.value;
             let health_number = this.$refs.health_number_input.value;
             let duration = this.$refs.duration_input.value;
 
+            // ARGUMENTS VALIDATION vv
             if (this.request_by_username) {
                 if (username == "") {
                     this.$toasted.show(
                         'Insert a username.', 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                     return;
                 }
@@ -156,20 +157,14 @@ export default {
                 if (health_number == "") {
                     this.$toasted.show(
                         'Insert a health number.', 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                     return;
                 }
                 else if (! /^\d+$/.test(health_number)) {
                     this.$toasted.show(
                         'Invalid health number.', 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                     return;
                 }
@@ -180,13 +175,11 @@ export default {
             if (! /^\d+$/.test(duration)) {
                 this.$toasted.show(
                     'Invalid duration.', 
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
+                    this.toast_configs
                 );
                 return;
             }
+            // ARGUMENTS VALIDATION ^^
 
             this.close_modal();
 
@@ -199,10 +192,7 @@ export default {
                 if (res.status == 0) {
                     this.$toasted.show(
                         'Permission requested.', 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                     this.permissions.pending.push(
                         {
@@ -218,41 +208,35 @@ export default {
                 else if (res.status == 1) {
                     this.$toasted.show(
                         res.msg,
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                 }
-                else {
-                    console.log("status code : " + res.status);
-                    console.log("message : " + res.msg);
-                    this.$toasted.show(
-                        'Error granting permission. Try again later.', 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
-                    );
-                }
+                else
+                    this.display_error_toasts(false, res, "requesting permission");
             })
-            .catch(e => {
-                console.log(e);
-                this.$toasted.show(
-                    'Error granting permission. Try again later.', 
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
-            })
+            .catch(e => this.display_error_toasts(true, e, "requesting permission"))
         },
-        /**
-         * 
-         */
+
         async grant_permission() {
             let username = this.$refs.medic_username_input.value;
             let duration = this.$refs.duration_input.value;
+
+            // ARGUMENTS VALIDATION vv
+            if (username == "") {
+                this.$toasted.show(
+                    'Insert a username.', 
+                    this.toast_configs
+                );
+                return;
+            }
+            if (! /^\d+$/.test(duration)) {
+                this.$toasted.show(
+                    'Invalid duration.', 
+                    this.toast_configs
+                );
+                return;
+            }
+            // ARGUMENTS VALIDATION ^^
 
             this.close_modal();
 
@@ -264,10 +248,7 @@ export default {
                 if (res.status == 0) {
                     this.$toasted.show(
                         'Permission granted.', 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                     this.permissions.accepted.push(
                         {
@@ -282,33 +263,12 @@ export default {
                 else if (res.status == 1)
                     this.$toasted.show(
                         res.msg,
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
-                else {
-                    console.log("status code: " + res.status)
-                    console.log("error msg: " + res.msg)
-                    this.$toasted.show(
-                        "Error granting permission. Try again later.",
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
-                    );
-                }
+                else
+                    this.display_error_toasts(false, res, "granting permission")
             })
-            .catch(e => {
-                console.log(e);
-                this.$toasted.show(
-                    'Error granting permission. Try again later.', 
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
-            })
+            .catch(e => this.display_error_toasts(true, e, "granting permission"))
         },
 
         /**
@@ -327,6 +287,12 @@ export default {
             this.$refs.request_grant_permission_modal.hide();
         },
 
+        /**
+         * Function called whenever a MEDIC uses the checkbox's
+         *  present on the modal to request permission.
+         * This checkboxes swtich between requesting permission
+         *  using health number or the username
+         */
         on_request_option_change(change_to_username) {
             if (this.request_by_username == change_to_username)
                 return;
@@ -340,19 +306,13 @@ export default {
 
         },
 
-        /**
-         * 
-         */
         async accept_permission(idx, medic_username) {
             return await this.$axios.$get("/permission/" + medic_username + "/accept", this.requests_header)
             .then(res => {
                 if (res.status == 0) {
                     this.$toasted.show(
                         'Permission accepted', 
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                     this.permissions.accepted.push(
                         this.permissions.pending[idx]
@@ -362,36 +322,68 @@ export default {
                 else if (res.status == 1) {
                     this.$toasted.show(
                         res.msg,
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
+                        this.toast_configs
                     );
                 }
-                else {
-                    console.log("status code: " + res.status);
-                    console.log("error msg: " + res.msg);
-                    this.$toasted.show(
-                        "Error accepting permission. Try again later.",
-                        {
-                            position: 'bottom-center',
-                            duration: 7500
-                        }
-                    );
-                }
+                else
+                    this.display_error_toasts(false, res, "accepting permission")
             })
-            .catch(e => {
-                console.log(e);
-                this.$toasted.show(
-                    "Error accepting permission. Try again later.",
-                    {
-                        position: 'bottom-center',
-                        duration: 7500
-                    }
-                );
-            })
+            .catch(e => this.display_error_toasts(true, e, "accepting permission"))
         },
 
+        /**
+         * TODO
+         */
+        async start_permission(idx, client_username) {
+
+            return;
+
+            return await this.$axios.$post("", this.requests_header)
+            .then(res => {
+                if (res.status == 0) {
+                    this.$toasted.show(
+                        "Permission started.",
+                        this.toast_configs
+                    );
+                }
+                else if (res.status == 1) {
+                    this.$toasted.show(
+                        res.msg,
+                        this.toast_configs
+                    );
+                }
+                else
+                    this.display_error_toasts(false, res, "starting permission")
+            })
+            .catch(e => this.display_error_toasts(true, e, "starting permission"))
+        },
+
+        async stop_permission(idx, client_username) {
+            return await this.$axios.$get("/permission/" + client_username + "/stop", this.requests_header)
+            .then(res => {
+                if (res.status == 0) {
+                    this.$toasted.show(
+                        "Active permission stopped.",
+                        this.toast_configs
+                    );
+
+                    this.permissions.accepted.push(
+                        this.permissions.active[idx]
+                    )
+
+                    this.permissions.active.splice(idx, 1);
+                }
+                else if (res.status == 1) {
+                    this.$toasted.show(
+                        res.msg,
+                        this.toast_configs
+                    );
+                }
+                else
+                    this.display_error_toasts(false, res, "stoping permission")
+            })
+            .catch(e => this.display_error_toasts(true, e, "stoping permission"))
+        }
     }
 }
 </script>
