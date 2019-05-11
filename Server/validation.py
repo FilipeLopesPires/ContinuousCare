@@ -58,7 +58,7 @@ class ArgumentValidator:
         return errors
 
     @staticmethod
-    def signupAndUpdateProfile(data):
+    def signupAndUpdateProfile(isUpdateProfile, data):
         userType = data.get("type")
         if not userType:
             return ["Missing \"type\" parameter"]
@@ -69,10 +69,9 @@ class ArgumentValidator:
             return ["Type can only be \"client\" or \"medic\""]
 
         if userType == "client":
-            result =  ArgumentValidator._validate(
-                data, [
+            fields = [
                     ("username", str, True),
-                    ("password", str, True),
+                    ("password", str, False),
                     ("name", str, True),
                     ("email", str, True),
                     ("health_number", int, True),
@@ -80,6 +79,12 @@ class ArgumentValidator:
                     ("weight", float, False),
                     ("height", float, False),
                     ("additional_info", str, False)]
+
+            if isUpdateProfile:
+                fields.append(("new_password"), str, False)
+
+            result =  ArgumentValidator._validate(
+                data, fields
             )
 
             birth_date = data.get("birth_date")
@@ -95,14 +100,19 @@ class ArgumentValidator:
 
             return result
 
-        return ArgumentValidator._validate(
-            data, [
+        fields = [
                 ("username", str, True),
                 ("password", str, True),
                 ("name", str, True),
                 ("email", str, True),
                 ("company", str, False),
                 ("specialities", str, False)]
+
+        if isUpdateProfile:
+            fields.append(("new_password", str, False))
+
+        return ArgumentValidator._validate(
+            data, fields
         )
 
     @staticmethod

@@ -656,10 +656,8 @@ class Processor:
             logging.error("Invalid Token in check permissions of " + client if client else medic)
             return
         try:
-            print(self.clientTokens)
-            print(self.medicTokens)
-            data = self.database.allPermissionsData(client if client else medic)
-            permissionThread(data["pending"], token, self.socket).start()
+            data = self.database.getPendingPermissions(client if client else medic)
+            permissionThread(data, token, self.socket).start()
         except DatabaseException as e:
             logging.error("Database error in check permissions of " + client if client else medic+" -> "+str(e))
             return

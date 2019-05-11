@@ -25,7 +25,7 @@ def signup():
     if not data:
         data = {}
 
-    argsErrors =  ArgumentValidator.signupAndUpdateProfile(data)
+    argsErrors =  ArgumentValidator.signupAndUpdateProfile(False, data)
     if len(argsErrors) > 0:
         return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
@@ -105,18 +105,18 @@ def getData(datatype=None):
     return processor.getData(userToken, function)
 
 
-@app.route('/profile', methods = ['GET', 'POST', 'DELETE'])
+@app.route('/profile', methods = ['GET', 'PUT', 'DELETE'])
 def profile():
     userToken = request.headers.get("AuthToken")
     if not userToken:
         return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
-    if request.method == 'POST':
+    if request.method == 'PUT':
         data = request.json
         if not data:
             data = {}
 
-        argsErrors =  ArgumentValidator.signupAndUpdateProfile(data)
+        argsErrors =  ArgumentValidator.signupAndUpdateProfile(True, data)
         if len(argsErrors) > 0:
             return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 

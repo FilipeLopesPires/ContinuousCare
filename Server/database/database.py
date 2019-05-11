@@ -98,7 +98,7 @@ class Database:
 
         :param user: username of the client to update
         :type user: str
-        :param data: common : [type:str, username:str, password:str, name:str, email:str]
+        :param data: common : [type:str, username:str, password:str, new_password:str name:str, email:str]
             client : [health_number:str, birth_date: str dd-mm-yyyy, weight:float, height:float, additional_info:str]
             medic : [company: str, specialities:str]
         :type data: dict
@@ -107,7 +107,8 @@ class Database:
             if data["type"].lower() == "client":
                 self.relational_proxy.update_client_profile_data(
                     user,
-                    data["password"],
+                    data.get("password"),
+                    data.get("new_password"),
                     data["full_name"],
                     data["email"],
                     data["health_number"],
@@ -119,7 +120,8 @@ class Database:
             elif data["type"].lower() == "medic":
                 self.relational_proxy.update_medic_profile_data(
                     user,
-                    data["password"],
+                    data.get("password"),
+                    data.get("new_password"),
                     data["full_name"],
                     data["email"],
                     data.get("company"),
@@ -589,6 +591,22 @@ class Database:
         """
         try:
             return self.relational_proxy.get_historical_permissions(user)
+        except (InternalException, LogicException):
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
+
+    def getPendingPermissions(self, user):
+        """
+        Used internally by the server
+
+        :param user: username of the USER (can be both client and medic)
+        :param user: str
+        :return: pending permissions
+        :return: list
+        """
+        try:
+            return self.relational_proxy.get_pending_permissions(user)
         except (InternalException, LogicException):
             raise
         except Exception as e:
