@@ -45,16 +45,17 @@ class Database:
         """
         try:
             if data["type"].lower() == "client":
-                additional_info = None if data["additional_info"] == "" else data["additional_info"]
+                additional_info = data.get("additional_info")
+                additional_info = None if not additional_info else additional_info #converts "" (empty string to None)
                 return self.relational_proxy.register_client(
                     data["username"],
                     data["password"],
                     data["name"],
                     data["email"],
                     data["health_number"],
-                    data["birth_date"],
-                    data["weight"],
-                    data["height"],
+                    data.get("birth_date"),
+                    data.get("weight"),
+                    data.get("height"),
                     additional_info
                 )
             elif data["type"].lower() == "medic":
@@ -63,8 +64,8 @@ class Database:
                     data["password"],
                     data["name"],
                     data["email"],
-                    data["company"],
-                    data["specialities"]
+                    data.get("company"),
+                    data.get("specialities")
                 )
             else:
                 raise Exception("Unkown type of user!")
@@ -380,7 +381,7 @@ class Database:
         """
         try:
             if not self.relational_proxy.has_permission(medic, client):
-                raise LogicException("You don't have permission to acces this data")
+                raise LogicException("You don't have permission to access this data")
 
             return self.getData(measurement, client, start, end, interval)
         except (InternalException, LogicException):
@@ -542,57 +543,6 @@ class Database:
         """
         try:
             self.relational_proxy.reject_permission(client, medic)
-        except (InternalException, LogicException):
-            raise
-        except Exception as e:
-            raise ProxyException(str(e))
-
-    def stopActivePermission(self, medic, client):
-        """
-        Allows a medic to stop an active permission so he can save the time
-        to use another time
-
-        :param medic: username of the client
-        :type medic: str
-        :param client: username of the client
-        :type client: str
-        """
-        try:
-            self.relational_proxy.stop_active_permission(medic, client)
-        except (InternalException, LogicException):
-            raise
-        except Exception as e:
-            raise ProxyException(str(e))
-
-    def removeActivePermission(self, client, medic):
-        """
-        Allows a client to remove an active permission from a medic.
-        The medic will not be able to see the data from the client after this.
-
-        :param client: username of the client
-        :type client: str
-        :param medic: username of the medic
-        :type medic: str
-        """
-        try:
-            self.relational_proxy.remove_active_permission(client, medic)
-        except (InternalException, LogicException):
-            raise
-        except Exception as e:
-            raise ProxyException(str(e))
-
-    def getHistoricalPermissions(self, user):
-        """
-        Obtains information of permissions that WERE active (expired/historical ones)
-        Use by both medics and clients
-
-        :param user: username
-        :type user: str
-        :return: all historical permissions
-        :rtype: list
-        """
-        try:
-            return self.relational_proxy.get_historical_permissions(user)
         except (InternalException, LogicException):
             raise
         except Exception as e:

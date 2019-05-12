@@ -50,7 +50,7 @@
       <div class="justify-content-center d-flex align-items-top">
         <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920">
           <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 mr--30 mt-30 ">
-            <Events :datesArticles="datesArticles" />
+            <Events :datesEvents="datesEvents"/>
           </div>
           <div class="col-lg-7 col-md-7 col-sm-7 col-xs-7 ml--30">
             <TagsArea :areas="tags_area"/>
@@ -83,7 +83,17 @@ export default {
   data() {
     return {
       full_name: this.$store.getters.profile.full_name,
-      datesArticles: {
+      tags_area: [
+        {
+          title: "How Are You Feeling Today?",
+          tags: ["Amused","Calm","Cheerful","Dreamy","Excited","Flirty","Good","Happy","Joyful","Loving","Mellow","Optimistic","Peaceful","Silly","Sympathetic","Angry","Annoyed / Irritated","Apathetic","Bad","Cranky / Grumpy","Depressed","Envious","Frustrated","Gloomy","Guilty","Indifferent","Melancholy","Pessimistic","Rejected","Restless","Sad","Stressed","Weird"],
+        },
+        {
+          title: "Would You Like To Take Note Of Any Complaints?",
+          tags: ["Cold / Respiratory Pain","Insomnia / Difficult Night","Migraine / Headache","Muscle Soreness or Injury","Allergies","Back or Joint Pain","Skin Conditions","Stomache or Intestinal Disconforts","Overstress / Heart Disconfort"]
+        }
+      ],
+      datesEvents: {
         'September': [
           {
             title: 'Five',
@@ -127,16 +137,6 @@ export default {
           }
         ]
       },
-      tags_area: [
-        {
-          title: "How Are You Feeling Today?",
-          tags: ["Amused","Calm","Cheerful","Dreamy","Excited","Flirty","Good","Happy","Joyful","Loving","Mellow","Optimistic","Peaceful","Silly","Sympathetic","Angry","Annoyed / Irritated","Apathetic","Bad","Cranky / Grumpy","Depressed","Envious","Frustrated","Gloomy","Guilty","Indifferent","Melancholy","Pessimistic","Rejected","Restless","Sad","Stressed","Weird"],
-        },
-        {
-          title: "Would You Like To Take Note Of Any Complaints?",
-          tags: ["Cold / Respiratory Pain","Insomnia / Difficult Night","Migraine / Headache","Muscle Soreness or Injury","Allergies","Back or Joint Pain","Skin Conditions","Stomache or Intestinal Disconforts","Overstress / Heart Disconfort"]
-        }
-      ],
     }
   },
  /* mounted() {

@@ -272,13 +272,23 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def getData(self, token, function):
-        user = self.clientTokens.get(token, None)
-        if not user:
+    def getData(self, token, endpoint, start, end, interval, patient):
+        client = self.clientTokens.get(token, None)
+        medic = self.medicTokens.get(token, None)
+        if not client and not medic:
             return  json.dumps({"status":2, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            values=eval("self.database."+function)
+            if client:
+                values = self.database.getData(endpoint, client, start, end, interval)
+            elif medic:
+                if endpoint == "Path":
+                    return json.dumps({"status":4, "msg":"Only accecible to patitents."}).encode("UTF-8")
+
+                if not patient:
+                    return json.dumps({"status":2, "msg":"Missing argument \"patient\""}).encode("UTF-8")
+
+                values = self.database.getDataByMedic(medic, endpoint, patient, start, end, interval)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
@@ -286,8 +296,6 @@ class Processor:
             return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
-        return  json.dumps({"status":2, "msg":"Bad combination of arguments. It can only be start+end, start+interval or end+interval"}).encode("UTF-8")
-                
 
     def updateProfile(self, token, data):
         client = self.clientTokens.get(token, None)
@@ -389,8 +397,6 @@ class Processor:
                 if v1==target or v2==target:
                     targetToken = (k1 if v1==target else k2) 
 
-            pendingBefore = self.database.allPermissionsData(target)["pending"]
-
             if client:
                 data = self.database.grantPermission(client, jsonData)
             elif medic:
@@ -478,31 +484,6 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def stopPermission(self, token, client):
-        """
-        Used only by the medic, stops an active permission so he can save time for later, still has permission
-
-        args
-        token - str - token representing the user
-        client - str - of the client that he wants to stop the active permission
-        """
-        if self.clientTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to medics"}).encode("UTF-8")
-
-        medic = self.medicTokens.get(token)
-        if not medic:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
-
-        try:
-            self.database.stopActivePermission(medic, client)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission stoped with success."}).encode("UTF-8")
-        except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
-        except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
-        except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
-
     def removePendingPermission(self, token, client):
         """
         Used only by the medic, removes a pending permission (requests not responded by the client)
@@ -545,31 +526,6 @@ class Processor:
 
         try:
             self.database.removeAcceptedPermission(client, medic)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission removed with success."}).encode("UTF-8")
-        except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
-        except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
-        except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
-
-    def removeActivePermission(self, token, medic):
-        """
-        Used only by the client, removes and active permission, accepted permission are not removed
-
-        args
-        token - str - token representing the user
-        username - str - of the medic that he wants to remove and active permission
-        """
-        if self.medicTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
-
-        client = self.clientTokens.get(token)
-        if not client:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
-
-        try:
-            self.database.removeActivePermission(client, medic)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission removed with success."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
@@ -659,11 +615,13 @@ class Processor:
         if data=={}:
             return  json.dumps({"status":2, "msg":"No moods were passed to register."}).encode("UTF-8")
         moods=data["moods"]
-        concatMoods=moods[0]
-        for m in moods[1:]:
-            concatMoods+=","+m
+        concatMoods="moods[0]"
+        allMoods={}
+        for m in moods:
+            allMoods[m]="PersonalStatus"
+            concatMoods+=m+","
         try: 
-            self.process([("PersonalStatus", {"moods":concatMoods}),("Event", {"events":concatMoods})], user)
+            self.process([("PersonalStatus", {"moods":concatMoods[:-1]}),("Event", allMoods)], user)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Mood(s) registered with success."}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"While saving data.Database internal error. "+str(e)}).encode("UTF-8")
@@ -739,7 +697,7 @@ class myThread (threading.Thread):
             if any(updating):
                 print(updating)
                 responses=[]
-                allEvents=""
+                allEvents={}
                 for i,v in enumerate(updating):
                     if v:
                         try:
@@ -748,7 +706,10 @@ class myThread (threading.Thread):
                             normalMetric=self.deltaTimes[i][1].normalizeData(resp)
                             event=self.deltaTimes[i][1].checkEvent(resp)
                             if event:
-                                allEvents+=event+","
+                                eventInfo=""
+                                for key,item in normalMetric.items():
+                                    eventInfo+=str(key)+","+str(item)+"/"
+                                allEvents[event]=normalMetric[:-1]
                             responses.append((self.deltaTimes[i][1].metricType, normalMetric))
                         except Exception as e:
                             logging.error("<"+self.user+">Exception caught: "+str(e))
@@ -756,17 +717,21 @@ class myThread (threading.Thread):
                                 tokens=self.deltaTimes[i][1].dataSource.refreshToken()
                                 self.processor.database.updateDevice(self.deltaTimes[i][1].dataSource.user, {"id":self.deltaTimes[i][1].dataSource.id, "token":tokens["token"],"refresh_token":tokens["refresh_token"]})
                                 resp=self.deltaTimes[i][1].getData()
-                                event=self.deltaTimes[i][1].checkEvent(resp)
+                                normalMetric=self.deltaTimes[i][1].normalizeData(resp)
+                                event=self.deltaTimes[i][1].checkEvent(normalMetric)
                                 if event:
-                                    allEvents+=event+","
-                                responses.append((self.deltaTimes[i][1].metricType, resp))
+                                    eventInfo=""
+                                for key,item in normalMetric.items():
+                                    eventInfo+=str(key)+","+str(item)+"/"
+                                allEvents[event]=normalMetric[:-1]
+                                responses.append((self.deltaTimes[i][1].metricType, normalMetric))
                             except DatabaseException as e:
                                 logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
                             except Exception as e:
                                 logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
 
-                if allEvents!="":
-                    responses.append(("Event", {"events":allEvents[:-1]})) 
+                if allEvents!={}:
+                    responses.append(("Event", allEvents)) 
                 self.processor.process(responses, self.user)
         print("ended")
       

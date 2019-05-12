@@ -102,22 +102,25 @@ def registerMood():
 @app.route('/path', endpoint="Path", methods = ['GET'])
 @app.route('/download', endpoint="download",methods = ['GET'])
 def getData():
-    userToken=request.headers["AuthToken"]
-    start=request.args.get('start', default="*", type=str)
-    start=start if start!="*" else None
-    end=request.args.get('end', default="*", type=str)
-    end=end if end!="*" else None
-    interval=request.args.get('interval', default="*", type=str)
-    interval="\""+interval+"\"" if interval!="*" else None
-    function="getData(\""+request.endpoint+"\",user,"+str(start)+","+str(end)+","+str(interval)+")"
-    if request.endpoint=="download":
-        function="getData(None, None,"+str(start)+","+str(end)+","+str(interval)+")"
+    userToken = request.headers.get("AuthToken")
+    if not userToken and request.endpoint != "download":
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
-    if request.endpoint=="path":
-        return processor.getPath(userToken, start, end, interval)
+    start=request.args.get('start', type=int)
+    end=request.args.get('end', type=int)
+    interval=request.args.get('interval')
+    patient=request.args.get('patient')
 
-    return processor.getData(userToken, function)
+    argsErrors =  ArgumentValidator.getData({
+        'start': start,
+        'end': end,
+        'interval': interval,
+        'patient': patient
+    })
+    if len(argsErrors) > 0:
+        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
+    return processor.getData(userToken, request.endpoint, start, end, interval, patient)
 
 @app.route('/profile', methods = ['GET', 'PUT', 'DELETE'])
 def profile():
@@ -191,17 +194,6 @@ def rejectPermission(medic):
 
     return processor.rejectPermission(userToken, medic)
 
-@app.route('/permission/<string:client>/stop', methods = ['GET'])
-def pausePermission(client):
-    """
-    Used only by the medic, stops an active permission so he can save time for later, still has permission
-    """
-    userToken = request.headers.get("AuthToken")
-    if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
-
-    return processor.stopPermission(userToken, client)
-
 @app.route('/permission/<string:client>/pending', methods = ['DELETE'])
 def removePendingPermission(client):
     """
@@ -223,17 +215,6 @@ def removeAcceptedPermission(medic):
         return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     return processor.removeAcceptedPermission(userToken, medic)
-
-@app.route('/permission/<string:medic>/active', methods = ['DELETE'])
-def removeActivePermission(medic):
-    """
-    Used only by the client, removes and active permission, accepted permission are not removed
-    """
-    userToken = request.headers.get("AuthToken")
-    if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
-
-    return processor.removeActivePermission(userToken, medic)
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 context.load_cert_chain("MyRootCA.crt", "MyRootCA.key")

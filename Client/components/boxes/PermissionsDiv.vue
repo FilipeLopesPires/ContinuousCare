@@ -52,10 +52,7 @@
                         <PermissionsTable title="pending" :user_type="user_type" :permissions="permissions.pending" v-on:accept="accept_permission" />
                     </b-tab>
                     <b-tab title="Accepted">
-                        <PermissionsTable title="accepted" :user_type="user_type" :permissions="permissions.accepted" v-on:start="start_permission" />
-                    </b-tab>
-                    <b-tab title="Active">
-                        <PermissionsTable title="active" :user_type="user_type" :permissions="permissions.active" v-on:stop="stop_permission" />
+                        <PermissionsTable title="accepted" :user_type="user_type" :permissions="permissions.accepted" v-on:use="use_permission" />
                     </b-tab>
                 </b-tabs>
             </b-card>
@@ -77,7 +74,7 @@ export default {
             permissions: {
                 "pending":[],
                 "accepted":[],
-                "active":[]
+                "expired":[]
             },
             requests_header: {
                 headers: {AuthToken: this.$store.getters.sessionToken},
@@ -165,7 +162,7 @@ export default {
             }
 
             minutes = minutes === "" ? 0 : parseInt(minutes);
-            minutes += hours === "" ? 0 : parseInt(hours);
+            minutes += hours === "" ? 0 : parseInt(hours) * 60;
 
             if (!(minutes > 0)) {
                 this.$toasted.show(
@@ -176,6 +173,16 @@ export default {
             }
 
             return minutes;
+        },
+
+        /**
+         * Formats numbers se they show the same way
+         *  they are display when they came from the REST
+         */
+        format_number(number) {
+            if (number >= 10)
+                return number;
+            return "0" + number;
         },
 
         async request_permission() {
@@ -238,10 +245,9 @@ export default {
                             name: res.data.name,
                             email: res.data.email,
                             health_number: res.data.health_number,
-                            duration: duration
+                            duration: this.format_number(Math.floor(minutes / 60)) + ":" + this.format_number(minutes - Math.floor(minutes / 60) * 60)
                         }
-                    )
-                    res.data
+                    );
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
@@ -273,6 +279,8 @@ export default {
                 return;
             // ARGUMENTS VALIDATION ^^
 
+            hours = hours === "" ? 0 : parseInt(hours);
+            
             this.close_modal();
 
             await this.$axios.$post("/permission", {
@@ -285,15 +293,35 @@ export default {
                         'Permission granted.',
                         this.toast_configs
                     );
-                    this.permissions.accepted.push(
-                        {
-                            username: username,
-                            name: res.data.name,
-                            email: res.data.email,
-                            company: res.data.company,
-                            duration: duration
-                        }
-                    )
+
+                    let permission = this.permissions.accepted.find(permission => {
+                        return permission.username === username;
+                    });
+
+                    // If an accepted permissions already exists, add durations
+                    if (permission !== undefined) {
+                        let destination_duration = permission.duration.split(":");
+                        let destination_hours = parseInt(destination_duration[0]);
+                        let destination_minutes = parseInt(destination_duration[1]);
+
+                        let extra_hours = Math.floor((minutes + destination_minutes) / 60);
+                        if (extra_hours > 0)
+                            permission.duration = this.format_number(destination_hours + extra_hours) + ":" + this.format_number(minutes + destination_minutes - extra_hours * 60);
+                        else
+                            permission.duration = this.format_number(hours + destination_hours) + ":" + this.format_number(minutes + destination_minutes);
+                    }
+                    // Else just move the permission
+                    else {
+                        this.permissions.accepted.push(
+                            {
+                                username: username,
+                                name: res.data.name,
+                                email: res.data.email,
+                                health_number: res.data.company,
+                                duration: this.format_number(Math.floor(minutes / 60)) + ":" + this.format_number(minutes - Math.floor(minutes / 60) * 60)
+                            }
+                        );
+                    }
                 }
                 else if (res.status == 1)
                     this.$toasted.show(
@@ -342,40 +370,6 @@ export default {
 
         },
 
-        /**
-         * Merge permissions related to the same user by adding
-         *  the duration
-         */
-        merge_permissions(source, destination, idx, username_of_moved) {
-            let permission = destination.find(permission => {
-                return permission.username === username_of_moved;
-            });
-
-            // If an source permissiosn exists merge the durations with the one on the destination
-            if (permission !== undefined) {
-                let destination_duration = permission.duration.split(":");
-                let destination_hours = parseInt(duration[0]);
-                let destination_minutes = parseInt(duration[1]);
-
-                let source_duration = source[idx].duration.split(":");
-                let source_hours = parseInt(duration[0]);
-                let source_minutes = parseInt(duration[1]);
-
-                if (source_minutes + destination_minutes > 60)
-                    permission.duration = (source_hours + destination_hours + 1) + ":" + (source_minutes + source_minutes - 60);
-                else
-                    permission.duration = (source_hours + destination_hours) + ":" + (source_minutes + source_minutes);
-            }
-            // Else just move the permission
-            else {
-                destination.push(
-                    source[idx]
-                );
-            }
-
-            source.splice(idx, 1);
-        },
-
         async accept_permission(idx, medic_username) {
             return await this.$axios.$get("/permission/" + medic_username + "/accept", this.requests_header)
             .then(res => {
@@ -385,7 +379,34 @@ export default {
                         this.toast_configs
                     );
 
-                    merge_permissions(this.permissions.pending, this.permissions.accepted, idx, medic_username);
+                    let permission = this.permissions.accepted.find(permission => {
+                        return permission.username === medic_username;
+                    });
+
+                    // If a pending permission exists merge the durations with the one on the this.permissions.accepted
+                    if (permission !== undefined) {
+                        let accepted_duration = permission.duration.split(":");
+                        let accepted_hours = parseInt(accepted_duration[0]);
+                        let accepted_minutes = parseInt(accepted_duration[1]);
+
+                        let pending_duration = this.permissions.pending[idx].duration.split(":");
+                        let pending_hours = parseInt(pending_duration[0]);
+                        let pending_minutes = parseInt(pending_duration[1]);
+
+                        let extra_hours = Math.floor((pending_minutes + accepted_minutes) / 60);
+                        if (extra_hours > 0)
+                            permission.duration = this.format_number(pending_hours + accepted_hours + extra_hours) + ":" + this.format_number(pending_minutes + accepted_minutes - extra_hours * 60);
+                        else
+                            permission.duration = this.format_number(pending_hours + accepted_hours) + ":" + this.format_number(pending_minutes + accepted_minutes);
+                    }
+                    // Else just move the permission
+                    else {
+                        this.permissions.accepted.push(
+                            this.permissions.pending[idx]
+                        );
+                    }
+
+                    this.permissions.pending.splice(idx, 1);
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
@@ -402,7 +423,7 @@ export default {
         /**
          * TODO
          */
-        async start_permission(idx, client_username) {
+        async use_permission(idx, client_username) {
 
             return;
 
@@ -413,8 +434,6 @@ export default {
                         "Permission started.",
                         this.toast_configs
                     );
-
-                    //merge_permissions(this.permissions.accepted, this.permissions.active, idx, client_username); //maybe some times no
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
@@ -425,30 +444,7 @@ export default {
                 else
                     this.display_error_toasts(false, res, "starting permission")
             })
-            .catch(e => this.display_error_toasts(true, e, "starting permission"))
-        },
-
-        async stop_permission(idx, client_username) {
-            return await this.$axios.$get("/permission/" + client_username + "/stop", this.requests_header)
-            .then(res => {
-                if (res.status == 0) {
-                    this.$toasted.show(
-                        "Active permission stopped.",
-                        this.toast_configs
-                    );
-
-                    merge_permissions(this.permissions.active, this.permissions.accepted, idx, client_username);
-                }
-                else if (res.status == 1) {
-                    this.$toasted.show(
-                        res.msg,
-                        this.toast_configs
-                    );
-                }
-                else
-                    this.display_error_toasts(false, res, "stoping permission")
-            })
-            .catch(e => this.display_error_toasts(true, e, "stoping permission"))
+            .catch(e => this.display_error_toasts(true, e, "starting permission"));
         }
     }
 }
