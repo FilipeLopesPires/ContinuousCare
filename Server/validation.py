@@ -187,25 +187,33 @@ class ArgumentValidator:
     @staticmethod
     def uploadPermissions(userType, data):
         if userType == "client":
-            return ArgumentValidator._validate(data, [
+            results = ArgumentValidator._validate(data, [
                 ("username", str, True),
-                ("duration", str, True)
+                ("duration", int, True)
             ])
+
+            if len(results) == 0 and int(data["duration"]) <= 0:
+                return ["Send a duration higher than 0"]
+
+            return results
         elif userType == "medic":
             results_username = ArgumentValidator._validate(data, [
                 ("username", str, True),
                 ("health_number", int, False),
-                ("duration", str, True)
+                ("duration", int, True)
             ])
             results_health_number = ArgumentValidator._validate(data, [
                 ("username", str, False),
                 ("health_number", int, True),
-                ("duration", str, True)
+                ("duration", int, True)
             ])
             if len(results_username) > 0 and len(results_health_number) > 0:
                 return ["Missing arguments. " +
                        "Requires keys (health_number:int, duration:int) " +
                        "or (username:str, duration:int)"]
+
+            if int(data["duration"]) <= 0:
+                return ["Send a duration higher than 0"]
 
             results_both = ArgumentValidator._validate(data, [
                 ("username", str, True),

@@ -463,7 +463,7 @@ class Database:
                 medic,
                 data.get("username"),
                 data.get("health_number"),
-                datetime.timedelta(hours=int(data["duration"])))
+                datetime.timedelta(minutes=int(data["duration"])))
         except (InternalException, LogicException):
             raise
         except Exception as e:
@@ -493,7 +493,7 @@ class Database:
             return self.relational_proxy.grant_permission(
                 client,
                 data["username"],
-                datetime.timedelta(hours=int(data["duration"])))
+                datetime.timedelta(minutes=int(data["duration"])))
         except (InternalException, LogicException):
             raise
         except Exception as e:

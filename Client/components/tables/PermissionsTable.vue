@@ -98,11 +98,11 @@ export default {
                 console.log(error_data);
             else {
                 console.log("status code: " + error_data.status);
-                console.log("error data: " + error_data.status);
+                console.log("error data: " + error_data.msg);
             }
 
             this.$toasted.show(
-                'Error ' + error_message + ". Try again later or refresh the page.", 
+                'Error ' + error_message + ". Try again later or refresh the page.",
                 this.toast_configs
             );
         },
@@ -113,14 +113,14 @@ export default {
             .then(res => {
                 if (res.status == 0) {
                     this.$toasted.show(
-                        'Permission rejected', 
+                        'Permission rejected',
                         this.toast_configs
                     );
                     this.permissions.splice(idx, 1);
                 }
                 else if (res.status == 1) {
                     this.$toasted.show(
-                        res.msg, 
+                        res.msg,
                         this.toast_configs
                     );
                 }
