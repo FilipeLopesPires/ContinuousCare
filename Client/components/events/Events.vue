@@ -5,11 +5,11 @@
       <div class='timeline' v-if='anyEvent()'>
         <div v-for='(dateWithEvents, date) in searchedEvents' :key="dateWithEvents.id">
           <p v-if='dateWithEvents.length > 0' class='date'>{{ date }}</p>
-          <div v-for='event in dateWithEvents' class='event' :key="event.id" @click="info(event.title)" style="cursor:pointer">
+          <div v-for='event in dateWithEvents' class='event' :key="event.id" @click="info(event.event)" style="cursor:pointer">
             <span class='dot'></span>
             <p class='event-date'>{{ event.time }}</p>
             <h3><a>{{ event.event }}</a></h3>
-            <p>{{ event.metrics }}</p>
+            <p style="white-space: pre-line">{{ event.metrics }}</p>
           </div>
         </div>
       </div>
@@ -38,20 +38,41 @@ export default {
         params: {'start': parseInt(new Date().setHours(0,0,0,0)/1000), 'end': parseInt(new Date().getTime()/1000)},
         headers: {'AuthToken': this.$store.getters.sessionToken}
       }
-      await this.$axios.$get("/supportedDevices")
+      await this.$axios.$get("/event", config)
             .then(res => {
+              console.log(res)
               var events=res.data
-              var today = (new Date()).toLocaleDateString()
-              var new_datesEvents = {today:[]}
-              for(var i=0; i<events["time"].length(); i++){
-                new_datesEvents[today].push({
+              if("time" in events){
+                var today = (new Date()).toLocaleDateString()
+                var new_datesEvents = {}
+                new_datesEvents[today]=[]
+                for(var i=0; i<events["time"].length; i++){
+                  var evt = ""
+                  var metrics = ""
+                  for(var key in events){
+                    if(key!="time"){
+                      if(events[key][i]){
+                        evt+=key+","
+                        var met = events[key][i].split(",")
+                        console.log(met)
+                        if(met.length>1){
+                          metrics+=met[0]+": "+met[1]+"\n"
+                        }else{
+                          metrics+=events[key][i]+"\n"
+                        }
+                        
+                      }
+                    }
+                  }
+                  new_datesEvents[today].push({
                   "time":events["time"][i],
-                  "event":"Evento",
-                  "metrics":"esta",
+                  "event":evt.slice(0,-1),
+                  "metrics":metrics,
                   })
+                }
+                this.datesEvents = new_datesEvents
+                console.log(this.datesEvents)
               }
-              this.datesEvents = new_datesEvents
-              console.log(this.datesEvents)
             })
             .catch(e => {
               // Unable to get devices from server

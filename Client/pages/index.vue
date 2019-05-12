@@ -58,6 +58,7 @@
         </div>
       </div>
       
+      <Events :datesEvents="datesEvents"/>
 
       <!--================ Footer Area =================-->
       <PageFooter />

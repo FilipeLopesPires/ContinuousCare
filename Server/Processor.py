@@ -668,7 +668,7 @@ class Processor:
         concatMoods="moods[0]"
         allMoods={}
         for m in moods:
-            allMoods[m]="PersonalStatus,None"
+            allMoods[m]="PersonalStatus"
             concatMoods+=m+","
         try: 
             self.process([("PersonalStatus", {"moods":concatMoods[:-1]}),("Event", allMoods)], user)
