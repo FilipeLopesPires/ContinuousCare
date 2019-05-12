@@ -51,7 +51,7 @@ class HearthRate(Metric):
 
     @property
     def updateTime(self):
-        return 360
+        return 0.20
 
     @property
     def metricType(self):
@@ -65,7 +65,7 @@ class HearthRate(Metric):
         try:
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
-            if not jsonData["success"]:
+            if "success" in jsonData:
                 raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
@@ -73,6 +73,13 @@ class HearthRate(Metric):
 
     def normalizeData(self, jsonData):
         return {"heartRate":jsonData["activities-heart"][0]["value"]["restingHeartRate"] if "restingHeartRate" in jsonData["activities-heart"][0]["value"] else None}
+
+    def checkEvent(self, normalJsonData):
+        hr = normalJsonData["heartRate"]
+        if hr:
+            if hr <= 50 or hr>=100:
+                return "HighHeartRate"
+        return None
 
 class Sleep(Metric):
     def __init__(self, dataSource):
@@ -98,7 +105,7 @@ class Sleep(Metric):
         try:
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
-            if not jsonData["success"]:
+            if "success" in jsonData:
                 raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
@@ -110,6 +117,13 @@ class Sleep(Metric):
         end=int(dp.parse(jsonData["sleep"][0]["endTime"]+"Z").strftime("%s"))
         sleepEvents=[{k if k!="dateTime" else "time" : v if k!="dateTime" else int(dp.parse(v+"Z").strftime("%s")) for k,v in e.items()} for e in jsonData["sleep"][0]["levels"]["data"]]
         return {"duration":duration, "day":jsonData["sleep"][0]["dateOfSleep"], "begin":begin, "end":end, "sleep":sleepEvents}
+
+    def checkEvent(self, normalJsonData):
+        duration = normalJsonData["duration"]
+        if duration:
+            if duration < 4:
+                return "VeryLittleSleep"
+        return None
 
 class Calories(Metric):
     def __init__(self, dataSource):
@@ -135,7 +149,7 @@ class Calories(Metric):
         try:
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
-            if not jsonData["success"]:
+            if "success" in jsonData:
                 raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
@@ -169,7 +183,7 @@ class Activity(Metric):
         try:
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
-            if not jsonData["success"]:
+            if "success" in jsonData:
                 raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
@@ -178,6 +192,12 @@ class Activity(Metric):
     def normalizeData(self, jsonData):
         return {"fairlyActiveMinutes":jsonData["summary"]["fairlyActiveMinutes"], "lightlyActiveMinutes":jsonData["summary"]["lightlyActiveMinutes"], "sedentaryMinutes":jsonData["summary"]["sedentaryMinutes"], "veryActiveMinutes":jsonData["summary"]["veryActiveMinutes"]}
 
+    def checkEvent(self, normalJsonData):
+        sedentaryMinutes = normalJsonData["sedentaryMinutes"]
+        if sedentaryMinutes:
+            if sedentaryMinutes > 8*60:
+                return "VerySedentary"
+        return None
 
 class Steps(Metric):
     def __init__(self, dataSource):
@@ -203,7 +223,7 @@ class Steps(Metric):
         try:
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
-            if not jsonData["success"]:
+            if "success" in jsonData:
                 raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
@@ -212,8 +232,12 @@ class Steps(Metric):
     def normalizeData(self, jsonData):
         return {"steps":jsonData["summary"]["steps"]}
 
-
-
+    def checkEvent(self, normalJsonData):
+        steps = normalJsonData["steps"]
+        if steps:
+            if steps < 1000:
+                return "VeryLittleMoviment"
+        return None
 
 
 class Foobot(DataSource):
@@ -268,7 +292,7 @@ class Foobotmetric(Metric):
         try:
             data=requests.get(self.url, headers=self.dataSource.header)
             jsonData=json.loads(data.text)
-            if not jsonData["success"]:
+            if "message" in jsonData:
                 raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
@@ -277,7 +301,23 @@ class Foobotmetric(Metric):
     def normalizeData(self, jsonData):
         return { metric : float(value) for metric, value in zip(["time","pm10","t","h","co2","voc","aqi"], jsonData["datapoints"][0])}
 
-
+    def checkEvent(self, normalJsonData):
+        aqi = normalJsonData["aqi"]
+        output=""
+        if aqi:
+            if aqi >= 75:
+                output+="VeryHighGeneralPollution,"
+        pm10 = normalJsonData["pm10"]
+        if pm10:
+            if pm10 >= 40:
+                output+="VeryHighParticleMatter10,"
+        voc = normalJsonData["voc"]
+        if voc:
+            if voc >= 350:
+                output+="VeryHighVolatileCompounds,"
+        if output!="":
+            return output[:-1]
+        return None
 
 
 class ExternalAPI(DataSource):
@@ -334,7 +374,7 @@ class WAQI(Metric):
             longi="" if longitude is None else longitude
             data=requests.get(self.url.replace("LATITUDE", lat).replace("LONGITUDE", longi), headers=self.dataSource.header)
             jsonData=json.loads(data.text)
-            if not jsonData["success"]:
+            if "status" in jsonData and jsonData["status"]=="error":
                 raise Exception("Couldn't fetch information at "+self.__class__.__name__+": "+jsonData["errors"][0]["errorType"])
             return jsonData
         except Exception as e:
@@ -343,7 +383,31 @@ class WAQI(Metric):
     def normalizeData(self, jsonData):
         return dict({metric:float(jsonData["data"]["iaqi"][metric]["v"]) for metric in jsonData["data"]["iaqi"]}, **{"aqi":float(jsonData["data"]["aqi"])})
 
-
+    def checkEvent(self, normalJsonData):
+        aqi = normalJsonData["aqi"]
+        output=""
+        if aqi:
+            if aqi >= 75:
+                output+="VeryHighGeneralPollution,"
+        pm10 = normalJsonData["pm10"]
+        if pm10:
+            if pm10 >= 40:
+                output+="VeryHighParticleMatter10,"
+        o3 = normalJsonData["o3"]
+        if o3:
+            if o3 >= 130:
+                output+="VeryHighOzono,"
+        pm25 = normalJsonData["pm25"]
+        if pm25:
+            if pm25 >= 55:
+                output+="VeryHighParticleMatter25,"
+        so2 = normalJsonData["so2"]
+        if so2:
+            if so2 >= 180:
+                output+="VeryHighSulfurDioxide,"
+        if output!="":
+            return output[:-1]
+        return None
 
 
 
@@ -407,3 +471,7 @@ class GPSmetric(Metric):
 
     def normalizeData(self, jsonData):
         return {"latitude":jsonData["data"]["latitude"],"longitude":jsonData["data"]["longitude"]}
+
+    def checkEvent(self, normalJsonData):
+        #irrelevant
+        return None

@@ -86,9 +86,18 @@ def devices():
 
     return processor.deleteDevice(authToken, data)
 
+@app.route('/mood',methods = ['POST'])
+def registerMood(datatype=None):
+    userToken=request.headers["AuthToken"]
+    data = request.json
+    if not data:
+        data = {}
+    return processor.registerMood(userToken, data)
+
 @app.route('/environment', endpoint="Environment", methods = ['GET'])
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
 @app.route('/personalstatus', endpoint="PersonalStatus", methods = ['GET'])
+@app.route('/sleep', endpoint="Sleep", methods = ['GET'])
 @app.route('/download', endpoint="download",methods = ['GET'])
 def getData(datatype=None):
     userToken=request.headers["AuthToken"]
@@ -125,20 +134,6 @@ def profile():
 @app.route('/supportedDevices', methods = ['GET'])
 def supportedDevices():
     return processor.getSupportedDevices()
-
-
-@app.route('/sleep', methods = ['GET'])
-def userGPSCoordinates():
-    userToken = request.headers.get("AuthToken")
-    if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
-
-    start=request.args.get('start', default="*", type=str)
-    start=start if start!="*" else None
-    end=request.args.get('end', default="*", type=str)
-    end=end if end!="*" else None
-    function="getData(\"Sleep\",user,"+start+","+end+")"
-    return processor.getData(userToken, function)
 
 
 @app.route('/permission', methods = ['GET','POST'])

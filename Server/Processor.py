@@ -54,7 +54,7 @@ class Processor:
             userDevices=self.database.getAllDevices(user)
             for device in userDevices:
                 deviceType=device["type"].strip().replace(" ", "_")
-                userDevice=eval(deviceType+"(\""+device.get("token",str(None))+"\",\""+device.get("refresh_token",str(None))+"\",\""+device.get("uuid",str(None))+"\",\""+user+"\",\""+str(device.get("id", str(None)))+"\", ["+str(device.get("latitude",str(None)))+","+str(device.get("longitude", str(None)))+"])")
+                userDevice=eval(deviceType+"(\""+device.get("token","")+"\",\""+device.get("refresh_token","")+"\",\""+device.get("uuid","")+"\",\""+user+"\",\""+str(device.get("id", ""))+"\", ["+str(device.get("latitude",str(None)))+","+str(device.get("longitude", str(None)))+"])")
                 for metric in userDevice.metrics:    
                     if metric.metricType not in metrics:
                         metrics[metric.metricType]=[]
@@ -184,8 +184,18 @@ class Processor:
         try:
             userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
             for device in userDevices:
-                if device.id==deviceConf["id"]:
-                    device.update(deviceConf["authentication_fields"].get("token",None),deviceConf["authentication_fields"].get("refresh_token",None), deviceConf["authentication_fields"].get("uuid",None), user, id, [deviceConf.get("latitude",None), deviceConf.get("longitude", None)])
+                if device.id==str(deviceConf["id"]):
+                    deviceId=device.id
+                    deviceToken=deviceConf["authentication_fields"]["token"] if "authentication_fields" in deviceConf and "token" in deviceConf["authentication_fields"] else device._token
+                    deviceRefreshToken=deviceConf["authentication_fields"]["refresh_token"] if "authentication_fields" in deviceConf and "refresh_token" in deviceConf["authentication_fields"] else device._refreshToken
+                    deviceUUID=deviceConf["authentication_fields"]["uuid"] if "authentication_fields" in deviceConf and "uuid" in deviceConf["authentication_fields"] else device._uuid
+                    latitude=deviceConf["latitude"] if "latitude" in deviceConf else device._location[0]
+                    longitude=deviceConf["longitude"] if "longitude" in deviceConf else device._location[1]
+                    device.update(deviceToken,deviceRefreshToken, deviceUUID, user, deviceId, [latitude, longitude])
+                    if user in self.userThreads:
+                        self.userThreads[user].end()
+                    self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+                    self.userThreads[user].start()
             result=self.database.updateDevice(user, deviceConf)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": result}).encode("UTF-8")
         except LogicException as e:
@@ -239,7 +249,7 @@ class Processor:
 
             if id not in [submetric.dataSource.id for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]]:
                 deviceType=jsonData["type"].strip().replace(" ", "_")
-                device=eval(deviceType+"(\""+jsonData["authentication_fields"].get("token",str(None))+"\",\""+jsonData["authentication_fields"].get("refresh_token",str(None))+"\",\""+jsonData["authentication_fields"].get("uuid",str(None))+"\",\""+user+"\",\""+str(id)+"\", ["+jsonData.get("latitude",str(None))+","+jsonData.get("longitude", str(None))+"])")
+                device=eval(deviceType+"(\""+jsonData["authentication_fields"].get("token","")+"\",\""+jsonData["authentication_fields"].get("refresh_token","")+"\",\""+jsonData["authentication_fields"].get("uuid","")+"\",\""+user+"\",\""+str(id)+"\", ["+jsonData.get("latitude",str(None))+","+jsonData.get("longitude", str(None))+"])")
                 for metric in device.metrics:
                     if metric.metricType not in self.userMetrics[user]:
                         self.userMetrics[user][metric.metricType]=[]
@@ -589,14 +599,14 @@ class Processor:
                                 data=metric.normalizeData(jsonData)
                                 normalData["Environment"]=dict(normalData["Environment"], **data)
                             except Exception as e:
-                                logging.error("Exception caught while refetching the data: "+str(e))
+                                logging.error("<"+user+">Exception caught while refetching the data: "+str(e))
                                 try:
                                     tokens=metric.dataSource.refreshToken()
                                     self.updateDevice(metric.dataSource.user, {"id":metric.dataSource.id, "token":tokens["token"],"refresh_token":tokens["refresh_token"]})
                                     resp=metric.normalizeData(metric.getData())
                                     normalData["Environment"]=dict(normalData["Environment"], **data)
                                 except Exception as e:
-                                    logging.error("Tried to refresh tokens and couldn't, caught error: "+str(e))
+                                    logging.error("<"+user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
                     if normalData["Environment"]=={}:
                         for metric in [metric for metric in envMetrics if metric.metricLocation=="outside"]:
                             try:
@@ -604,14 +614,14 @@ class Processor:
                                 data=metric.normalizeData(jsonData)
                                 normalData["Environment"]=dict(normalData["Environment"], **data)
                             except Exception as e:
-                                logging.error("Exception caught while refetching the data: "+str(e))
+                                logging.error("<"+user+">Exception caught while refetching the data: "+str(e))
                                 try:
                                     tokens=metric.dataSource.refreshToken()
                                     self.updateDevice(metric.dataSource.user, {"id":metric.dataSource.id, "token":tokens["token"],"refresh_token":tokens["refresh_token"]})
                                     resp=metric.normalizeData(metric.getData())
                                     normalData["Environment"]=dict(normalData["Environment"], **data)
                                 except Exception as e:
-                                    logging.error("Tried to refresh tokens and couldn't, caught error: "+str(e))
+                                    logging.error("<"+user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
                     #print(normalData["GPS"])
                     normalData["Environment"]["latitude"]=normalData["GPS"]["latitude"]
                     normalData["Environment"]["longitude"]=normalData["GPS"]["longitude"]
@@ -628,7 +638,7 @@ class Processor:
                     normalData[metric]["latitude"]=coords["latitude"]
                     normalData[metric]["longitude"]=coords["longitude"]
         except Exception as e:
-            logging.error("Error while fetching GPS Coordinates. "+str(e))
+            logging.error("<"+user+">Error while fetching GPS Coordinates. "+str(e))
 
 
         for metric in normalData:
@@ -636,9 +646,26 @@ class Processor:
                 normalData[metric]["time"]=int(time.time())
 
         print(normalData)
-        self._save(normalData,user)
-                        
+        try: 
+            self._save(normalData, user)
+        except Exception as e:
+            logging.error("<"+user+">Error while saving data. "+str(e))
 
+    def registerMood(self, token, data):
+        user=self.clientTokens.get(token)
+        if not user:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+        moods=data["moods"]
+        concatMoods=moods[0]
+        for m in moods[1:]:
+            concatMoods+=","+m
+        try: 
+            self._save({"PersonalStatus":concatMoods}, user)
+            self._save({"Event":concatMoods}, user)
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Mood(s) registered with success."}).encode("UTF-8")
+        except Exception as e:
+            return  json.dumps({"status":-1, "msg":"While saving data.Database internal error. "+str(e)}).encode("UTF-8")
+        
     
     def _save(self, data, user):
         try:
@@ -715,29 +742,21 @@ class myThread (threading.Thread):
                         try:
                             old_times[i]=now1
                             resp=self.deltaTimes[i][1].getData()
-                            responses.append((self.deltaTimes[i][1].metricType, resp))
+                            normalMetric=self.deltaTimes[i][1].normalizeData(resp)
+                            responses.append((self.deltaTimes[i][1].metricType, normalMetric))
                         except Exception as e:
-                            logging.error("Exception caught: "+str(e))
+                            logging.error("<"+self.user+">Exception caught: "+str(e))
                             try:
                                 tokens=self.deltaTimes[i][1].dataSource.refreshToken()
                                 self.processor.database.updateDevice(self.deltaTimes[i][1].dataSource.user, {"id":self.deltaTimes[i][1].dataSource.id, "token":tokens["token"],"refresh_token":tokens["refresh_token"]})
                                 resp=self.deltaTimes[i][1].getData()
                                 responses.append((self.deltaTimes[i][1].metricType, resp))
                             except DatabaseException as e:
-                                logging.error("Tried to refresh tokens and couldn't, caught error: "+str(e))
+                                logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
                             except Exception as e:
-                                logging.error("Tried to refresh tokens and couldn't, caught error: "+str(e))
+                                logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
                         
                 self.processor.process(responses, self.user)
-            '''
-            saving=[datetime.now()-old[1] > delta[1] for old,delta in zip(old_times, self.deltaTimes)]
-            if any(saving):
-                for i,v in enumerate(saving):
-                    if v:
-                        old_times[i][1]=datetime.now()
-                        response=requests.get(self.urls[self.deltaTimes[i]]["url"], headers=self.urls[self.deltaTimes[i]]["header"])
-                        self.processor.save(response.text, self.user)
-            '''
         print("ended")
       
     def end(self):

@@ -404,7 +404,7 @@ class Database:
         :type user: str
         """
         try:
-            if measurement == "sleep":
+            if measurement == "Sleep":
 
                 self.relational_proxy.insert_sleep_session(user,
                                                            data["day"], #TODO may receive, Agree format
