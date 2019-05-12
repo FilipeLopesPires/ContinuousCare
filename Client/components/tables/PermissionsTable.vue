@@ -36,18 +36,10 @@
                     </div>
                     <div v-else-if="title === 'accepted'">
                         <div v-if="user_type === 'medic'">
-                            <button @click="$emit('start', index, permissions.username)" class="genric-btn success radius"><i class="fa fa-play" aria-hidden="true"></i></button>
+                            <button @click="$emit('use', index, permissions.username)" class="genric-btn success radius"><i class="fa fa-play" aria-hidden="true"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
                             <button @click="remove_accepted(index, permission.username)" class="genric-btn primary radius"><i class="fa fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <div v-else-if="title === 'active'">
-                        <div v-if="user_type === 'medic'">
-                            <button @click="$emit('stop', index, permission.username)" class="genric-btn success radius"><i class="fa fa-stop"></i></button>
-                        </div>
-                        <div v-if="user_type === 'client'">
-                            <button @click="remove_active(index, permission.username)" class="genric-btn warning radius"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
                 </td>
@@ -173,30 +165,6 @@ export default {
                     this.display_error_toasts(false, res, "deleting accepted permission")
             })
             .catch(e => this.display_error_toasts(true, e, "deleting accepted permission"));
-        },
-
-        async remove_active(idx, medic_username) {
-
-            return await this.$axios.$delete("/permission/" + medic_username + "/active", this.requests_header)
-            .then(res => {
-                if (res.status == 0) {
-                    this.permissions.splice(idx, 1);
-                    this.$toasted.show(
-                        "Active permissiosn deleted.",
-                        this.toast_configs
-                    );
-                }
-                else if (res.status == 1) {
-                    this.$toasted.show(
-                        res.msg,
-                        this.toast_configs
-                    );
-                }
-                else {
-                    this.display_error_toasts(false, res, "deleting active permission")
-                }
-            })
-            .catch(e => this.display_error_toasts(true, e, "deleting active permission"));
         }
     }
 }

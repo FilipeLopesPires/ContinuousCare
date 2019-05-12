@@ -58,6 +58,7 @@
         </div>
       </div>
       
+      <Events :datesEvents="datesEvents"/>
 
       <!--================ Footer Area =================-->
       <PageFooter />
@@ -71,6 +72,7 @@
 import HomeBanner from '@/components/banners/HomeBanner.vue'
 import ServiceBox from '@/components/boxes/ServiceBox.vue'
 import TagsArea from '@/components/boxes/TagsArea.vue'
+import Events from '@/components/events/Events.vue'
 
 export default { 
   middleware: ['check-log', 'clients-only'],
@@ -78,6 +80,7 @@ export default {
     HomeBanner,
     ServiceBox,
     TagsArea,
+    Events,
   },
   data() {
     return {
@@ -92,6 +95,50 @@ export default {
           tags: ["Cold / Respiratory Pain","Insomnia / Difficult Night","Migraine / Headache","Muscle Soreness or Injury","Allergies","Back or Joint Pain","Skin Conditions","Stomache or Intestinal Disconforts","Overstress / Heart Disconfort"]
         }
       ],
+      datesEvents: {
+        'September': [
+          {
+            title: 'Five',
+            slug: 'five',
+            teaser: 'five',
+            published_at: '30.09.2016.'
+          },
+          {
+            title: 'Four',
+            slug: 'four',
+            teaser: 'four',
+            published_at: '15.09.2016.'
+          }
+        ],
+        'April': [
+          {
+            title: 'Three',
+            slug: 'three',
+            teaser: 'three',
+            published_at: '14.04.2016.'
+          },
+          {
+            title: 'Two and a half',
+            slug: 'two-and-a-half',
+            teaser: 'two and a half',
+            published_at: '02.04.2016.'
+          }
+        ],
+        'December': [
+          {
+            title: 'Two',
+            slug: 'two',
+            teaser: 'two',
+            published_at: '25.12.2015.'
+          },
+          {
+            title: 'One',
+            slug: 'one',
+            teaser: 'one',
+            published_at: '01.12.2015.'
+          }
+        ]
+      },
     }
   },
  /* mounted() {
