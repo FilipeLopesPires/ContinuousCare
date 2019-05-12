@@ -11,6 +11,7 @@ class DataSource(ABC):
         self._uuid=uuid
         self._user=user
         self._id=id
+        self._location=location
 
     @property
     def user(self):
@@ -32,7 +33,6 @@ class DataSource(ABC):
     def refreshData(self):
         return json.loads(self._refreshDataTemplate.replace("REFRESH_TOKEN", self._uuid))
 
-    @classmethod
     def update(self, token, refreshToken, uuid, user, id, location):
         self._token=token
         self._refreshToken=refreshToken

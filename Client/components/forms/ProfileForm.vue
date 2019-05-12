@@ -53,10 +53,10 @@
             <p v-if="!is_medic" class="title-form-wrap">Weight and Height:</p>
             <div v-if="!is_medic" class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.weight" type="number" name="weight" placeholder="Weight (kg)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Weight (kg)'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model.number="filledform.weight" type="number" name="weight" placeholder="Weight (kg)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Weight (kg)'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team ">
-                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.height" type="number" min="0.10" max="2.50" step="0.10" name="height" placeholder="Height (m)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height (m)'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model.number="filledform.height" type="number" min="0.10" max="2.50" step="0.10" name="height" placeholder="Height (m)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height (m)'">
                 </div>
             </div>
             <!-- Aditional Info -->
@@ -101,8 +101,6 @@ export default {
             is_medic = true;
         }
         var stored_profile = this.$store.getters.profile;
-        console.log("profileForm init");
-        console.log(stored_profile);
         return {
             is_medic,
             btn_class,
@@ -119,8 +117,8 @@ export default {
                 
                 health_number: stored_profile.health_number,
                 birdthdate: stored_profile.birth_date,
-                weight: stored_profile.weight,
-                height: stored_profile.height,
+                weight: parseFloat(stored_profile.weight),
+                height: parseFloat(stored_profile.height),
                 additional_info: stored_profile.additional_info,
 
                 company: stored_profile.company,
@@ -157,25 +155,25 @@ export default {
                     var profile;
                     if(this.$store.getters.isMedic) {
                         profile = {
-                            full_name: filledform.full_name,
-                            email: filledform.email,
+                            full_name: this.filledform.full_name,
+                            email: this.filledform.email,
                             health_number: null,
                             birth_date: null,
                             weight: null,
                             height: null,
                             additional_info: null,
-                            company: filledform.company,
-                            specialities: filledform.specialities
+                            company: this.filledform.company,
+                            specialities: this.filledform.specialities
                         }
                     } else {
                         profile = {
-                            full_name: filledform.full_name,
-                            email: filledform.email,
-                            health_number: filledform.health_number,
-                            birth_date: filledform.birth_date,
-                            weight: filledform.weight,
-                            height: filledform.height,
-                            additional_info: filledform.additional_info,
+                            full_name: this.filledform.full_name,
+                            email: this.filledform.email,
+                            health_number: this.filledform.health_number,
+                            birth_date: this.filledform.birth_date,
+                            weight: this.filledform.weight,
+                            height: this.filledform.height,
+                            additional_info: this.filledform.additional_info,
                             company: null,
                             specialities: null
                         }
@@ -210,23 +208,24 @@ export default {
 
         async checkUpdateProfile(filledform, AuthToken) {
             const config = {
-                headers: {'AuthToken': AuthToken},
-                body: {
-                    'type': this.$store.getters.userType,
-                    'full_name': filledform.full_name,
-                    'email': filledform.email,
-                    'health_number': filledform.health_number,
-                    'password': filledform.password,
-                    'new_password': filledform.new_password,
-                    'birth_date': this.convertDate(filledform.birth_date),
-                    'weight': filledform.weight,
-                    'height': filledform.height,
-                    'additional_info': filledform.additional_info,
-                    'company': filledform.company,
-                    'specialities': filledform.specialities,
-                }
+                headers: {'AuthToken': AuthToken, "Content-Type":"application/json"},
+                
             }
-            return await this.$axios.$post("/profile",config)
+            var data = {
+                'type': this.$store.getters.userType,
+                'name': filledform.full_name,
+                'email': filledform.email,
+                'health_number': filledform.health_number,
+                'password': filledform.password,
+                'new_password': filledform.new_password,
+                'birth_date': this.convertDate(filledform.birth_date),
+                'weight': filledform.weight,
+                'height': filledform.height,
+                'additional_info': filledform.additional_info,
+                'company': filledform.company,
+                'specialities': filledform.specialities,
+            }
+            return await this.$axios.$put("/profile", data, config)
                         .then(res => {
                             if(res.status != 0) {
                                 // warn which registration fields are invalid
@@ -254,7 +253,7 @@ export default {
 
                 return dd + '-' + mm + '-' + yyyy;
             }   
-            return "00-00-0000";
+            return null;
         },
 
         showToast(message, duration) {
