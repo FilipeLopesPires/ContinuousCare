@@ -1,5 +1,5 @@
 <template>
-  <div class='mycontainer container'>
+  <div class='mycontainer mt-25'>
     <input v-model='searchQuery' class='single-input mb-20' placeholder='Filter your events...'>
     <VuePerfectScrollbar class="scroll-area container" :settings="settings">
       <div class='timeline' v-if='anyArticle()'>
@@ -205,6 +205,6 @@ datesArticles: {
   position: relative;
   margin: auto;
   width: 100%;
-  height: 800px;
+  height: 600px;
 }
 </style>

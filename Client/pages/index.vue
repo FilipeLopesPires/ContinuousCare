@@ -47,18 +47,17 @@
       <PageBanner parent_page="Home" page="Profile" :name="full_name" />
 
       <!--================ Tags Area =================-->
-      <div class="row justify-content-center d-flex align-items-top">
-        <div class="row justify-content-center d-flex align-items-top col-lg-10 col-md-10">
-          <div class="col-lg-4 col-md-4">
-            <TagsArea :areas="tags_area"/>
+      <div class="justify-content-center d-flex align-items-top">
+        <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920">
+          <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 mr--30 mt-30 ">
+            <Events :datesArticles="datesArticles" />
           </div>
-          <div class="col-lg-8 col-md-8">
+          <div class="col-lg-7 col-md-7 col-sm-7 col-xs-7 ml--30">
             <TagsArea :areas="tags_area"/>
           </div>
         </div>
       </div>
       
-
       <!--================ Footer Area =================-->
       <PageFooter />
 
@@ -71,6 +70,7 @@
 import HomeBanner from '@/components/banners/HomeBanner.vue'
 import ServiceBox from '@/components/boxes/ServiceBox.vue'
 import TagsArea from '@/components/boxes/TagsArea.vue'
+import Events from '@/components/events/Events.vue'
 
 export default { 
   middleware: ['check-log', 'clients-only'],
@@ -78,10 +78,55 @@ export default {
     HomeBanner,
     ServiceBox,
     TagsArea,
+    Events,
   },
   data() {
     return {
       full_name: this.$store.getters.profile.full_name,
+      datesArticles: {
+        'September': [
+          {
+            title: 'Five',
+            slug: 'five',
+            teaser: 'five',
+            published_at: '30.09.2016.'
+          },
+          {
+            title: 'Four',
+            slug: 'four',
+            teaser: 'four',
+            published_at: '15.09.2016.'
+          }
+        ],
+        'April': [
+          {
+            title: 'Three',
+            slug: 'three',
+            teaser: 'three',
+            published_at: '14.04.2016.'
+          },
+          {
+            title: 'Two and a half',
+            slug: 'two-and-a-half',
+            teaser: 'two and a half',
+            published_at: '02.04.2016.'
+          }
+        ],
+        'December': [
+          {
+            title: 'Two',
+            slug: 'two',
+            teaser: 'two',
+            published_at: '25.12.2015.'
+          },
+          {
+            title: 'One',
+            slug: 'one',
+            teaser: 'one',
+            published_at: '01.12.2015.'
+          }
+        ]
+      },
       tags_area: [
         {
           title: "How Are You Feeling Today?",

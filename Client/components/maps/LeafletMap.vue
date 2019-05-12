@@ -1,7 +1,30 @@
 <template>
     <div>
-        <div class="container justify-content-center  align-items-center col-lg-9 col-md-9 ">
-            <div class="mb-60 leaflet-map" id="map-wrap" ref="worldmap"></div>
+        <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
+            <div class="blog_right_sidebar">
+                <form class="form-wrap" @submit.prevent="onLoadMap">
+                    <div class="mt-10">
+                        <input class="single-input" v-model="filledform.start" type="text" name="start" placeholder="Start Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Start Time'">
+                    </div>
+                    <div class="mt-10">
+                        <input class="single-input" v-model="filledform.end" type="text" name="end" placeholder="End Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'End Time'">
+                    </div>
+                    <div class="mt-10">
+                        <input class="single-input" v-model="filledform.interval" type="text" name="interval" placeholder="Time Interval" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Time Interval'">
+                    </div>
+                    <div class="row justify-content-center d-flex align-items-center">
+                        <div class="mt-10 col-lg-6">
+                            <button class="genric-btn success medium text-uppercase" type="submit">Load Data</button>
+                        </div>
+                        <!-- <div class="mt-10 col-lg-6">
+                            <button class="genric-btn primary medium text-uppercase" type="button" @click="changeChartSource">Change Source</button>
+                        </div> -->
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="container justify-content-center  align-items-center col-lg-9 col-md-9 mt-30">
+            <div class="mb-60  leaflet-map" id="map-wrap" ref="worldmap"></div>
         </div>
     </div>
 </template>
@@ -26,45 +49,62 @@ var vueComponent;
 
 export default {
     data() {
-        var map;
-        
-        var marker;
-        var marker_config = {
-            coords: [38.7223, -9.1393],
-            options: {
-                riseOnHover: true,
-            },
-        };
-        var popup;
-        var popup_config = {
-            message: "My Message Here",
-        };
-
         return {
-            map,
-            marker,
-            marker_config,
-            popup,
-            popup_config,
+            map: null,
+            filledform: {
+                start: null,
+                end: null,
+                interval: null,
+            }
         }
     },
-    mounted() {
+    async mounted() {
         vueComponent = this;
-        this.$nextTick(function () {
-            // prepare data
-            var view = {
-                coords: [38.7223, -9.1393],
-                zoom: 13,
-            }
-            var userPath = [[38.7423, -9.1593], [38.7323, -9.1493], [38.7223, -9.1493], [38.7223, -9.1393]];
 
-            // build map
-            this.createMap(view, 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA');
-            this.createPath(userPath);
-            this.insertMarkers();
-        });
+        var result = await this.getServerData(this.$store.getters.sessionToken);
+        if(result) {
+            if(result.status==0) {
+                console.log(res.data);
+                /* this.$nextTick(function () {
+                    // prepare data
+                    var view = {
+                        coords: [38.7223, -9.1393],
+                        zoom: 13,
+                    }
+                    var userPath = [[38.7423, -9.1593], [38.7323, -9.1493], [38.7223, -9.1493], [38.7223, -9.1393]];
+
+                    // build map
+                    this.createMap(view, 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA');
+                    this.createPath(userPath);
+                    this.insertMarkers();
+                }); */
+            }
+        }
+
+        
     },
     methods: {
+        async onLoadMap() {
+
+        },
+        async getServerData(start,end,interval,AuthToken) {
+            const config = {
+                params: {'start': start, 'end': end, 'interval': interval},
+                headers: {'AuthToken': AuthToken}
+            }
+            this.serverData = await this.$axios.$get("/path",config)
+                                .then(res => {
+                                    if(res.status != 0) {
+                                        // toast
+                                        return null;
+                                    }
+                                    return res.data;
+                                })
+                                .catch(e => {
+                                    // toast
+                                    return null;
+                                });
+        },
         createMap(view, mapAccessToken) {
             /* 
             // https://www.wrld3d.com/wrld.js/latest/docs/examples/adding-a-leaflet-marker-with-popup/

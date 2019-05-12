@@ -2,6 +2,7 @@
     <div class="blog_right_sidebar">
         <div class="tag_cloud_widget">
             <div class="row justify-content-center d-flex align-items-center">
+                <input v-model='new_emotion' @keyup.enter="clickTag(null,new_emotion)" class='single-input mb-20 ml-15' placeholder='Type anything you find relevant...'>
                 <div class="col-lg-12 col-md-12" v-for="area in availableTags" :key="area.title">
                     <h4 class="widget_title"> {{ area.title }} </h4>
                     <ul>
@@ -21,6 +22,12 @@
                             </div>
                         </li>
                     </ul>
+                    <div class="row justify-content-center d-flex align-items-center">
+                        <div class="mt-10 col-lg-8 col-md-9"> </div>
+                        <div class="mt-10 col-lg-4 col-md-3 justify-content-center d-flex align-items-center">
+                            <button class="genric-btn info radius text-uppercase mb-60" type="button" @click="sendSelected">Done</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -37,6 +44,8 @@ export default {
         }
     },
     data() {
+        var new_emotion = null;
+
         var availableTags = []; // [ {title:'', tags:[]}, {...}, ... ]
         var selectedTags = [];  // [ {area:'', tag:''}, {...}, ... ]
 
@@ -45,6 +54,7 @@ export default {
         }
 
         return {
+            new_emotion,
             availableTags,
             selectedTags,
             firstClick: true,
@@ -53,47 +63,95 @@ export default {
     methods: {
         clickTag(area,tag) {
             // advise user
-            if(this.selectedTags.length == 0 && this.firstClick) {
+            /* if(this.selectedTags.length == 0 && this.firstClick) {
                 this.$toasted.show('Remember that once you switch to another page, your selections will be submitted.', 
                     {position: 'bottom-center', duration: 5000});
                 this.firstClick = false;
-            }
-            // add to selected tags
-            this.selectedTags.push({area:area, tag:tag});
-            // remove from available tags
-            for(var a in this.availableTags) {
-                if(this.availableTags[a].title == area) {
-                    var new_availableTags_tags = [];
-                    for(var i in this.availableTags[a].tags) {
-                        if(this.availableTags[a].tags[i] != tag) {
-                            new_availableTags_tags.push(this.availableTags[a].tags[i]);
+            } */
+            if(area) {
+                // add to selected tags
+                this.selectedTags.push({area:area, tag:tag});
+                // remove from available tags
+                for(var a in this.availableTags) {
+                    if(this.availableTags[a].title == area) {
+                        var new_availableTags_tags = [];
+                        for(var i in this.availableTags[a].tags) {
+                            if(this.availableTags[a].tags[i] != tag) {
+                                new_availableTags_tags.push(this.availableTags[a].tags[i]);
+                            }
                         }
+                        this.availableTags[a].tags = new_availableTags_tags;
                     }
-                    this.availableTags[a].tags = new_availableTags_tags;
                 }
+            } else {
+                // add to selected tags
+                this.selectedTags.push({area:null, tag:tag});
             }
         },
         unclickTag(selected) {
             // remove from selected tags
             var new_selectedTags = [];
+            var null_area = false;
             for(var i in this.selectedTags) {
                 if(this.selectedTags[i].tag != selected.tag) {
                     new_selectedTags.push(this.selectedTags[i]);
+                } else if(this.selectedTags[i].area == null) {
+                    null_area = true;
                 }
             }
             this.selectedTags = new_selectedTags;
-            // add to available tags
-            for(var i in this.availableTags) {
-                if(this.availableTags[i].title == selected.area) {
-                    var new_availableTags_tags = [];
-                    for(var j in this.availableTags[i].tags) {
-                        new_availableTags_tags.push(this.availableTags[i].tags[j]);
+            if(!null_area) {
+                // add to available tags
+                for(var i in this.availableTags) {
+                    if(this.availableTags[i].title == selected.area) {
+                        var new_availableTags_tags = [];
+                        for(var j in this.availableTags[i].tags) {
+                            new_availableTags_tags.push(this.availableTags[i].tags[j]);
+                        }
+                        new_availableTags_tags.push(selected.tag);
+                        this.availableTags[i].tags = new_availableTags_tags;
                     }
-                    new_availableTags_tags.push(selected.tag);
-                    this.availableTags[i].tags = new_availableTags_tags;
                 }
             }
-        }
+        },
+        async sendSelected() {
+            // prepare message
+            var selection = [];
+            for(var i in this.selectedTags) {
+                selection.push(this.selectedTags[i].tag);
+            }
+            var data = {
+                'moods': selection,
+            }
+            const config = {
+                headers: {'AuthToken': this.$store.getters.sessionToken},
+            }
+            // send data
+            await this.$axios.$post("/mood", data, config)
+                .then(res => {
+                    if(res.status != 0) {
+                        console.log(res);
+                        this.$toasted.show('Something went wrong while sending your health update. Please try again, if it still does not work, contact us through email.', 
+                            {position: 'bottom-center', duration: 7500});
+                    } else {
+                        this.$toasted.show('Daily update submitted.', 
+                            {position: 'bottom-center', duration: 2500});
+                        /* if(process.client) {
+                            window.location.reload(true);
+                        } */
+                        this.availableTags = [];
+                        this.selectedTags = [];
+                        for(var i in this.areas) {
+                            this.availableTags.push(this.areas[i]);
+                        }
+                    }
+                })
+                .catch(e => {
+                    console.log(e);
+                    this.$toasted.show('Something went wrong while sending your health update. The server might be down at the moment. Please try again later.', 
+                        {position: 'bottom-center', duration: 7500});
+                });
+        },
     }
 }
 </script>

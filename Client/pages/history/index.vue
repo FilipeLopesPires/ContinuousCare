@@ -8,30 +8,18 @@
             <PageBanner parent_page="Home" page="History" />
 
             <!--================ Graphics Area =================-->
-            <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
+            <!-- <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
                 <div class="blog_right_sidebar">
                     <form class="form-wrap" @submit.prevent="onLoadChart">
-                        <!-- <div class="row justify-content-center d-flex align-items-center">
-                            <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password" type="password" name="password" placeholder="Password *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password *'">
-                            </div>
-                            <div class="mt-10 col-lg-6 col-md-6 single-team ">
-                                <input required class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.password_confirmation" type="password" name="password_confirmation" placeholder="Confirm Password *" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Confirm Password *'">
-                            </div>
-                        </div> -->
-                        <!-- Start -->
                         <div class="mt-10">
                             <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.start" type="text" name="start" placeholder="Start Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Start Time'">
                         </div>
-                        <!-- End -->
                         <div class="mt-10">
                             <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.end" type="text" name="end" placeholder="End Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'End Time'">
                         </div>
-                        <!-- Interval -->
                         <div class="mt-10">
                             <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.interval" type="text" name="interval" placeholder="Time Interval" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Time Interval'">
                         </div>
-                        <!-- Submit -->
                         <div class="row justify-content-center d-flex align-items-center">
                             <div class="mt-10 col-lg-6">
                                 <button class="genric-btn success medium text-uppercase" type="submit">Load Chart</button>
@@ -44,22 +32,12 @@
                     <div><p></p></div>
                     <apexchart v-if="showChart" id="apexchart-line" width="700" height="450" type="line" :options="chartOptions" :series="series"></apexchart>
                     <div v-else><h1>Unable to load information.</h1></div>
-                    <!-- <button class="genric-btn info" @click="updateChart">Update!</button> -->
-                    <PaginationBox />
-                    
                 </div>
-            </div>
+            </div> -->
 
             <!--================ Map Area =================-->
             <LeafletMap />
             
-            <!--================ Timeline Area =================-->
-            <div>
-                <div class="container justify-content-center  align-items-center col-lg-9 col-md-9 blog_right_sidebar mb-60 timeline-div">
-                    <vue-horizontal-timeline :items="items" clickable="true" @click="onClickTimeline(this.content-attr)" class="timeline"/>
-                </div>
-            </div>
-
             <!--================ Footer Area =================-->
             <PageFooter />
 
@@ -73,13 +51,13 @@
 // https://uicookies.com/horizontal-timeline/
 // https://www.npmjs.com/package/vue-horizontal-timeline
 
-import PaginationBox from '@/components/boxes/PaginationBox.vue'
+//import PaginationBox from '@/components/boxes/PaginationBox.vue'
 import LeafletMap from '@/components/maps/LeafletMap.vue'
 
 export default {
     middleware: ['check-log', 'log', 'clients-only'],
     components: {
-        PaginationBox,
+        //PaginationBox,
         LeafletMap,
     },
     data() {

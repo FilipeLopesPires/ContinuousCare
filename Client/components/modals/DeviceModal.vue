@@ -171,7 +171,6 @@ export default {
                             if(res.status != 0) {
                                 if(res.status == 1) { 
                                     this.showToast(res.msg, 5000);
-                                    this.showToast("It is only possible to add 1 bracelet per account.", 5000);
                                 } else {
                                     this.showToast("Something went wrong while adding your device. Please try again later.", 5000);
                                 }
