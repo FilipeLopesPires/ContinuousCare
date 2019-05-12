@@ -51,7 +51,7 @@ class HearthRate(Metric):
 
     @property
     def updateTime(self):
-        return 0.20
+        return 360
 
     @property
     def metricType(self):

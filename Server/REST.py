@@ -87,7 +87,7 @@ def devices():
     return processor.deleteDevice(authToken, data)
 
 @app.route('/mood',methods = ['POST'])
-def registerMood(datatype=None):
+def registerMood():
     userToken=request.headers["AuthToken"]
     data = request.json
     if not data:
@@ -98,18 +98,23 @@ def registerMood(datatype=None):
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
 @app.route('/personalstatus', endpoint="PersonalStatus", methods = ['GET'])
 @app.route('/sleep', endpoint="Sleep", methods = ['GET'])
+@app.route('/event', endpoint="Event", methods = ['GET'])
+@app.route('/path', endpoint="Path", methods = ['GET'])
 @app.route('/download', endpoint="download",methods = ['GET'])
-def getData(datatype=None):
+def getData():
     userToken=request.headers["AuthToken"]
     start=request.args.get('start', default="*", type=str)
     start=start if start!="*" else None
     end=request.args.get('end', default="*", type=str)
     end=end if end!="*" else None
     interval=request.args.get('interval', default="*", type=str)
-    interval=interval if interval!="*" else None
+    interval="\""+interval+"\"" if interval!="*" else None
     function="getData(\""+request.endpoint+"\",user,"+str(start)+","+str(end)+","+str(interval)+")"
     if request.endpoint=="download":
         function="getData(None, None,"+str(start)+","+str(end)+","+str(interval)+")"
+
+    if request.endpoint=="path":
+        return processor.getPath(userToken, start, end, interval)
 
     return processor.getData(userToken, function)
 

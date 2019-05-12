@@ -633,6 +633,7 @@ class Processor:
 
         try: 
             coords=self.userMetrics[user]["GPS"][0].normalizeData(self.userMetrics[user]["GPS"][0].getData())
+            responses.append(("Path", {"path":coords}))
             for metric in normalData:
                 if metric!="Environment":
                     normalData[metric]["latitude"]=coords["latitude"]
@@ -655,13 +656,14 @@ class Processor:
         user=self.clientTokens.get(token)
         if not user:
             return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+        if data=={}:
+            return  json.dumps({"status":2, "msg":"No moods were passed to register."}).encode("UTF-8")
         moods=data["moods"]
         concatMoods=moods[0]
         for m in moods[1:]:
             concatMoods+=","+m
         try: 
-            self._save({"PersonalStatus":concatMoods}, user)
-            self._save({"Event":concatMoods}, user)
+            self.process([("PersonalStatus", {"moods":concatMoods}),("Event", {"events":concatMoods})], user)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Mood(s) registered with success."}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"While saving data.Database internal error. "+str(e)}).encode("UTF-8")
@@ -737,12 +739,16 @@ class myThread (threading.Thread):
             if any(updating):
                 print(updating)
                 responses=[]
+                allEvents=""
                 for i,v in enumerate(updating):
                     if v:
                         try:
                             old_times[i]=now1
                             resp=self.deltaTimes[i][1].getData()
                             normalMetric=self.deltaTimes[i][1].normalizeData(resp)
+                            event=self.deltaTimes[i][1].checkEvent(resp)
+                            if event:
+                                allEvents+=event+","
                             responses.append((self.deltaTimes[i][1].metricType, normalMetric))
                         except Exception as e:
                             logging.error("<"+self.user+">Exception caught: "+str(e))
@@ -750,12 +756,17 @@ class myThread (threading.Thread):
                                 tokens=self.deltaTimes[i][1].dataSource.refreshToken()
                                 self.processor.database.updateDevice(self.deltaTimes[i][1].dataSource.user, {"id":self.deltaTimes[i][1].dataSource.id, "token":tokens["token"],"refresh_token":tokens["refresh_token"]})
                                 resp=self.deltaTimes[i][1].getData()
+                                event=self.deltaTimes[i][1].checkEvent(resp)
+                                if event:
+                                    allEvents+=event+","
                                 responses.append((self.deltaTimes[i][1].metricType, resp))
                             except DatabaseException as e:
                                 logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
                             except Exception as e:
                                 logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
-                        
+
+                if allEvents!="":
+                    responses.append(("Event", {"events":allEvents[:-1]})) 
                 self.processor.process(responses, self.user)
         print("ended")
       
