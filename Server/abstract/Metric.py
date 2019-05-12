@@ -33,3 +33,6 @@ class Metric(ABC):
     @abstractmethod
     def normalizeData(self, jsonData):
         pass
+
+    def checkEvent(self, normalJsonData):
+        return None

@@ -40,8 +40,9 @@ class WebSocket:
             self.sockets[token]=websocket
 
     async def send(self, data, token):
-        if token in self.sockets:
-            await self.sockets[token].send(data)
+        socket = self.sockets.get(token)
+        if socket:
+            await socket.send(data)
 
     def getUsers(self):
         return self.sockets.keys()

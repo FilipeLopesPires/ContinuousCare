@@ -32,14 +32,16 @@ const createStore = () => {
                 console.log("fechado")
             },
             SOCKET_ONMESSAGE (state, message)  {
-                console.log(message);
-                var jsonData = JSON.parse(message.data.replace(/'/g,"\""));
-                state.vue.$notify({
-                    group: 'permissions',
-                    title: 'Pending Permission',
-                    text: 'User: '+jsonData.full_name +'<br/>Duration(Hours): '+jsonData.duration,
-                    duration: 5000,
-                });
+                var jsonData = JSON.parse(message.data.replace(/'/g,"\"").replace(/None/g,"null"));
+                console.log(jsonData);
+                for(var permIndex in jsonData){
+                    state.vue.$notify({
+                        group: 'permissions',
+                        title: 'Pending Permission',
+                        text: 'User: '+jsonData[permIndex].name + ((jsonData[permIndex].health_number==null)?'':'<br/>Health Number: '+jsonData[permIndex].health_number) +'<br/>Duration(Hours): '+jsonData[permIndex].duration,
+                        duration: 5000,
+                        });
+                }
             },
             setReloadControl(state, value) {
                 state.reloadControl = value;

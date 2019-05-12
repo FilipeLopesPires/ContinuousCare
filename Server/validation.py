@@ -38,7 +38,7 @@ class ArgumentValidator:
                     errors.append("Missing key \"" + key + "\"")
                 continue
 
-            if not value:
+            if value == None:
                 if mandatory:
                     errors.append("Value \"" + key + "\" can't be null")
                 continue
@@ -58,21 +58,10 @@ class ArgumentValidator:
         return errors
 
     @staticmethod
-    def signupAndUpdateProfile(data):
-        userType = data.get("type")
-        if not userType:
-            return ["Missing \"type\" parameter"]
-
-        userType = userType.lower()
-
-        if userType not in ["client", "medic"]:
-            return ["Type can only be \"client\" or \"medic\""]
-
-        if userType == "client":
-            result =  ArgumentValidator._validate(
-                data, [
-                    ("username", str, True),
-                    ("password", str, True),
+    def signupAndUpdateProfile(isClient, isUpdateProfile, data):
+        if isClient:
+            fields = [
+                    ("password", str, False),
                     ("name", str, True),
                     ("email", str, True),
                     ("health_number", int, True),
@@ -80,6 +69,14 @@ class ArgumentValidator:
                     ("weight", float, False),
                     ("height", float, False),
                     ("additional_info", str, False)]
+
+            if isUpdateProfile:
+                fields.append(("new_password", str, False))
+            else:
+                fields.append(("username", str, True))
+
+            result =  ArgumentValidator._validate(
+                data, fields
             )
 
             birth_date = data.get("birth_date")
@@ -89,21 +86,40 @@ class ArgumentValidator:
                 else:
                     try:
                         day, month, year = birth_date.split("-")
-                        datetime.date(day, month, year)
+                        datetime.date(int(year), int(month), int(day))
                     except ValueError:
                         result.append("Invalid date.")
 
             return result
 
-        return ArgumentValidator._validate(
-            data, [
-                ("username", str, True),
+        fields = [
                 ("password", str, True),
                 ("name", str, True),
                 ("email", str, True),
                 ("company", str, False),
                 ("specialities", str, False)]
+
+        if isUpdateProfile:
+            fields.append(("new_password", str, False))
+        else:
+            fields.append(("username", str, True))
+
+        return ArgumentValidator._validate(
+            data, fields
         )
+
+    @staticmethod
+    def signup(data):
+        userType = data.get("type")
+        if not userType:
+            return ["Missing \"type\" parameter"]
+
+        userType = userType.lower()
+
+        if userType not in ["client", "medic"]:
+            return ["Type can only be \"client\" or \"medic\""]
+
+        return ArgumentValidator.signupAndUpdateProfile(userType == "client", False, data)
 
     @staticmethod
     def signin(data):
@@ -171,25 +187,33 @@ class ArgumentValidator:
     @staticmethod
     def uploadPermissions(userType, data):
         if userType == "client":
-            return ArgumentValidator._validate(data, [
+            results = ArgumentValidator._validate(data, [
                 ("username", str, True),
-                ("duration", str, True)
+                ("duration", int, True)
             ])
+
+            if len(results) == 0 and int(data["duration"]) <= 0:
+                return ["Send a duration higher than 0"]
+
+            return results
         elif userType == "medic":
             results_username = ArgumentValidator._validate(data, [
                 ("username", str, True),
                 ("health_number", int, False),
-                ("duration", str, True)
+                ("duration", int, True)
             ])
             results_health_number = ArgumentValidator._validate(data, [
                 ("username", str, False),
                 ("health_number", int, True),
-                ("duration", str, True)
+                ("duration", int, True)
             ])
             if len(results_username) > 0 and len(results_health_number) > 0:
                 return ["Missing arguments. " +
                        "Requires keys (health_number:int, duration:int) " +
                        "or (username:str, duration:int)"]
+
+            if int(data["duration"]) <= 0:
+                return ["Send a duration higher than 0"]
 
             results_both = ArgumentValidator._validate(data, [
                 ("username", str, True),

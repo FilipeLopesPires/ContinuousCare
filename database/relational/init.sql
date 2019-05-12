@@ -416,6 +416,7 @@ CREATE PROCEDURE get_user_info (
 CREATE PROCEDURE update_client_info (
     IN _username varchar(30),
     IN _password char(88),
+    IN _new_password char(88),
     IN _full_name varchar(55),
     IN _email varchar(30),
     IN _health_number integer,
@@ -437,13 +438,27 @@ CREATE PROCEDURE update_client_info (
     IF EXISTS (SELECT *
                FROM client
                WHERE client_id != __client_id AND health_number = _health_number) THEN
-	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "health number already exists";
+	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Health number already exists.";
+    ELSE IF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email)
+	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
+    END IF;
+
+    IF _password IS NOT NULL AND _new_password IS NOT NULL THEN
+      IF NOT EXISTS (SELECT *
+                     FROM user
+                     WHERE username = _username
+                       AND password = _password) THEN
+        SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Wrong password!";
+      ELSE
+        UPDATE user
+        SET password = _new_password
+        where username = _username;
+      END IF;
     END IF;
 
     -- Update user related data
     UPDATE user
-    SET password = _password,
-        full_name = _full_name,
+    SET full_name = _full_name,
         email = _email
     WHERE username = _username;
 
@@ -467,6 +482,7 @@ CREATE PROCEDURE update_client_info (
 CREATE PROCEDURE update_medic_info (
     IN _username varchar(30),
     IN _password char(88),
+    IN _new_password char(88),
     IN _full_name varchar(55),
     IN _email varchar(30),
     IN _company varchar(100),
@@ -481,10 +497,26 @@ CREATE PROCEDURE update_medic_info (
     FROM medic_username
     where username = _username;
 
+    IF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email)
+	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
+    END IF;
+
+    IF _password IS NOT NULL AND _new_password IS NOT NULL THEN
+      IF NOT EXISTS (SELECT *
+                     FROM user
+                     WHERE username = _username
+                       AND password = _password) THEN
+        SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Wrong password!";
+      ELSE
+        UPDATE user
+        SET password = _new_password
+        where username = _username;
+      END IF;
+    END IF;
+
     -- Update user related data
     UPDATE user
-    SET password = _password,
-        full_name = _full_name,
+    SET full_name = _full_name,
         email = _email
     WHERE username = _username;
 

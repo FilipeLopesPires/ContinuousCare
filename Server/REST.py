@@ -25,7 +25,7 @@ def signup():
     if not data:
         data = {}
 
-    argsErrors =  ArgumentValidator.signupAndUpdateProfile(data)
+    argsErrors =  ArgumentValidator.signup(data)
     if len(argsErrors) > 0:
         return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
@@ -86,39 +86,49 @@ def devices():
 
     return processor.deleteDevice(authToken, data)
 
+@app.route('/mood',methods = ['POST'])
+def registerMood():
+    userToken=request.headers["AuthToken"]
+    data = request.json
+    if not data:
+        data = {}
+    return processor.registerMood(userToken, data)
+
 @app.route('/environment', endpoint="Environment", methods = ['GET'])
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
 @app.route('/personalstatus', endpoint="PersonalStatus", methods = ['GET'])
+@app.route('/sleep', endpoint="Sleep", methods = ['GET'])
+@app.route('/event', endpoint="Event", methods = ['GET'])
+@app.route('/path', endpoint="Path", methods = ['GET'])
 @app.route('/download', endpoint="download",methods = ['GET'])
-def getData(datatype=None):
+def getData():
     userToken=request.headers["AuthToken"]
     start=request.args.get('start', default="*", type=str)
     start=start if start!="*" else None
     end=request.args.get('end', default="*", type=str)
     end=end if end!="*" else None
     interval=request.args.get('interval', default="*", type=str)
-    interval=interval if interval!="*" else None
+    interval="\""+interval+"\"" if interval!="*" else None
     function="getData(\""+request.endpoint+"\",user,"+str(start)+","+str(end)+","+str(interval)+")"
     if request.endpoint=="download":
         function="getData(None, None,"+str(start)+","+str(end)+","+str(interval)+")"
 
+    if request.endpoint=="path":
+        return processor.getPath(userToken, start, end, interval)
+
     return processor.getData(userToken, function)
 
 
-@app.route('/profile', methods = ['GET', 'POST', 'DELETE'])
+@app.route('/profile', methods = ['GET', 'PUT', 'DELETE'])
 def profile():
     userToken = request.headers.get("AuthToken")
     if not userToken:
         return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
-    if request.method == 'POST':
+    if request.method == 'PUT':
         data = request.json
         if not data:
             data = {}
-
-        argsErrors =  ArgumentValidator.signupAndUpdateProfile(data)
-        if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
 
         return processor.updateProfile(userToken, data)
     elif request.method == 'GET':
@@ -129,20 +139,6 @@ def profile():
 @app.route('/supportedDevices', methods = ['GET'])
 def supportedDevices():
     return processor.getSupportedDevices()
-
-
-@app.route('/sleep', methods = ['GET'])
-def userGPSCoordinates():
-    userToken = request.headers.get("AuthToken")
-    if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
-
-    start=request.args.get('start', default="*", type=str)
-    start=start if start!="*" else None
-    end=request.args.get('end', default="*", type=str)
-    end=end if end!="*" else None
-    function="getData(\"Sleep\",user,"+start+","+end+")"
-    return processor.getData(userToken, function)
 
 
 @app.route('/permission', methods = ['GET','POST'])
