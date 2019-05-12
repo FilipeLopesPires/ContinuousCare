@@ -18,7 +18,8 @@
                 <div class="mt-10 col-lg-8 col-md-9">
                     <p class="mt-10">
                         Not registered yet? <nuxt-link to="/register">Start Now!</nuxt-link> 
-                        <br>I forgot my password <nuxt-link to="" @click="forgotMyPassword">Help!</nuxt-link> 
+                        <br>I forgot my password 
+                        <nuxt-link to="" @click.native="forgotMyPassword">Help!</nuxt-link>
                     </p>
                 </div>
             </div>
@@ -35,8 +36,8 @@ export default {
     data() {
         return {
             filledform: {
-                username: "",
-                password: ""
+                username: null,
+                password: null
             }
         }
     },
@@ -53,31 +54,30 @@ export default {
                             var push = "/";
                             if(result.data.user_type == "client") {
                                 profile = {
-                                    full_name: result.data.full_name,
-                                    email: result.data.email,
-                                    health_number: result.data.health_number,
-                                    birth_date: result.data.birth_date,
-                                    weight: result.data.weight,
-                                    height: result.data.height,
-                                    additional_info: result.data.additional_info,
+                                    full_name: this.convertEmpty(result.data.full_name),
+                                    email: this.convertEmpty(result.data.email),
+                                    health_number: this.convertEmpty(result.data.health_number),
+                                    birth_date: this.convertEmpty(result.data.birth_date),
+                                    weight: this.convertEmpty(result.data.weight),
+                                    height: this.convertEmpty(result.data.height),
+                                    additional_info: this.convertEmpty(result.data.additional_info),
                                     company: null,
                                     specialities: null
                                 }
                             } else {
                                 profile = {
-                                    full_name: result.data.full_name,
-                                    email: result.data.email,
+                                    full_name: this.convertEmpty(result.data.full_name),
+                                    email: this.convertEmpty(result.data.email),
                                     health_number: null,
                                     birth_date: null,
                                     weight: null,
                                     height: null,
                                     additional_info: null,
-                                    company: result.data.company,
-                                    specialities: result.data.specialities
+                                    company: this.convertEmpty(result.data.company),
+                                    specialities: this.convertEmpty(result.data.specialities)
                                 }
                                 push += "patients";
                             }
-                            console.log("login");
 
                             if(this.$store.getters.isLoggedIn){
                                 this.$store.dispatch("setVue", this)
@@ -86,26 +86,12 @@ export default {
                                 this.$connect('ws://mednat.ieeta.pt:8344', {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
                             }
 
-                            console.log(profile);
                             this.$store.dispatch('setUserType', result.data.user_type);
                             this.$store.dispatch('setProfile', profile);
                             this.$router.push(push);
-                        } else {
-                            // deal with error
-                            // this should never happen
-                            return;
-                        }
-                    } else {
-                        // deal with error
-                        return;
-                    }
-                } else {
-                    // deal with error
-                    return;
-                }
-            } else {
-                // deal with error
-                return;
+                        } 
+                    } 
+                } 
             }
             /* this.logInDev("medic"); */
         }, 
@@ -118,12 +104,18 @@ export default {
                 'username': filledform.username,
                 'password': filledform.password
             }
-            return await this.$axios.$post("/signin",config)
+            return await this.$axios.$post("/signin", config)
                         .then(res => {
                             if(res.status != 0) {
                                 // warn which login field is invalid
                                 console.log(res);
-                                this.showToast("Invalid username or password. Please make sure you fill in the fields correctly.", 5000);
+                                //this.showToast("Invalid username or password. Please make sure you fill in the fields correctly.", 5000);
+                                if(res.status == 1) {
+                                    this.showToast(res.message, 5000);
+                                } else {
+                                    this.showToast("Something went wrong with the login process. The server might be down at the moment. Please re-submit or try again later.", 7500);
+                                }
+                                return null;
                             }
                             return res;
                         })
@@ -138,12 +130,18 @@ export default {
             const config = {
                 headers: {'AuthToken': AuthToken}
             }
-            return await this.$axios.$get("/profile",config)
+            return await this.$axios.$get("/profile", config)
                         .then(res => {
                             if(res.status != 0) {
                                 // warn what exactly went wrong inside the server
                                 console.log(res);
-                                this.showToast("Something went terribly wrong while trying to retrieve information about the user. Please try to login again, if it does not work contact us through email.", 7500);
+                                //this.showToast("Something went terribly wrong while trying to retrieve information about the user. Please try to login again, if it does not work contact us through email.", 7500);
+                                if(res.status == 1) {
+                                    this.showToast(res.message, 5000);
+                                } else {
+                                    this.showToast("Something went wrong while trying to retrieve information about the user. The server might be down at the moment. Please re-submit or try again later.", 7500);
+                                }
+                                return null;
                             }
                             return res;
                         })
@@ -153,6 +151,12 @@ export default {
                             this.showToast("Something went wrong while trying to retrieve information about the user. The server might be down at the moment. Please re-submit or try again later.", 7500);
                             return null;
                         });
+        },
+        convertEmpty(field) {
+            if(field == "null" || field == "" || field == null) {
+                return null;
+            }
+            return field;
         },
         showToast(message, duration) {
             this.$toasted.show(message, {position: 'bottom-center', duration: duration});

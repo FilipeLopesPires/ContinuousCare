@@ -47,11 +47,17 @@
       <PageBanner parent_page="Home" page="Profile" :name="full_name" />
 
       <!--================ Tags Area =================-->
-      <div class="row justify-content-center d-flex align-items-center">
-        <div class="col-lg-9">
-          <TagsArea :areas="tags_area"/>
+      <div class="row justify-content-center d-flex align-items-top">
+        <div class="row justify-content-center d-flex align-items-top col-lg-10 col-md-10">
+          <div class="col-lg-4 col-md-4">
+            <TagsArea :areas="tags_area"/>
+          </div>
+          <div class="col-lg-8 col-md-8">
+            <TagsArea :areas="tags_area"/>
+          </div>
         </div>
       </div>
+      
 
       <!--================ Footer Area =================-->
       <PageFooter />
@@ -77,14 +83,14 @@ export default {
     return {
       full_name: this.$store.getters.profile.full_name,
       tags_area: [
-        {area: {
+        {
           title: "How Are You Feeling Today?",
           tags: ["Amused","Calm","Cheerful","Dreamy","Excited","Flirty","Good","Happy","Joyful","Loving","Mellow","Optimistic","Peaceful","Silly","Sympathetic","Angry","Annoyed / Irritated","Apathetic","Bad","Cranky / Grumpy","Depressed","Envious","Frustrated","Gloomy","Guilty","Indifferent","Melancholy","Pessimistic","Rejected","Restless","Sad","Stressed","Weird"],
-        }},
-        {area: {
+        },
+        {
           title: "Would You Like To Take Note Of Any Complaints?",
           tags: ["Cold / Respiratory Pain","Insomnia / Difficult Night","Migraine / Headache","Muscle Soreness or Injury","Allergies","Back or Joint Pain","Skin Conditions","Stomache or Intestinal Disconforts","Overstress / Heart Disconfort"]
-        }}
+        }
       ],
     }
   },

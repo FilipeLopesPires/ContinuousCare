@@ -192,23 +192,10 @@ export default {
                                 this.$store.dispatch('setUserType', 'client');
                                 this.$router.push("/");
                             }
-                        } else {
-                            // deal with error
-                            // this should never happen
-                            return;
-                        }
-                    } else {
-                        // deal with error
-                        return;
-                    }
-                } else {
-                    // deal with error
-                    return;
-                }
-            } else {
-                // deal with error
-                return;
-            }
+                        } 
+                    } 
+                } 
+            } 
         },
 
         async checkRegistration(filledform, account_type) {
@@ -220,8 +207,8 @@ export default {
                 'health_number': filledform.health_number,
                 'password': filledform.password,
                 'birth_date': this.convertDate(filledform.birth_date),
-                'weight': this.convertNull(filledform.weight),
-                'height': this.convertNull(filledform.height),
+                'weight': filledform.weight,
+                'height': filledform.height,
                 'additional_info': filledform.additional_info,
                 'company': filledform.company,
                 'specialities': filledform.specialities,
@@ -231,10 +218,13 @@ export default {
                             if(res.status != 0) {
                                 // warn which registration fields are invalid
                                 console.log(res);
+                                //this.showToast("Registration was invalid. Please make sure you fill in the form correctly.", 5000);
                                 if(res.status == 1) {
-                                    // warn that phpn must be uniuqe
+                                    this.showToast(res.message, 5000);
+                                } else {
+                                    this.showToast("Something went wrong with the registration process. The server might be down at the moment. Please re-submit or try again later.", 7500);
                                 }
-                                this.showToast("Registration was invalid. Please make sure you fill in the form correctly.", 5000);
+                                return null;
                             }
                             return res;
                         })
@@ -254,13 +244,19 @@ export default {
                         .then(res => {
                             if(res.status != 0) {
                                 console.log(res);
-                                this.showToast("Something went terribly wrong with the registration process. Please try to login, if it does not work contact us through email.", 7500);
+                                //this.showToast("Something went terribly wrong with the registration process. Please try to login, if it does not work contact us through email.", 7500);
+                                if(res.status == 1) {
+                                    this.showToast(res.message, 5000);
+                                } else {
+                                    this.showToast("Something went wrong with the registration process. The server might be down at the moment. Please try to login, if it does not work re-register or contact us through email.", 7500);
+                                }
+                                return null;
                             }
                             return res;
                         })
                         .catch(e => {
                             console.log(e);
-                            // toast
+                            this.showToast("Something went terribly wrong with the registration process. Please try to login, if it does not work contact us through email.", 7500);
                             return null;
                         });
         },
