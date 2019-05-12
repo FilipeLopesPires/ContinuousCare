@@ -486,31 +486,6 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def stopPermission(self, token, client):
-        """
-        Used only by the medic, stops an active permission so he can save time for later, still has permission
-
-        args
-        token - str - token representing the user
-        client - str - of the client that he wants to stop the active permission
-        """
-        if self.clientTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to medics"}).encode("UTF-8")
-
-        medic = self.medicTokens.get(token)
-        if not medic:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
-
-        try:
-            self.database.stopActivePermission(medic, client)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission stoped with success."}).encode("UTF-8")
-        except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
-        except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
-        except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
-
     def removePendingPermission(self, token, client):
         """
         Used only by the medic, removes a pending permission (requests not responded by the client)
@@ -553,31 +528,6 @@ class Processor:
 
         try:
             self.database.removeAcceptedPermission(client, medic)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission removed with success."}).encode("UTF-8")
-        except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
-        except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
-        except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
-
-    def removeActivePermission(self, token, medic):
-        """
-        Used only by the client, removes and active permission, accepted permission are not removed
-
-        args
-        token - str - token representing the user
-        username - str - of the medic that he wants to remove and active permission
-        """
-        if self.medicTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
-
-        client = self.clientTokens.get(token)
-        if not client:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
-
-        try:
-            self.database.removeActivePermission(client, medic)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission removed with success."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")

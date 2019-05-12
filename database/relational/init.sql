@@ -64,33 +64,17 @@ create table accepted_permission (
   medic_id                integer,
   foreign key (medic_id) references medic (medic_id),
   primary key (client_id, medic_id),
-  duration                time
-);
-create table active_permission (
-  client_id               integer,
-  foreign key (client_id) references client (client_id),
-  medic_id                integer,
-  foreign key (medic_id) references medic (medic_id),
-  primary key (client_id, medic_id),
   begin_date              datetime,
   expiration_date         datetime
 );
-create table historical_permission (
+CREATE TABLE expired_permission (
   client_id               integer,
   foreign key (client_id) references client (client_id),
   medic_id                integer,
   foreign key (medic_id) references medic (medic_id),
   begin_date              datetime,
   primary key (client_id, medic_id, begin_date),
-  stop_date                datetime
-);
--- drop index `PRIMARY` on historical_permission;
--- create index exp_perm_client_idx on historical_permission (client_id);
--- create index exp_perm_medic_idx on historical_permission (client_id);
-
-create table status_type (
-  id                      integer       primary key auto_increment,
-  name                    varchar(30)
+  end_date         datetime
 );
 
 create table sleep_session (
@@ -107,7 +91,7 @@ create table sleep_session (
 create table supported_device (
   id                      integer       primary key auto_increment,
 -- PRIMARY KEY
-  type                    enum("bracelet", "home_device"), -- TODO doesn't allow extensability
+  type                    enum("bracelet", "home_device"), -- TODO doesn't allow easy extensability
   brand                   varchar(30),
   model                   varchar(30),
   photo                   varchar(200)
@@ -203,6 +187,8 @@ CREATE PROCEDURE insert_client (
       SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "username already exists";
     ELSEIF EXISTS (SELECT * FROM client WHERE health_number = _health_number) THEN
       SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "health number already exists";
+    ELSEIF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email) THEN
+	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
     END IF;
 
     -- Insertions
@@ -235,6 +221,8 @@ CREATE PROCEDURE insert_medic (
     -- Check duplicates
     IF EXISTS (SELECT * FROM user WHERE username = _username) THEN
       SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "username already exists";
+    ELSEIF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email) THEN
+	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
     END IF;
 
     -- Insertions
@@ -439,7 +427,7 @@ CREATE PROCEDURE update_client_info (
                FROM client
                WHERE client_id != __client_id AND health_number = _health_number) THEN
 	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Health number already exists.";
-    ELSE IF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email)
+    ELSEIF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email) THEN
 	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
     END IF;
 
@@ -497,7 +485,7 @@ CREATE PROCEDURE update_medic_info (
     FROM medic_username
     where username = _username;
 
-    IF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email)
+    IF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email) THEN
 	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
     END IF;
 
@@ -698,7 +686,7 @@ CREATE PROCEDURE delete_device (
   END //
 
 /*
- * Moves any active permission that expired to the historical_permission table
+ * Moves any active permission that expired to the expired_permission table
  * Used at the beginning of any stored procedure that
  *  operates over the permissions
  */
@@ -720,16 +708,16 @@ CREATE PROCEDURE update_permissions (
     FROM medic_username
     WHERE username = _medic;
 
-    -- Insert into expired the expired permission
-    INSERT INTO historical_permission
-    SELECT client_id, medic_id, begin_date, NOW()
-    FROM active_permission
+    -- Move accepted that had expired to expired_permission
+    INSERT INTO expired_permission
+    SELECT *
+    FROM accepted_permission
     WHERE client_id = __client_id
       AND medic_id = __medic_id
       AND expiration_date < NOW();
 
     -- Delete form the active the expired permission
-    DELETE FROM active_permission
+    DELETE FROM accepted_permission
     WHERE client_id = __client_id
       AND medic_id = __medic_id
       AND expiration_date < NOW();
@@ -784,8 +772,9 @@ CREATE PROCEDURE request_permission (
       -- Insert otherwise
       INSERT INTO pending_permission VALUES (__client_id, __medic_id, _duration);
 
-      SELECT _client, __full_name, __email, __health_number;
     END IF;
+
+    SELECT _client, __full_name, __email, __health_number;
 
     COMMIT;
   END //
@@ -798,7 +787,7 @@ CREATE PROCEDURE request_permission (
 CREATE PROCEDURE grant_permission (
     IN _client VARCHAR(30),
     IN _medic VARCHAR(30),
-    IN _duration time)
+    IN _duration TIME)
   BEGIN
     DECLARE __client_id, __medic_id VARCHAR(30);
 
@@ -812,19 +801,22 @@ CREATE PROCEDURE grant_permission (
 
     -- If an accepted permision doesn't exits
     IF NOT EXISTS (SELECT *
-                       FROM accepted_permission
-                       WHERE client_id = __client_id
-                         AND medic_id = __medic_id) THEN
+                   FROM accepted_permission
+                   WHERE client_id = __client_id
+                     AND medic_id = __medic_id) THEN
       -- Insert
-      INSERT INTO accepted_permission VALUES (__client_id, __medic_id, _duration);
-
-      SELECT full_name, email, company
-      FROM user JOIN medic ON user.user_id = medic.user_id
-      WHERE username = _medic;
+      INSERT INTO accepted_permission VALUES (__client_id, __medic_id, NOW(), ADDTIME(NOW(), _duration));
     ELSE
       -- Otherwise fail
-      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "A permission grant already exists";
+      UPDATE accepted_permission
+      SET expiration_date = ADDTIME(expiration_date, _duration)
+      WHERE client_id = __client_id
+        AND medic_id = __medic_id;
     END IF;
+
+    SELECT full_name, email, company
+    FROM user JOIN medic ON user.user_id = medic.user_id
+    WHERE username = _medic;
 
     COMMIT;
   END //
@@ -869,13 +861,13 @@ CREATE PROCEDURE accept_permission (
                    AND medic_id = __medic_id) THEN
         -- Increment the duration of the request
         UPDATE accepted_permission
-        SET duration = duration + __pending_duration
+        SET expiration_date = ADDTIME(expiration_date, __pending_duration)
         WHERE client_id = __client_id
           AND medic_id = __medic_id;
       ELSE
         -- Else Create the accepted permission
         INSERT INTO accepted_permission
-        VALUES (__client_id, __medic_id, __pending_duration);
+        VALUES (__client_id, __medic_id, NOW(), __pending_duration);
       END IF;
 
       -- Delete the request
@@ -911,6 +903,13 @@ CREATE PROCEDURE remove_accepted_permission (
                      AND medic_id = __medic_id) THEN
       SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "No accepted permission to delete";
     ELSE
+      INSERT INTO expired_permission
+      SELECT *
+      FROM accepted_permission
+      WHERE client_id = __client_id
+        AND medic_id = __medic_id
+        AND expiration_date < NOW();
+
       -- Otherwise removes it
       DELETE FROM accepted_permission
       WHERE client_id = __client_id
@@ -965,193 +964,23 @@ CREATE PROCEDURE has_permission (
     IN _client VARCHAR(30))
   BEGIN
     DECLARE __client_id, __medic_id VARCHAR(30);
-    DECLARE __has_permission BOOLEAN;
-    DECLARE __pending_duration TIME;
 
     IF NOT EXISTS (SELECT * FROM client_username where username = _client) THEN
       SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no patient with the given username.";
     END IF;
 
     CALL update_permissions(_client, _medic, __client_id, __medic_id);
-
-    START TRANSACTION;
 
     -- If a permission is active, has permission
     IF EXISTS (SELECT *
-                   FROM active_permission
-                   WHERE client_id = __client_id
-                     AND medic_id = __medic_id) THEN
-      SET __has_permission = TRUE;
+               FROM accepted_permission
+               WHERE client_id = __client_id
+                 AND medic_id = __medic_id) THEN
+      SELECT TRUE;
     ELSE
-      -- Else, If an accepted permission exists
-      IF EXISTS (SELECT *
-                 FROM accepted_permission
-                 WHERE client_id = __client_id
-                   AND medic_id = __medic_id) THEN
-        -- Transfere it to active
-        SELECT duration INTO __pending_duration
-        FROM accepted_permission
-        WHERE client_id = __client_id
-          AND medic_id = __medic_id;
-
-        -- By adding the duration of the accepted pending permission
-        INSERT INTO active_permission (client_id, medic_id, begin_date, expiration_date)
-        VALUES (__client_id, __medic_id, NOW(), ADDTIME(NOW(), __pending_duration));
-
-        -- Delete the accepted permission
-        DELETE FROM accepted_permission
-        WHERE client_id = __client_id
-          AND medic_id = __medic_id;
-
-        -- Has permission
-        SET __has_permission = TRUE;
-      ELSE
-        -- Doesn't have permission
-        SET __has_permission = FALSE;
-      END IF;
+      SELECT FALSE;
     END IF;
 
-    COMMIT;
-
-    SELECT __has_permission;
-  END //
-
-/*
- * Allows a medic to stop the timer of the active permission
- * Transforms an active permission into an accepted permission
- */
-CREATE PROCEDURE stop_active_permission (
-    IN _medic VARCHAR(30),
-    IN _client VARCHAR(30))
-  BEGIN
-    DECLARE __client_id, __medic_id VARCHAR(30);
-    DECLARE __not_used_duration TIME;
-
-    IF NOT EXISTS (SELECT * FROM client_username where username = _client) THEN
-      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no patient with the given username.";
-    END IF;
-
-    CALL update_permissions(_client, _medic, __client_id, __medic_id);
-
-    START TRANSACTION;
-
-    IF NOT EXISTS (SELECT *
-                   FROM active_permission
-                   WHERE client_id = __client_id
-                     AND medic_id = __medic_id) THEN
-      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "No active permission to stop";
-    ELSE
-      SELECT TIMEDIFF(expiration_date,NOW()) INTO __not_used_duration
-      FROM active_permission
-      WHERE client_id = __client_id
-        AND medic_id = __medic_id;
-
-      INSERT INTO historical_permission
-      SELECT client_id, medic_id, begin_date, NOW()
-      FROM active_permission
-      WHERE client_id = __client_id
-        AND medic_id = __medic_id;
-
-      IF NOT EXISTS (SELECT *
-                     FROM accepted_permission
-                     WHERE client_id = __client_id
-                       AND medic_id = __medic_id) THEN
-        INSERT INTO accepted_permission (client_id, medic_id, duration)
-        VALUES (__client_id, __medic_id, __not_used_duration);
-      ELSE
-        UPDATE accepted_permission
-        SET duration = duration + __not_used_duration
-        WHERE client_id = __client_id
-          AND medic_id = __medic_id;
-
-      END IF;
-
-      DELETE FROM active_permission
-      WHERE client_id = __client_id
-        AND medic_id = __medic_id;
-    END IF;
-
-    COMMIT;
-  END //
-
-/*
- * Allows a client to disable/remove a active permission
- *  of a medic over his data
- */
-CREATE PROCEDURE remove_active_permission (
-    IN _client VARCHAR(30),
-    IN _medic VARCHAR(30))
-  BEGIN
-    DECLARE __client_id, __medic_id VARCHAR(30);
-
-    IF NOT EXISTS (SELECT * FROM medic_username where username = _medic) THEN
-      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There's no medic with the given username.";
-    END IF;
-
-    CALL update_permissions(_client, _medic, __client_id, __medic_id);
-
-    START TRANSACTION;
-
-    IF NOT EXISTS (SELECT *
-                   FROM active_permission
-                   WHERE client_id = __client_id
-                     AND medic_id = __medic_id) THEN
-      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "No active permission to remove";
-    ELSE
-      INSERT INTO historical_permission
-      SELECT client_id, medic_id, begin_date, NOW()
-      FROM active_permission
-      WHERE client_id = __client_id
-        AND medic_id = __medic_id;
-
-      DELETE FROM active_permission
-      WHERE client_id = __client_id
-        AND medic_id = __medic_id;
-    END IF;
-
-    COMMIT;
-  END //
-
-/*
- * Obtains all allowed expired permissions from a user displaying information of the associated medic/client
- */
-CREATE PROCEDURE get_historical_permissions (
-    IN _user VARCHAR(30))
-  BEGIN
-    DECLARE __user_id INTEGER;
-
-    -- Get user_id of the user
-    SELECT user_id INTO __user_id
-    FROM user
-    WHERE username = _user;
-
-    -- If the user is a medic
-    IF EXISTS(SELECT *
-              FROM medic
-              WHERE user_id = __user_id) THEN
-      SELECT DATE_FORMAT(expired_permission.begin_date, "%Y-%m-%d %H:%i:%s"),
-             DATE_FORMAT(expired_permission.stop_date, "%Y-%m-%d %H:%i:%s"),
-             user.username,
-             user.full_name,
-             user.email,
-             client.health_number
-      FROM ((expired_permission JOIN medic_username ON medic_username.medic_id = expired_permission.medic_id)
-      JOIN client ON client.client_id = expired_permission.client_id)
-      JOIN user on user.user_id = client.user_id
-      WHERE medic_username.username = _user;
-    ELSE
-      -- Else is a client
-      SELECT DATE_FORMAT(expired_permission.begin_date, "%Y-%m-%d %H:%i:%s"),
-             DATE_FORMAT(expired_permission.stop_date, "%Y-%m-%d %H:%i:%s"),
-             user.username,
-             user.full_name,
-             user.email,
-             medic.company
-      FROM ((expired_permission JOIN client_username ON client_username.client_id = expired_permission.client_id)
-      JOIN medic ON medic.medic_id = expired_permission.medic_id)
-      JOIN user on user.user_id = medic.user_id
-      WHERE client_username.username = _user;
-    END IF;
   END //
 
 /*
@@ -1211,7 +1040,7 @@ CREATE PROCEDURE get_accepted_permissions (
     IF EXISTS(SELECT *
               FROM medic
               WHERE user_id = __user_id) THEN
-      SELECT TIME_FORMAT(accepted_permission.duration, "%H:%i"),
+      SELECT TIME_FORMAT(TIMEDIFF(accepted_permission.expiration_date, NOW()), "%H:%i"),
              user.username,
              user.full_name,
              user.email,
@@ -1222,7 +1051,7 @@ CREATE PROCEDURE get_accepted_permissions (
       WHERE medic_username.username = _user;
     ELSE
       -- Else is a client
-      SELECT TIME_FORMAT(accepted_permission.duration, "%H:%i"),
+      SELECT TIME_FORMAT(TIMEDIFF(accepted_permission.expiration_date, NOW()), "%H:%i"),
              user.username,
              user.full_name,
              user.email,
@@ -1232,12 +1061,10 @@ CREATE PROCEDURE get_accepted_permissions (
       JOIN user on user.user_id = medic.user_id
       WHERE client_username.username = _user;
     END IF;
+
   END //
 
-/*
- * Obtains all active permissions from a user displaying information of the associated medic/client
- */
-CREATE PROCEDURE get_active_permissions (
+CREATE PROCEDURE get_expired_permissions (
     _user VARCHAR(30))
   BEGIN
     DECLARE __user_id INTEGER;
@@ -1251,27 +1078,30 @@ CREATE PROCEDURE get_active_permissions (
     IF EXISTS(SELECT *
               FROM medic
               WHERE user_id = __user_id) THEN
-      SELECT DATE_FORMAT(TIMEDIFF(active_permission.expiration_date, NOW()), "%H:%i"),
+      SELECT DATE_FORMAT(expired_permission.begin_date, "%Y-%m-%d %H:%i:%s"),
+             DATE_FORMAT(expired_permission.end_date, "%Y-%m-%d %H:%i:%s"),
              user.username,
              user.full_name,
              user.email,
              client.health_number
-      FROM ((active_permission JOIN medic_username ON medic_username.medic_id = active_permission.medic_id)
-      JOIN client ON client.client_id = active_permission.client_id)
+      FROM ((expired_permission JOIN medic_username ON medic_username.medic_id = expired_permission.medic_id)
+      JOIN client ON client.client_id = expired_permission.client_id)
       JOIN user on user.user_id = client.user_id
       WHERE medic_username.username = _user;
     ELSE
       -- Else is a client
-      SELECT DATE_FORMAT(TIMEDIFF(active_permission.expiration_date, NOW()), "%H:%i"),
+      SELECT DATE_FORMAT(expired_permission.begin_date, "%Y-%m-%d %H:%i:%s"),
+             DATE_FORMAT(expired_permission.end_date, "%Y-%m-%d %H:%i:%s"),
              user.username,
              user.full_name,
              user.email,
              medic.company
-      FROM ((active_permission JOIN client_username ON client_username.client_id = active_permission.client_id)
-      JOIN medic ON medic.medic_id = active_permission.medic_id)
+      FROM ((expired_permission JOIN client_username ON client_username.client_id = expired_permission.client_id)
+      JOIN medic ON medic.medic_id = expired_permission.medic_id)
       JOIN user on user.user_id = medic.user_id
       WHERE client_username.username = _user;
     END IF;
+
   END //
 
 DELIMITER ;

@@ -44,9 +44,7 @@ class StoredProcedures:
     REJECT_PERMISSION = "delete_permission"
     DELETE_PERMISSION = REJECT_PERMISSION
     HAS_PERMISSION = "has_permission"
-    STOP_ACTIVE_PERMISSION = "stop_active_permission"
-    REMOVE_ACTIVE_PERMISSION = "remove_active_permission"
-    GET_HISTORICAL_PERMISSIONS = "get_historical_permissions"
+    GET_EXPIRED_PERMISSIONS_OF_USER = "get_expired_permissions"
     GET_PENDING_PERMISSIONS_OF_USER = "get_pending_permissions"
     GET_ACCEPTED_PERMISSIONS_OF_USER = "get_accepted_permissions"
     GET_ACTIVE_PERMISSIONS_OF_USER = "get_active_permissions"
@@ -793,48 +791,6 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def stop_active_permission(self, medic, client):
-        """
-        Allows a medic to stop an active permission so he can save the time
-        to use another time
-
-        :param medic: username of the client
-        :type medic: str
-        :param client: username of the client
-        :type client: str
-        """
-        try:
-            conn, cursor = self._init_connection()
-
-            cursor.callproc(StoredProcedures.STOP_ACTIVE_PERMISSION, (medic, client))
-        except Exception as e:
-            if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(e.msg)
-            raise RelationalDBException(str(e))
-        finally:
-            self._close_conenction(conn, cursor)
-
-    def remove_active_permission(self, client, medic):
-        """
-        Allows a client to remove an active permission from a medic.
-        The medic will not be able to see the data from the client after this.
-
-        :param client: username of the client
-        :type client: str
-        :param medic: username of the medic
-        :type medic: str
-        """
-        try:
-            conn, cursor = self._init_connection()
-
-            cursor.callproc(StoredProcedures.REMOVE_ACTIVE_PERMISSION, (client, medic))
-        except Exception as e:
-            if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(e.msg)
-            raise RelationalDBException(str(e))
-        finally:
-            self._close_conenction(conn, cursor)
-
     def _parse_permissions_data(self, data, type):
         """
         Parses permission's data from a list of tuples
@@ -847,14 +803,13 @@ class MySqlProxy:
             different
         0 pending
         1 accepted
-        2 active
         3 expired
         :type type: int
         :return: parsed data
         :rtype: list
         """
         return_value = []
-        if type in [0, 1, 2]:
+        if type in [0, 1]:
             for duration, username, full_name, email, neutral in data:
                 return_value.append({
                     "duration": duration,
@@ -865,7 +820,7 @@ class MySqlProxy:
                     "company": neutral
                 })
 
-        elif type == 3:
+        elif type == 2:
             for begin_date, \
                 last_date, username, full_name, email, neutral in data:
                 permission = {
@@ -878,37 +833,12 @@ class MySqlProxy:
                     "company": neutral
                 }
 
-                if health_number:
-                    permission["health_number"] = health_number
-
                 return_value.append(permission)
 
         else:
-            raise TypeError("type argument can only be one of these (0, 1, 2, 3)")
+            raise TypeError("type argument can only be one of these (0, 1, 2)")
 
         return return_value
-
-    def get_historical_permissions(self, user):
-        """
-        Obtains information of permissions that WERE active
-
-        :param user: username of the client
-        :type user: str
-        :return: all historical permissions
-        :rtype: list
-        """
-        try:
-            conn, cursor = self._init_connection()
-
-            cursor.callproc(StoredProcedures.GET_HISTORICAL_PERMISSIONS, [user])
-
-            return self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 3)
-        except Exception as e:
-            if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(e.msg)
-            raise RelationalDBException(str(e))
-        finally:
-            self._close_conenction(conn, cursor)
 
     def get_pending_permissions(self, user):
         """
@@ -952,8 +882,8 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.GET_ACCEPTED_PERMISSIONS_OF_USER, [user])
             data["accepted"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 1)
 
-            cursor.callproc(StoredProcedures.GET_ACTIVE_PERMISSIONS_OF_USER, [user])
-            data["active"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 2)
+            cursor.callproc(StoredProcedures.GET_EXPIRED_PERMISSIONS_OF_USER, [user])
+            data["expired"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 2)
 
             return data
         except Exception as e:

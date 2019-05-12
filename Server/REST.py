@@ -194,17 +194,6 @@ def rejectPermission(medic):
 
     return processor.rejectPermission(userToken, medic)
 
-@app.route('/permission/<string:client>/stop', methods = ['GET'])
-def pausePermission(client):
-    """
-    Used only by the medic, stops an active permission so he can save time for later, still has permission
-    """
-    userToken = request.headers.get("AuthToken")
-    if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
-
-    return processor.stopPermission(userToken, client)
-
 @app.route('/permission/<string:client>/pending', methods = ['DELETE'])
 def removePendingPermission(client):
     """
@@ -226,17 +215,6 @@ def removeAcceptedPermission(medic):
         return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     return processor.removeAcceptedPermission(userToken, medic)
-
-@app.route('/permission/<string:medic>/active', methods = ['DELETE'])
-def removeActivePermission(medic):
-    """
-    Used only by the client, removes and active permission, accepted permission are not removed
-    """
-    userToken = request.headers.get("AuthToken")
-    if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
-
-    return processor.removeActivePermission(userToken, medic)
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 context.load_cert_chain("MyRootCA.crt", "MyRootCA.key")
