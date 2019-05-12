@@ -90,19 +90,26 @@ def devices():
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
 @app.route('/personalstatus', endpoint="PersonalStatus", methods = ['GET'])
 @app.route('/download', endpoint="download",methods = ['GET'])
-def getData(datatype=None):
-    userToken=request.headers["AuthToken"]
-    start=request.args.get('start', default="*", type=str)
-    start=start if start!="*" else None
-    end=request.args.get('end', default="*", type=str)
-    end=end if end!="*" else None
-    interval=request.args.get('interval', default="*", type=str)
-    interval=interval if interval!="*" else None
-    function="getData(\""+request.endpoint+"\",user,"+str(start)+","+str(end)+","+str(interval)+")"
-    if request.endpoint=="download":
-        function="getData(None, None,"+str(start)+","+str(end)+","+str(interval)+")"
+def getData():
+    userToken = request.headers.get("AuthToken")
+    if not userToken and request.endpoint != "download":
+        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
-    return processor.getData(userToken, function)
+    start=request.args.get('start', type=int)
+    end=request.args.get('end', type=int)
+    interval=request.args.get('interval')
+    patient=request.args.get('patient')
+
+    argsErrors =  ArgumentValidator.getData({
+        'start': start,
+        'end': end,
+        'interval': interval,
+        'patient': patient
+    })
+    if len(argsErrors) > 0:
+        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
+    return processor.getData(userToken, request.endpoint, start, end, interval, patient)
 
 
 @app.route('/profile', methods = ['GET', 'PUT', 'DELETE'])

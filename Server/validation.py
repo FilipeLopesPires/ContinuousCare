@@ -182,6 +182,23 @@ class ArgumentValidator:
             ]
         )
 
+    @staticmethod
+    def getData(data):
+        result = ArgumentValidator._validate(
+            data, [
+                ("start", int, False),
+                ("end", int, False),
+                ("interval", str, False),
+                ("patient", str, False),
+            ]
+        )
+
+        interval = data.get("interval")
+        if interval and isinstance(interval, str) and not re.match(r"^\d+(ns|u|ms|s|m|h|d|w)$", interval):
+            result.append("Inteval argument must follow the regex \"^\d+(ns|u|ms|s|m|h|d|w)$\"")
+
+        return result
+
     # =============================== Processor.py =========================================
 
     @staticmethod
