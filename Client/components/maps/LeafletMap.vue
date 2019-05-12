@@ -19,7 +19,7 @@ https://leafletjs.com/examples/quick-start/
 
 // http://jsfiddle.net/sowelie/3JbNY/
 
-// https://www.wrld3d.com/wrld.js/latest/docs/examples/adding-a-leaflet-marker-with-popup/
+
 
 */
 var vueComponent;
@@ -61,16 +61,18 @@ export default {
             // build map
             this.createMap(view, 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA');
             this.createPath(userPath);
-            // marker 
-            /* this.popup = L.popup().setContent("<div id='info'>" + this.popup_config.message + "</div>");
-            this.marker = L.marker(this.marker_config.coords, this.marker_config.options).bindPopup(this.popup).addTo(this.map);
-            this.marker.on('mouseover', function(e) { this.openPopup(); });
-            this.marker.on('mouseout', function(e) { this.closePopup(); }); */
             this.insertMarkers();
         });
     },
     methods: {
         createMap(view, mapAccessToken) {
+            /* 
+            // https://www.wrld3d.com/wrld.js/latest/docs/examples/adding-a-leaflet-marker-with-popup/
+            // { src: 'https://cdn-webgl.wrld3d.com/wrldjs/dist/latest/wrld.js'},
+            this.map = L.Wrld.map("map-wrap", "mapAccessToken", {
+                center: [37.7950, -122.401],
+                zoom: 15
+            }); */
             this.map = L.map(this.$refs.worldmap).setView(view.coords, view.zoom);
             L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
                 id: 'mapbox.streets',

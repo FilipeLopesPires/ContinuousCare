@@ -51,8 +51,7 @@ const createStore = () => {
             },
             setSessionToken(state, new_token) {
                 if(new_token == "null") {
-                    state.sessionToken = null;
-                    return;
+                    new_token = null;
                 }
                 state.sessionToken = new_token;
             },
@@ -65,28 +64,43 @@ const createStore = () => {
             setProfileEmail(state, email) {
                 state.profile.email = email;
             },
-            setProfileEmail(state, email) {
-                state.profile.email = email;
-            },
             setProfileHealthNumber(state, health_number) {
                 state.profile.health_number = health_number;
             },
             setProfileBirthdate(state, birth_date) {
+                if(birth_date == "null" || birth_date == "") {
+                    birth_date = null;
+                }
                 state.profile.birth_date = birth_date;
             },
             setProfileWeight(state, weight) {
+                if(weight == "null" || weight == "") {
+                    weight = null;
+                }
                 state.profile.weight = weight;
             },
             setProfileHeight(state, height) {
+                if(height == "null" || height == "") {
+                    height = null;
+                }
                 state.profile.height = height;
             },
             setProfileAdditionalInfo(state, additional_info) {
+                if(additional_info == "null" || additional_info == "") {
+                    additional_info = null;
+                }
                 state.profile.additional_info = additional_info;
             },
             setProfileCompany(state, company) {
+                if(company == "null" || company == "") {
+                    company = null;
+                }
                 state.profile.company = company;
             },
             setProfileSpecialities(state, specialities) {
+                if(specialities == "null" || specialities == "") {
+                    specialities = null;
+                }
                 state.profile.specialities = specialities;
             },
             setDevices(state, devices) {
@@ -126,15 +140,15 @@ const createStore = () => {
                     localStorage.setItem("session_token", new_token);
                     localStorage.setItem("session_token_expiration", new Date().getTime() + 1000*60*60*24);
                 }
-                Cookie.set("session_token", new_token);
-                Cookie.set("session_token_expiration", new Date().getTime() + 1000*60*60*24);
+                //Cookie.set("session_token", new_token);
+                //Cookie.set("session_token_expiration", new Date().getTime() + 1000*60*60*24);
             },
             setUserType(vuexContext, new_user_type) {
                 vuexContext.commit("setUserType", new_user_type);
                 if(process.client) {
                     localStorage.setItem("session_user_type", new_user_type);
                 }
-                Cookie.set("session_user_type", new_user_type);
+                //Cookie.set("session_user_type", new_user_type);
             },
             setProfile(vuexContext, new_profile) {
                 vuexContext.commit("setProfileFullName", new_profile.full_name);
@@ -157,7 +171,7 @@ const createStore = () => {
                     localStorage.setItem("session_profile_company", new_profile.company);
                     localStorage.setItem("session_profile_specialities", new_profile.specialities);
                 }
-                Cookie.set("session_profile_full_name", new_profile.full_name);
+                /* Cookie.set("session_profile_full_name", new_profile.full_name);
                 Cookie.set("session_profile_email", new_profile.email);
                 Cookie.set("session_profile_health_number", new_profile.health_number);
                 Cookie.set("session_profile_birth_date", new_profile.birth_date);
@@ -165,25 +179,25 @@ const createStore = () => {
                 Cookie.set("session_profile_height", new_profile.height);
                 Cookie.set("session_profile_additional_info", new_profile.additional_info);
                 Cookie.set("session_profile_company", new_profile.company);
-                Cookie.set("session_profile_specialities", new_profile.specialities);
+                Cookie.set("session_profile_specialities", new_profile.specialities); */
             },
             setDevices(vuexContext, devices) {
                 vuexContext.commit("setDevices", devices); 
                 if(process.client) {
                     localStorage.setItem("session_loaded_devices", devices);
                 }
-                Cookie.set("session_loaded_devices", devices);
+                //Cookie.set("session_loaded_devices", devices);
             },
             setSupportedDevices(vuexContext, devices) {
                 vuexContext.commit("setSupportedDevices", devices); 
                 if(process.client) {
                     localStorage.setItem("session_supported_devices", devices);
                 }
-                Cookie.set("session_supported_devices", devices);
+                //Cookie.set("session_supported_devices", devices);
             },
             logout(vuexContext) {
                 vuexContext.commit("clearSession");
-                Cookie.remove("session_token");
+                /* Cookie.remove("session_token");
                 Cookie.remove("session_token_expiration");
                 Cookie.remove("session_user_type");
                 Cookie.remove("session_profile_full_name");
@@ -196,7 +210,7 @@ const createStore = () => {
                 Cookie.remove("session_profile_company");
                 Cookie.remove("session_profile_specialities");
                 Cookie.remove("session_loaded_devices");
-                Cookie.remove("session_supported_devices");
+                Cookie.remove("session_supported_devices"); */
                 if(process.client) {
                     localStorage.removeItem("session_token");
                     localStorage.removeItem("session_token_expiration");

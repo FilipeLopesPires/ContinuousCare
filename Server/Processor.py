@@ -272,13 +272,23 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def getData(self, token, function):
-        user = self.clientTokens.get(token, None)
-        if not user:
+    def getData(self, token, endpoint, start, end, interval, patient):
+        client = self.clientTokens.get(token, None)
+        medic = self.medicTokens.get(token, None)
+        if not client and not medic:
             return  json.dumps({"status":2, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            values=eval("self.database."+function)
+            if client:
+                values = self.database.getData(endpoint, client, start, end, interval)
+            elif medic:
+                if endpoint == "Path":
+                    return json.dumps({"status":4, "msg":"Only accecible to patitents."}).encode("UTF-8")
+
+                if not patient:
+                    return json.dumps({"status":2, "msg":"Missing argument \"patient\""}).encode("UTF-8")
+
+                values = self.database.getDataByMedic(medic, endpoint, patient, start, end, interval)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
@@ -286,8 +296,6 @@ class Processor:
             return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
-        return  json.dumps({"status":2, "msg":"Bad combination of arguments. It can only be start+end, start+interval or end+interval"}).encode("UTF-8")
-                
 
     def updateProfile(self, token, data):
         client = self.clientTokens.get(token, None)
