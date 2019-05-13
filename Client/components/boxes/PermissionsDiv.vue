@@ -39,7 +39,7 @@
                 </div>
             </b-modal>
             <button
-                class="genric-btn info radius mb-20"
+                class="genric-btn radius mb-20" :class="btn_class"
                 @click="$refs.request_grant_permission_modal.show()">
                 <span v-if="user_type === 'medic'"><i class="fa fa-plus"></i> Request Permission</span>
                 <span v-else-if="user_type === 'client'"><i class="fa fa-plus"></i> Grant Permission</span>
@@ -69,7 +69,12 @@ export default {
         PermissionsTable
     },
     data() {
+        var btn_class = "info";
+        if(this.$store.getters.isMedic) {
+            btn_class = "primary";
+        }
         return {
+            btn_class,
             user_type: this.$store.getters.userType,
             permissions: {
                 "pending":[],

@@ -96,7 +96,8 @@ export default {
             /* this.logInDev("medic"); */
         }, 
         forgotMyPassword() {
-            this.showToast("This feature is not yet implemented. We are sorry for the inconvenience :(", 5000);
+            //this.showToast("This feature is not yet implemented. We are sorry for the inconvenience :(", 5000);
+            this.$router.push("/contact");
         },
 
         async checkLogin(filledform) {

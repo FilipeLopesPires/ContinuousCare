@@ -8,7 +8,11 @@
             <PageBanner parent_page="Home" page="Patients" />
 
             <!--================ Permissions Boxes Area ============-->
-            <PermissionsDiv />
+            <div class="row justify-content-center align-items-center">
+                <div class="col-lg-9 col-md-9">
+                    <PermissionsDiv />
+                </div>
+            </div>
             
             <!--================ Footer Area =================-->
             <PageFooter />

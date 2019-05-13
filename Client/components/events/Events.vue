@@ -80,7 +80,6 @@ export default {
               this.$toasted.show('Something went wrong while trying to retrieve data. The server might be down at the moment. Please try again later.', 
                   {position: 'bottom-center', duration: 7500});
               this.requestError = true;
-              return {};
             });
     },
     computed: {
