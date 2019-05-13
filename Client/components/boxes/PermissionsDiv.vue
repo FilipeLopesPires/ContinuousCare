@@ -7,12 +7,12 @@
                     <h3  class="title_color text-center" >Request Permission</h3>
                     <h5>Patient Username:</h5>
                     <div class="form-inline">
-                        <input @click="on_request_option_change(true)" type="radio" class="col-md-1" name="request_option" />
+                        <input @click="on_request_option_change(true)" id="client_username_radio" type="radio" class="col-md-1" name="request_option" />
                         <b-input v-model="client_username" ref="client_username_input" class="single-input col-md-11" :disabled="!request_by_username"></b-input>
                     </div>
                     <h5>Patient Health Number:</h5>
                     <div class="form-inline">
-                        <input @click="on_request_option_change(false)" type="radio" class="col-md-1" name="request_option" checked />
+                        <input @click="on_request_option_change(false)" id="health_number_radio" type="radio" class="col-md-1" name="request_option" :checked="true" />
                         <b-input v-model="health_number" ref="health_number_input" class="single-input col-md-11" :disabled="request_by_username"></b-input>
                     </div>
                 </div>
@@ -343,9 +343,14 @@ export default {
          * Clears all inputs on the modal and closes it
          */
         close_modal() {
+            this.$refs.request_grant_permission_modal.hide();
+
             if (this.user_type === "medic") {
                 this.$refs.client_username_input.value = "";
                 this.$refs.health_number_input.value = "";
+
+                this.on_request_option_change(false)
+                document.getElementById("health_number_radio").checked = true;
             }
             else if (this.user_type === "client")
                 this.$refs.medic_username_input.value = "";
@@ -353,7 +358,6 @@ export default {
             this.$refs.duration_hours_input.value = "";
             this.$refs.duration_minutes_input.value = "";
 
-            this.$refs.request_grant_permission_modal.hide();
         },
 
         /**
@@ -425,8 +429,8 @@ export default {
             .catch(e => this.display_error_toasts(true, e, "accepting permission"));
         },
 
-        use_permission(client_name, client_health_number) {
-            this.$emit('use', client_name, client_health_number);
+        use_permission(client_name, client_username) {
+            this.$emit('use', client_name, client_username);
         }
     }
 }

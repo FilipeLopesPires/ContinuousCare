@@ -18,19 +18,24 @@
             <b-container ref="client_container" class="mb-20" :hidden="!data_loaded">
                 <b-row>
                     <div class="w-100">
-                        <h2 class="mt-10">{{ client_name }}</h2>
+                        <b-row>
+                            <h2 class="col-md-11 mt-10">{{ client_name }}</h2>
+                            <div class="col-md-1">
+                                <button @click="close_charts" class="genric-btn danger radius"><i class="fa fa-times"></i></button>
+                            </div>
+                        </b-row>
                         <div class="form-inline">
-                            <input @click="on_metric_option_change(true)" type="radio" name="metric_option" id="health_status" checked />
-                            <label for="health_status"> Health Status</label>
+                            <input @click="on_metric_option_change(true)" type="radio" name="metric_option" id="health_status_radio" checked />
+                            <label for="health_status_radio"> Health Status</label>
                         </div>
                         <div class="form-inline mb-20">
-                            <input @click="on_metric_option_change(false)" type="radio" name="metric_option" id="environment" />
-                            <label for="environmnet"> Environment</label>
+                            <input @click="on_metric_option_change(false)" type="radio" name="metric_option" id="environment_radio" />
+                            <label for="environment_radio"> Environment</label>
                         </div>
                         <b-card no-body>
                             <b-tabs card justified>
                                 <b-tab v-for="(data, metric) in charts_data" :key="metric" :title="metric">
-                                    <apexchart width="100%" height="80%" type="line" :options="{xaxis:{type:'seconds', categories: data.time}}" :series="[{data:data.values}]"></apexchart>
+                                    <apexchart width="100%" height="80%" type="line" :options="charts_options" :series="[{data:data}]"></apexchart>
                                 </b-tab>
                             </b-tabs>
                         </b-card>
@@ -62,41 +67,36 @@ export default {
             data_loaded: false,
             data_source: "/healthstatus",
             client_name: "",
-            charts_data: {
-                "Hearth Rate": {
-                    time: [1,2,3],
-                    values: [1,2,3]
-                },
-                "CO2": {
-                    time: [1,2,3],
-                    values: [1,2,3]
-                },
-                "OZONO": {
-                    time: [1,2,3],
-                    values: [1,2,3]
+            client_username: "",
+            charts_data: {},
+            charts_options: {
+                xaxis: {
+                    type:'seconds',
+                    categories: []
                 }
-            },
-            requests_header: {
-                headers: {AuthToken: this.$store.getters.sessionToken},
-            },
+            }
         }
     },
     methods: {
-        use_permission(client_name, client_health_number) {
-            this.client_name = client_name;
-            this.data_loaded = true;
-        },
-
-        async on_metric_option_change(health_status_clicked) {
-            let new_data_source = health_status_clicked ? "/health_status" : "/environmnet";
-
-            if (new_data_source === data_source)
-                return;
-
-            await this.$axios.$get("", this.requests_header)
+        /**
+         * Used to display the charts
+         * No arguments are received because variables on
+         *  data are changed before this function is called
+         */
+        async display_graphics() {
+            await this.$axios.$get(this.data_source, {
+                headers: {
+                    AuthToken: this.$store.getters.sessionToken
+                },
+                params: {
+                    patient: this.client_username
+                }
+            })
             .then(res => {
                 if (res.status == 0) {
-
+                    this.charts_options.xaxis.categories = res.data.time;
+                    delete res.data.time;
+                    this.charts_data = res.data;
                 }
                 else if (res.status == 1) {
 
@@ -106,8 +106,41 @@ export default {
                 }
             })
             .catch(e => {
-
             });
+        },
+
+        /**
+         * Invoked whenever a medic click on a play button
+         */
+        async use_permission(client_name, client_username) {
+            this.client_name = client_name;
+            this.client_username = client_username;
+            this.data_loaded = true;
+
+            this.display_graphics();
+        },
+
+        async on_metric_option_change(health_status_clicked) {
+            let new_data_source = health_status_clicked ? "/health_status" : "/environmnet";
+
+            if (new_data_source === this.data_source)
+                return;
+
+            this.data_source = new_data_source;
+
+            this.display_graphics();
+        },
+
+        close_charts() {
+            this.data_loaded = false;
+
+            this.charts_data = {};
+
+            this.client_name = "";
+            this.client_username = "";
+
+            document.getElementById("health_status_radio").checked = true;
+            this.data_source = "/healthstatus"
         }
     }
 }

@@ -36,7 +36,7 @@
                     </div>
                     <div v-else-if="title === 'accepted'">
                         <div v-if="user_type === 'medic'">
-                            <button @click="$emit('use', permission.name, permission.health_number)" class="genric-btn success radius"><i class="fa fa-play" aria-hidden="true"></i></button>
+                            <button @click="$emit('use', permission.name, permission.username)" class="genric-btn success radius"><i class="fa fa-play" aria-hidden="true"></i></button>
                         </div>
                         <div v-if="user_type === 'client'">
                             <button @click="remove_accepted(index, permission.username)" class="genric-btn primary radius"><i class="fa fa-trash"></i></button>
