@@ -288,7 +288,7 @@ class Database:
         try:
             data = {}
 
-            if measurement == "sleep":
+            if measurement == "Sleep":
                 if not start and not end: #both None -> last
                     results = self.relational_proxy.get_sleep_sessions(user)
                 elif start: # just end None -> from start

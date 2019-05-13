@@ -147,14 +147,16 @@ export default {
                     } else {
                         this.$toasted.show('Daily update submitted.', 
                             {position: 'bottom-center', duration: 2500});
-                        /* if(process.client) {
+                        if(process.client) {
                             window.location.reload(true);
-                        } */
+                        }
+                        /*
                         this.availableTags = [];
                         this.selectedTags = [];
                         for(var i in this.areas) {
                             this.availableTags.push(this.areas[i]);
                         }
+                        */
                     }
                 })
                 .catch(e => {

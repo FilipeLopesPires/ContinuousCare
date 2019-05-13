@@ -7,9 +7,9 @@
           <p v-if='dateWithEvents.length > 0' class='date'>{{ date }}</p>
           <div v-for='event in dateWithEvents' class='event' :key="event.id" @click="info(event.event)" style="cursor:pointer">
             <span class='dot'></span>
-            <p class='event-date'>{{ event.time }}</p>
-            <h3><a>{{ event.event }}</a></h3>
-            <p style="white-space: pre-line">{{ event.metrics }}</p>
+            <p class='event-date' v-html="event.time"></p>
+            <h3><a v-html="event.title"></a></h3>
+            <p v-html="event.content"></p>
           </div>
         </div>
       </div>
@@ -40,39 +40,51 @@ export default {
       }
       await this.$axios.$get("/event", config)
             .then(res => {
-              console.log(res)
-              var events=res.data
-              if("time" in events){
-                var today = (new Date()).toLocaleDateString()
-                var new_datesEvents = {}
-                new_datesEvents[today]=[]
-                for(var i=0; i<events["time"].length; i++){
-                  var evt = ""
-                  var metrics = ""
-                  for(var key in events){
-                    if(key!="time"){
-                      if(events[key][i]){
-                        evt+=key+","
-                        var met = events[key][i].split(",")
-                        console.log(met)
-                        if(met.length>1){
-                          metrics+=met[0]+": "+met[1]+"\n"
-                        }else{
-                          metrics+=events[key][i]+"\n"
+                console.log(res.data)
+                if(res.status==0){
+                    var events=res.data
+                    if("time" in events){
+                        var today = (new Date()).toLocaleDateString()
+                        var new_datesEvents = {}
+                        new_datesEvents[today]=[]
+                        for(var i=events["time"].length-1; i>-1; i--){
+                            var title = ""
+                            var content = ""
+                            var evt = JSON.parse(events["events"][i])
+                            if(evt){
+                                for(var j=0; i<evt["events"].length;j++){
+                                    title+=evt["events"][j]+", "
+                                    //if data is empty the only events are related to personalStatus, else there may be some metrics and events related to personal signals
+                                    if(evt["data"]=={}){
+                                        if(!content.includes(evt["metrics"][j])){
+                                            content+=evt["metrics"][j]+"<br>"
+                                        }
+                                    }else{
+                                        for (let [key, value] of Object.entries(evt["data"])) {
+                                            if(key in evt["metrics"]){
+                                                content+="<font color=\"red\""+value+"</font><br>"
+                                            }else{
+                                                content+=value+"<br>"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            new_datesEvents[today].push({
+                            "time": events["time"][i],
+                            "title": title,
+                            "content": content,
+                            })
                         }
-                        
-                      }
+                        this.datesEvents = new_datesEvents
                     }
-                  }
-                  new_datesEvents[today].push({
-                  "time":events["time"][i],
-                  "event":evt.slice(0,-1),
-                  "metrics":metrics,
-                  })
+                }else if(res.status==1){
+                    this.$toasted.show(res.msg, 
+                                {position: 'bottom-center', duration: 7500});
+                }else{
+                    this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
+                                {position: 'bottom-center', duration: 7500});
                 }
-                this.datesEvents = new_datesEvents
-                console.log(this.datesEvents)
-              }
             })
             .catch(e => {
               // Unable to get devices from server
@@ -176,82 +188,82 @@ datesEvents: {
 
 <style scoped>
 .mycontainer {
-	margin: 0 auto;
-	max-width: 80%;
-  margin-bottom: 20px;
+    margin: 0 auto;
+    max-width: 80%;
+    margin-bottom: 20px;
 }
 
 .mycontainer .search-box {
-	padding: 10px;
-	margin: 20px 0;
-	border: 1px solid black;
-	border-radius: 5px;
+    padding: 10px;
+    margin: 20px 0;
+    border: 1px solid black;
+    border-radius: 5px;
 }
 
 .mycontainer .timeline {
-	position: relative;
-	border-left: 2px solid black;
+    position: relative;
+    border-left: 2px solid black;
 }
 
 .mycontainer .timeline .date {
-	display: inline-block;
-  font-size: 1.5rem;
-	padding: 5px;
-	position: relative;
-  color:#616161;
-  font-weight: bold;
-	left: 15px;
-	margin: 15px 0;
+    display: inline-block;
+    font-size: 1.5rem;
+    padding: 5px;
+    position: relative;
+    color:#616161;
+    font-weight: bold;
+    left: 15px;
+    margin: 15px 0;
 }
 
 .mycontainer .timeline .date:before {
-	content: '';
-	position: absolute;
-	top: 50%;
-	left: -16px;
-	border: 1px solid black;
-	width: 14px;
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -16px;
+    border: 1px solid black;
+    width: 14px;
 }
 
 .mycontainer .timeline .event {
-	position: relative;
-  max-width: 95%;
-	left: 20px;
-	box-shadow: 1px 5px 10px 1px rgba(0, 0, 0, 0.2);
-	border-radius: 5px;
-	padding: 10px;
-	margin: 10px 0;
+    position: relative;
+    max-width: 95%;
+    left: 20px;
+    box-shadow: 1px 5px 10px 1px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px 0;
 }
 
 .mycontainer .timeline .event:hover {
-	box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.4);
+    box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.4);
 }
 
 .mycontainer .timeline .event a {
-	color: #006699;
-	text-decoration: none;
+    color: #006699;
+    text-decoration: none;
 }
 
 .mycontainer .timeline .event .event-date {
-	font-weight: 300;
-	font-size: 14px;
+    font-weight: 300;
+    font-size: 14px;
 }
 
 .mycontainer .timeline .event .dot {
-	display: block;
-	position: absolute;
-	width: 15px;
-	height: 15px;
-	border-radius: 50%;
-	background: #006699;
-	left: -27.5px;
-	top: calc(50% - 5px);
+    display: block;
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #006699;
+    left: -27.5px;
+    top: calc(50% - 5px);
 }
 
 .scroll-area {
-  position: relative;
-  margin: auto;
-  width: 100%;
-  height: 600px;
+    position: relative;
+    margin: auto;
+    width: 100%;
+    height: 600px;
 }
 </style>
