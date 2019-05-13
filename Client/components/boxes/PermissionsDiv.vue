@@ -417,34 +417,11 @@ export default {
                 else
                     this.display_error_toasts(false, res, "accepting permission")
             })
-            .catch(e => this.display_error_toasts(true, e, "accepting permission"))
+            .catch(e => this.display_error_toasts(true, e, "accepting permission"));
         },
 
-        /**
-         * TODO
-         */
-        async use_permission(idx, client_username) {
-
-            return;
-
-            return await this.$axios.$post("", this.requests_header)
-            .then(res => {
-                if (res.status == 0) {
-                    this.$toasted.show(
-                        "Permission started.",
-                        this.toast_configs
-                    );
-                }
-                else if (res.status == 1) {
-                    this.$toasted.show(
-                        res.msg,
-                        this.toast_configs
-                    );
-                }
-                else
-                    this.display_error_toasts(false, res, "starting permission")
-            })
-            .catch(e => this.display_error_toasts(true, e, "starting permission"));
+        use_permission(client_name, client_health_number) {
+            this.$emit('use', client_name, client_health_number);
         }
     }
 }
