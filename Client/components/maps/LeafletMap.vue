@@ -2,23 +2,7 @@
     <div>
         <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
             <div class="blog_right_sidebar">
-                <form class="form-wrap" @submit.prevent="onLoadMap">
-                    <div class="mt-10">
-                        <date-picker class="single-input" v-model="filledform.start" name="start" :config="datetimepicker_options" placeholder="Start Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Start Time'"></date-picker>
-                    </div>
-                    <div class="mt-10">
-                        <date-picker class="single-input" v-model="filledform.end" name="end" :config="datetimepicker_options" placeholder="End Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'End Time'"></date-picker>
-                    </div>
-                    <div class="mt-10">
-                        <input class="single-input" v-model="filledform.interval" type="number" step=1 min=0 name="interval" placeholder="Time Interval" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Time Interval'" style="font-size:16px">
-                    </div>
-                    <div class="row justify-content-center d-flex align-items-center">
-                        <div class="mt-10 col-lg-6"><p></p></div>
-                        <div class="mt-10 col-lg-6">
-                            <button class="genric-btn success medium text-uppercase" type="submit">Load Data</button>
-                        </div>
-                    </div>
-                </form>
+                <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
             </div>
         </div>
         <div class="container justify-content-center align-items-center col-lg-9 col-md-9 mt-30">
@@ -28,6 +12,7 @@
 </template>
 
 <script>
+import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
 import Vue from "vue"
 import L from 'leaflet';
 import {antPath} from 'leaflet-ant-path';
@@ -46,6 +31,10 @@ https://leafletjs.com/examples/quick-start/
 var vueComponent;
 
 export default {
+    name: "LeafletMap",
+    components: {
+        TimeIntervalForm
+    },
     data() {
         return {
             map: null,
@@ -53,12 +42,6 @@ export default {
                 start: null,
                 end: null,
                 interval: null,
-            },
-            datetimepicker_options: {
-                format: 'DD/MM/YYYY h:mm:ss',
-                useCurrent: false,
-                showClear: true,
-                showClose: true,
             },
             blueIcon: L.icon({
                 iconUrl: 'marker-icon-blue.png',
@@ -307,8 +290,17 @@ export default {
         clickEvent(coords) {
             console.log("Event Clicked! Coordenates: " + coords);
             // to do
-        }
+        },
 
+        time_interval_submit_handler(start, end, interval) {
+            console.log(this.filledform);
+
+            this.filledform.start = start;
+            this.filledform.end = end;
+            this.filledform.interval = interval;
+
+            console.log(this.filledform);
+        }
         /* ======================== AUX METHODS ======================== */
 
 
@@ -324,8 +316,7 @@ export default {
 
 
 
-    },
-    name: "LeafletMap"
+    }
 }
 </script>
 
