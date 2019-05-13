@@ -8,7 +8,7 @@
             <PageBanner parent_page="Home" page="Permissions" />
 
             <!--================ Permissions Boxes Area ============-->
-            <div class="row m0 justify-content-center align-items-center">
+            <div class="row justify-content-center align-items-center">
                 <div class="col-lg-9 col-md-9">
                     <PermissionsDiv />
                 </div>

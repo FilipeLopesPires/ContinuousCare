@@ -8,7 +8,11 @@
             <PageBanner parent_page="Home" page="Patients" />
 
             <!--================ Permissions Boxes Area ============-->
-            <PermissionsDiv @use="use_permission" />
+            <div class="row justify-content-center align-items-center">
+                <div class="col-lg-9 col-md-9">
+                    <PermissionsDiv @use="use_permission" />
+                </div>
+            </div>
 
             <!--================ Permissions Boxes Area ============-->
             <b-container ref="client_container" class="mb-20" :hidden="!data_loaded">

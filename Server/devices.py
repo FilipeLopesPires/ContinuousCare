@@ -77,8 +77,10 @@ class HearthRate(Metric):
     def checkEvent(self, normalJsonData):
         hr = normalJsonData["heartRate"]
         if hr:
-            if hr <= 50 or hr>=100:
-                return "HighHeartRate"
+            if hr>=100:
+                return {"events":["High Heart Rate"], "metrics":["heartRate"]}
+            elif hr<=50:
+                return {"events":["Low Heart Rate"], "metrics":["heartRate"]}
         return None
 
 class Sleep(Metric):
@@ -121,8 +123,8 @@ class Sleep(Metric):
     def checkEvent(self, normalJsonData):
         duration = normalJsonData["duration"]
         if duration:
-            if duration < 4:
-                return "VeryLittleSleep"
+            if duration < 7:
+                return {"events":["Not Enough Sleep"], "metrics":["duration"]}
         return None
 
 class Calories(Metric):
@@ -158,6 +160,9 @@ class Calories(Metric):
     def normalizeData(self, jsonData):
         return {"calories":jsonData["summary"]["caloriesOut"]}
 
+    def checkEvent(self, normalJsonData):
+        #irrelevant
+        return None
 
 class Activity(Metric):
     def __init__(self, dataSource):
@@ -195,8 +200,8 @@ class Activity(Metric):
     def checkEvent(self, normalJsonData):
         sedentaryMinutes = normalJsonData["sedentaryMinutes"]
         if sedentaryMinutes:
-            if sedentaryMinutes > 8*60:
-                return "VerySedentary"
+            if sedentaryMinutes > 5*60:
+                return {"events":["Sedentary Behavior"], "metrics":["sedentaryMinutes"]}
         return None
 
 class Steps(Metric):
@@ -236,7 +241,7 @@ class Steps(Metric):
         steps = normalJsonData["steps"]
         if steps:
             if steps < 1000:
-                return "VeryLittleMoviment"
+                return {"events":["Not Enough Exercise"], "metrics":["steps"]}
         return None
 
 
@@ -302,21 +307,24 @@ class Foobotmetric(Metric):
         return { metric : float(value) for metric, value in zip(["time","pm10","t","h","co2","voc","aqi"], jsonData["datapoints"][0])}
 
     def checkEvent(self, normalJsonData):
+        output={"events":[], "metrics":[]}
         aqi = normalJsonData["aqi"]
-        output=""
         if aqi:
             if aqi >= 75:
-                output+="VeryHighGeneralPollution,"
+                output["events"].append("High General Pollution Index")
+                output["metrics"].append("aqi")
         pm10 = normalJsonData["pm10"]
         if pm10:
             if pm10 >= 40:
-                output+="VeryHighParticleMatter10,"
+                output["events"].append("High Percentage of Particle Matter(<10 um)")
+                output["metrics"].append("pm10")
         voc = normalJsonData["voc"]
         if voc:
             if voc >= 350:
-                output+="VeryHighVolatileCompounds,"
-        if output!="":
-            return output[:-1]
+                output["events"].append("High Percentage of Volatile Compounds")
+                output["metrics"].append("pm10")
+        if output["events"]!=[]:
+            return output
         return None
 
 
@@ -384,29 +392,34 @@ class WAQI(Metric):
         return dict({metric:float(jsonData["data"]["iaqi"][metric]["v"]) for metric in jsonData["data"]["iaqi"]}, **{"aqi":float(jsonData["data"]["aqi"])})
 
     def checkEvent(self, normalJsonData):
+        output={"events":[], "metrics":[]}
         aqi = normalJsonData["aqi"]
-        output=""
         if aqi:
             if aqi >= 75:
-                output+="VeryHighGeneralPollution,"
+                output["events"].append("High General Pollution Index")
+                output["metrics"].append("aqi")
         pm10 = normalJsonData["pm10"]
         if pm10:
             if pm10 >= 40:
-                output+="VeryHighParticleMatter10,"
+                output["events"].append("High Percentage of Particle Matter(<10 um)")
+                output["metrics"].append("pm10")
         o3 = normalJsonData["o3"]
         if o3:
             if o3 >= 130:
-                output+="VeryHighOzono,"
+                output["events"].append("High Percentage of Ozone")
+                output["metrics"].append("o3")
         pm25 = normalJsonData["pm25"]
         if pm25:
             if pm25 >= 55:
-                output+="VeryHighParticleMatter25,"
+                output["events"].append("High Percentage of Particle Matter(<2.5 um)")
+                output["metrics"].append("pm25")
         so2 = normalJsonData["so2"]
         if so2:
             if so2 >= 180:
-                output+="VeryHighSulfurDioxide,"
-        if output!="":
-            return output[:-1]
+                output["events"].append("High Percentage of Sulfur Dioxide")
+                output["metrics"].append("so2")
+        if output["events"]!=[]:
+            return output
         return None
 
 

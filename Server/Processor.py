@@ -616,12 +616,13 @@ class Processor:
             return  json.dumps({"status":2, "msg":"No moods were passed to register."}).encode("UTF-8")
         moods=data["moods"]
         concatMoods="moods[0]"
-        allMoods={}
+        allMoods={"events":[], "metrics":[], "data":{}}
         for m in moods:
-            allMoods[m]="PersonalStatus"
+            allMoods["events"].append(m)
+            allMoods["metrics"].append("PersonalStatus")
             concatMoods+=m+","
         try: 
-            self.process([("PersonalStatus", {"moods":concatMoods[:-1]}),("Event", allMoods)], user)
+            self.process([("PersonalStatus", {"moods":concatMoods[:-1]}),("Event", {"events":json.dumps(allMoods)})], user)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Mood(s) registered with success."}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"While saving data.Database internal error. "+str(e)}).encode("UTF-8")
@@ -697,7 +698,7 @@ class myThread (threading.Thread):
             if any(updating):
                 print(updating)
                 responses=[]
-                allEvents={}
+                allEvents={"events":[], "metrics":[], "data":{}}
                 for i,v in enumerate(updating):
                     if v:
                         try:
@@ -706,10 +707,9 @@ class myThread (threading.Thread):
                             normalMetric=self.deltaTimes[i][1].normalizeData(resp)
                             event=self.deltaTimes[i][1].checkEvent(resp)
                             if event:
-                                eventInfo=""
-                                for key,item in normalMetric.items():
-                                    eventInfo+=str(key)+","+str(item)+"/"
-                                allEvents[event]=normalMetric[:-1]
+                                allEvents["events"]=list(set(allEvents["events"]+event["events"]))
+                                allEvents["metrics"]=list(set(allEvents["metrics"]+event["metrics"]))
+                                allEvents["data"] = dict(allEvents["data"], **normalMetric)
                             responses.append((self.deltaTimes[i][1].metricType, normalMetric))
                         except Exception as e:
                             logging.error("<"+self.user+">Exception caught: "+str(e))
@@ -720,10 +720,9 @@ class myThread (threading.Thread):
                                 normalMetric=self.deltaTimes[i][1].normalizeData(resp)
                                 event=self.deltaTimes[i][1].checkEvent(normalMetric)
                                 if event:
-                                    eventInfo=""
-                                for key,item in normalMetric.items():
-                                    eventInfo+=str(key)+","+str(item)+"/"
-                                allEvents[event]=normalMetric[:-1]
+                                    allEvents["events"]=list(set(allEvents["events"]+event["events"]))
+                                    allEvents["metrics"]=list(set(allEvents["metrics"]+event["metrics"]))
+                                    allEvents["data"] = dict(allEvents["data"], **normalMetric)
                                 responses.append((self.deltaTimes[i][1].metricType, normalMetric))
                             except DatabaseException as e:
                                 logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
@@ -731,7 +730,7 @@ class myThread (threading.Thread):
                                 logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
 
                 if allEvents!={}:
-                    responses.append(("Event", allEvents)) 
+                    responses.append(("Event", {"events": json.dumps(allEvents)})) 
                 self.processor.process(responses, self.user)
         print("ended")
       

@@ -867,7 +867,7 @@ CREATE PROCEDURE accept_permission (
       ELSE
         -- Else Create the accepted permission
         INSERT INTO accepted_permission
-        VALUES (__client_id, __medic_id, NOW(), __pending_duration);
+        VALUES (__client_id, __medic_id, NOW(), ADDTIME(NOW(), __pending_duration));
       END IF;
 
       -- Delete the request
@@ -984,22 +984,59 @@ CREATE PROCEDURE has_permission (
   END //
 
 /*
- * Obtains all pending permissions from a user displaying information of the associated medic/client
+ * Similar as the stored procedure update_permissions
+ *  however just updates permissions related to a single user
  */
-CREATE PROCEDURE get_pending_permissions (
-    _user VARCHAR(30))
+CREATE PROCEDURE update_permissions_user (
+    IN _user VARCHAR(30))
   BEGIN
     DECLARE __user_id INTEGER;
 
-    -- Get user_id of the user
-    SELECT user_id INTO __user_id
-    FROM user
+    SELECT medic_id INTO __user_id
+    FROM medic JOIN user ON medic.user_id = user.user_id
     WHERE username = _user;
 
+    IF __user_id IS NULL THEN
+      SELECT client_id INTO __user_id
+      FROM client JOIN user ON client.user_id = user.user_id
+      WHERE username = _user;
+
+      INSERT INTO expired_permission
+      SELECT *
+      FROM accepted_permission
+      WHERE client_id = __user_id
+        AND expiration_date < NOW();
+
+      DELETE FROM accepted_permission
+      WHERE medic_id = __user_id
+        AND expiration_date < NOW();
+
+      SELECT FALSE;
+    ELSE
+      INSERT INTO expired_permission
+      SELECT *
+      FROM accepted_permission
+      WHERE medic_id = __user_id
+        AND expiration_date < NOW();
+
+      DELETE FROM accepted_permission
+      WHERE medic_id = __user_id
+        AND expiration_date < NOW();
+
+      SELECT TRUE;
+    END IF;
+
+  END //
+
+/*
+ * Obtains all pending permissions from a user displaying information of the associated medic/client
+ */
+CREATE PROCEDURE get_pending_permissions (
+    IN _user VARCHAR(30),
+    IN _is_medic BOOLEAN)
+  BEGIN
     -- If the user is a medic
-    IF EXISTS(SELECT *
-              FROM medic
-              WHERE user_id = __user_id) THEN
+    IF _is_medic THEN
       SELECT TIME_FORMAT(pending_permission.duration, "%H:%i"),
              user.username,
              user.full_name,
@@ -1027,19 +1064,11 @@ CREATE PROCEDURE get_pending_permissions (
  * Obtains all accepted permissions from a user displaying information of the associated medic/client
  */
 CREATE PROCEDURE get_accepted_permissions (
-    _user VARCHAR(30))
+    IN _user VARCHAR(30),
+    IN _is_medic BOOLEAN)
   BEGIN
-    DECLARE __user_id INTEGER;
-
-    -- Get user_id of the user
-    SELECT user_id INTO __user_id
-    FROM user
-    WHERE username = _user;
-
     -- If the user is a medic
-    IF EXISTS(SELECT *
-              FROM medic
-              WHERE user_id = __user_id) THEN
+    IF _is_medic THEN
       SELECT TIME_FORMAT(TIMEDIFF(accepted_permission.expiration_date, NOW()), "%H:%i"),
              user.username,
              user.full_name,
@@ -1065,19 +1094,11 @@ CREATE PROCEDURE get_accepted_permissions (
   END //
 
 CREATE PROCEDURE get_expired_permissions (
-    _user VARCHAR(30))
+    IN _user VARCHAR(30),
+    IN _is_medic BOOLEAN)
   BEGIN
-    DECLARE __user_id INTEGER;
-
-    -- Get user_id of the user
-    SELECT user_id INTO __user_id
-    FROM user
-    WHERE username = _user;
-
     -- If the user is a medic
-    IF EXISTS(SELECT *
-              FROM medic
-              WHERE user_id = __user_id) THEN
+    IF _is_medic THEN
       SELECT DATE_FORMAT(expired_permission.begin_date, "%Y-%m-%d %H:%i:%s"),
              DATE_FORMAT(expired_permission.end_date, "%Y-%m-%d %H:%i:%s"),
              user.username,

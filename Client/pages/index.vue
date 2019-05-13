@@ -50,7 +50,7 @@
       <div class="justify-content-center d-flex align-items-top">
         <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920">
           <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 mr--30 mt-30 ">
-            <Events :datesEvents="datesEvents"/>
+            <Events/>
           </div>
           <div class="col-lg-7 col-md-7 col-sm-7 col-xs-7 ml--30">
             <TagsArea :areas="tags_area"/>
@@ -93,50 +93,6 @@ export default {
           tags: ["Cold / Respiratory Pain","Insomnia / Difficult Night","Migraine / Headache","Muscle Soreness or Injury","Allergies","Back or Joint Pain","Skin Conditions","Stomache or Intestinal Disconforts","Overstress / Heart Disconfort"]
         }
       ],
-      datesEvents: {
-        'September': [
-          {
-            title: 'Five',
-            slug: 'five',
-            teaser: 'five',
-            published_at: '30.09.2016.'
-          },
-          {
-            title: 'Four',
-            slug: 'four',
-            teaser: 'four',
-            published_at: '15.09.2016.'
-          }
-        ],
-        'April': [
-          {
-            title: 'Three',
-            slug: 'three',
-            teaser: 'three',
-            published_at: '14.04.2016.'
-          },
-          {
-            title: 'Two and a half',
-            slug: 'two-and-a-half',
-            teaser: 'two and a half',
-            published_at: '02.04.2016.'
-          }
-        ],
-        'December': [
-          {
-            title: 'Two',
-            slug: 'two',
-            teaser: 'two',
-            published_at: '25.12.2015.'
-          },
-          {
-            title: 'One',
-            slug: 'one',
-            teaser: 'one',
-            published_at: '01.12.2015.'
-          }
-        ]
-      },
     }
   },
  /* mounted() {

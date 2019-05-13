@@ -2,7 +2,7 @@
     <div class="blog_right_sidebar">
         <div class="tag_cloud_widget">
             <div class="row justify-content-center d-flex align-items-center">
-                <input v-model='new_emotion' @keyup.enter="clickTag(null,new_emotion)" class='single-input mb-20 ml-15' placeholder='Type anything you find relevant...'>
+                <input v-model='new_emotion' @keyup.enter="clickTag(null,new_emotion)" class='single-input mb-20 ml-15 mr-15' placeholder='Type anything you find relevant...'>
                 <div class="col-lg-12 col-md-12" v-for="area in availableTags" :key="area.title">
                     <h4 class="widget_title"> {{ area.title }} </h4>
                     <ul>
@@ -84,8 +84,19 @@ export default {
                     }
                 }
             } else {
-                // add to selected tags
-                this.selectedTags.push({area:null, tag:tag});
+                // check if input already exists
+                var exists = false;
+                for(var i=0; i<this.selectedTags.length; i++) {
+                    if(this.selectedTags[i].tag == tag) {
+                        exists = true;
+                    }
+                }
+                if(!exists) {
+                    // add to selected tags
+                    this.selectedTags.push({area:null, tag:tag});
+                } else {
+                    // toast, warn that no repeated words are allowed
+                }
             }
         },
         unclickTag(selected) {
@@ -136,14 +147,16 @@ export default {
                     } else {
                         this.$toasted.show('Daily update submitted.', 
                             {position: 'bottom-center', duration: 2500});
-                        /* if(process.client) {
+                        if(process.client) {
                             window.location.reload(true);
-                        } */
+                        }
+                        /*
                         this.availableTags = [];
                         this.selectedTags = [];
                         for(var i in this.areas) {
                             this.availableTags.push(this.areas[i]);
                         }
+                        */
                     }
                 })
                 .catch(e => {

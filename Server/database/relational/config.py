@@ -10,7 +10,7 @@ chmod 600 config.py
 """
 
 HOST      = "localhost"
-PORT      = 33060
+PORT      = 3306
 USERNAME  = "pi2019cc_flaskapp"
 PASSWORD  = "T)[-keLSh.9UFZcN58.+"
 DATABASE  = "db"
