@@ -19,31 +19,40 @@
                 <b-row>
                     <div class="w-100">
                         <b-row>
-                            <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
-                                <div class="blog_right_sidebar">
-                                    <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
-                                </div>
-                            </div>
-                            <h2 class="col-md-11 mt-10">{{ client_name }}</h2>
+                            <h1 class="col-md-11 mt-10">{{ client_name }}</h1>
                             <div class="col-md-1">
                                 <button @click="close_charts" class="genric-btn danger radius"><i class="fa fa-times"></i></button>
                             </div>
                         </b-row>
-                        <div class="form-inline">
-                            <input @click="on_metric_option_change(true)" type="radio" name="metric_option" id="health_status_radio" checked />
-                            <label for="health_status_radio"> Health Status</label>
-                        </div>
-                        <div class="form-inline mb-20">
-                            <input @click="on_metric_option_change(false)" type="radio" name="metric_option" id="environment_radio" />
-                            <label for="environment_radio"> Environment</label>
-                        </div>
-                        <b-card no-body>
+                        <b-row>
+                            <b-col md="3">
+                                <b-card style="width:200px">
+                                    <h4>Metrics</h4>
+                                    <div class="form-inline">
+                                        <input @click="on_metric_option_change(true)" type="radio" name="metric_option" id="health_status_radio" checked />
+                                        <label for="health_status_radio"> Health Status</label>
+                                    </div>
+                                    <div class="form-inline mb-20">
+                                        <input @click="on_metric_option_change(false)" type="radio" name="metric_option" id="environment_radio" />
+                                        <label for="environment_radio"> Environment</label>
+                                    </div>
+                                </b-card>
+                            </b-col>
+
+                            <b-col offset-md="1" md=4>
+                                <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
+                            </b-col>
+                        </b-row>
+                        <b-card v-if="Object.keys(charts_data).length > 0" no-body>
                             <b-tabs card justified>
                                 <b-tab v-for="(data, metric) in charts_data" :key="metric" :title="metric">
                                     <apexchart width="100%" height="80%" type="line" :options="charts_options" :series="[{data:data}]"></apexchart>
                                 </b-tab>
                             </b-tabs>
                         </b-card>
+                        <div class="text-center" v-else>
+                            <p>No data for the given patient, interval and metrics option requested.</p>
+                        </div>
                     </div>
                 </b-row>
             </b-container>
@@ -91,6 +100,7 @@ export default {
          *  data are changed before this function is called
          */
         async display_graphics() {
+            console.log("call");
             await this.$axios.$get(this.data_source, {
                 headers: {
                     AuthToken: this.$store.getters.sessionToken

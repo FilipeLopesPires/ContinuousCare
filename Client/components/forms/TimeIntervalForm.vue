@@ -9,14 +9,14 @@
             </div>
             <div class="mt-10 form-inline">
                 <input class="single-input col-md-7" v-model="interval" type="number" name="interval" placeholder="Time Interval" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Time Interval'" style="font-size:16px">
-                <b-form-select ref="time_unit_select" class="col-md-5">
-                    <option :value="null" >Interval unit</option>
+                <select ref="time_unit_select" class="col-md-5 custom-select">
+                    <option :value="null">Time unit</option>
                     <option value="s">seconds</option>
                     <option value="m">minutes</option>
                     <option value="h">hours</option>
                     <option value="d">days</option>
                     <option value="w">weeks</option>
-                </b-form-select>
+                </select>
             </div>
             <div class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6"><p></p></div>
@@ -52,14 +52,14 @@ export default {
         on_submit() {
             let interval_unit = this.$refs.time_unit_select.value;
 
-            if (interval_unit !== null && (this.interval === null || this.interval === '')) {
+            if ((interval_unit !== null && interval_unit !== "") && (this.interval === null || this.interval === '')) {
                 this.$toasted.show(
                     'Insert a interval count.',
                     this.toast_configs
                 );
                 return;
             }
-            else if ((this.interval !== null && this.interval !== '') && interval_unit === null) {
+            else if ((this.interval !== null && this.interval !== '') && (interval_unit === null || interval_unit === "")) {
                 this.$toasted.show(
                     'Choose an interval unit.',
                     this.toast_configs
