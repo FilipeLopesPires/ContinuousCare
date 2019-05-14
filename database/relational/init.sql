@@ -13,7 +13,8 @@ create table user (
   user_id                 integer     primary key auto_increment ,
 -- PRIMARY KEY
   username                varchar(30) unique,
-  password                char(88),
+  derived_password        BINARY(44),
+  salt                    BINARY(44),
   full_name               varchar(55),
   email                   varchar(30)
 );
@@ -172,7 +173,8 @@ DELIMITER //
  */
 CREATE PROCEDURE insert_client (
     IN _username varchar(30),
-    IN _password char(88),
+    IN _derived_password BINARY(44),
+    IN _salt BINARY(44),
     IN _full_name varchar(55),
     IN _email varchar(30),
     IN _health_number integer,
@@ -192,8 +194,8 @@ CREATE PROCEDURE insert_client (
     END IF;
 
     -- Insertions
-    INSERT INTO user (username, password, full_name, email)
-    VALUES (_username, _password, _full_name, _email);
+    INSERT INTO user (username, derived_password, salt, full_name, email)
+    VALUES (_username, _derived_password, _salt, _full_name, _email);
 
     INSERT INTO client (user_id, health_number, birth_date, weight, height, additional_information)
     VALUES (LAST_INSERT_ID(), _health_number, STR_TO_DATE(_birth_date, "%d-%m-%Y"), _weight, _height, _additional_information);
@@ -211,7 +213,8 @@ CREATE PROCEDURE insert_client (
  */
 CREATE PROCEDURE insert_medic (
     IN _username VARCHAR(30),
-    IN _password CHAR(88),
+    IN _derived_password BINARY(44),
+    IN _salt BINARY(44),
     IN _full_name VARCHAR(55),
     IN _email VARCHAR(30),
     IN _company VARCHAR(100),
@@ -226,8 +229,8 @@ CREATE PROCEDURE insert_medic (
     END IF;
 
     -- Insertions
-    INSERT INTO user (username, password, full_name, email)
-    VALUES (_username, _password, _full_name, _email);
+    INSERT INTO user (username, derived_password, salt, full_name, email)
+    VALUES (_username, _derived_password, _salt, _full_name, _email);
 
     INSERT INTO medic (user_id, company, specialities)
     VALUES (LAST_INSERT_ID(), _company, _specialities);
@@ -240,24 +243,25 @@ CREATE PROCEDURE insert_medic (
 
 
 /*
- * Verifies if the credentials of a user are correct
- * Used for login
+ * Gets the information needed to check
+ *  the credentials and also returns an integer
+ *  according to the user type
  */
-CREATE PROCEDURE verify_credentials (
-    IN _username varchar(30),
-    IN _password char(88))
+CREATE PROCEDURE get_credentials (
+    IN _username varchar(30))
   BEGIN
-    START TRANSACTION;
 
-    IF NOT EXISTS(SELECT * FROM user WHERE username = _username and password = _password) THEN
-      SELECT 0;
-    ELSEIF EXISTS(SELECT * FROM client_username WHERE username = _username) THEN
-      SELECT 1;
-    ELSE -- IF EXISTS(SELECT * FROM medic_username WHERE username = _username) THEN
-      SELECT 2;
+    IF EXISTS (SELECT * FROM client_username WHERE username = _username) THEN
+      SELECT 1, derived_password, salt
+      FROM user
+      WHERE username = _username;
+    ELSEIF EXISTS (SELECT * FROM medic_username WHERE username = _username) THEN
+      SELECT 2, derived_password, salt
+      FROM user
+      WHERE username = _username;
     END IF;
 
-    COMMIT;
+    SELECT NULL, NULL, NULL;
   END //
 
 /*
@@ -403,8 +407,8 @@ CREATE PROCEDURE get_user_info (
  */
 CREATE PROCEDURE update_client_info (
     IN _username varchar(30),
-    IN _password char(88),
-    IN _new_password char(88),
+    IN _new_derived_password BINARY(44),
+    IN _new_salt BINARY(44),
     IN _full_name varchar(55),
     IN _email varchar(30),
     IN _health_number integer,
@@ -431,17 +435,11 @@ CREATE PROCEDURE update_client_info (
 	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
     END IF;
 
-    IF _password IS NOT NULL AND _new_password IS NOT NULL THEN
-      IF NOT EXISTS (SELECT *
-                     FROM user
-                     WHERE username = _username
-                       AND password = _password) THEN
-        SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Wrong password!";
-      ELSE
-        UPDATE user
-        SET password = _new_password
-        where username = _username;
-      END IF;
+    IF _new_derived_password IS NOT NULL THEN
+      UPDATE user
+      SET derived_password = _new_derived_password,
+          salt = _new_salt
+      WHERE username = _username;
     END IF;
 
     -- Update user related data
@@ -469,8 +467,8 @@ CREATE PROCEDURE update_client_info (
  */
 CREATE PROCEDURE update_medic_info (
     IN _username varchar(30),
-    IN _password char(88),
-    IN _new_password char(88),
+    IN _new_derived_password BINARY(44),
+    IN _new_salt BINARY(44),
     IN _full_name varchar(55),
     IN _email varchar(30),
     IN _company varchar(100),
@@ -489,17 +487,11 @@ CREATE PROCEDURE update_medic_info (
 	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
     END IF;
 
-    IF _password IS NOT NULL AND _new_password IS NOT NULL THEN
-      IF NOT EXISTS (SELECT *
-                     FROM user
-                     WHERE username = _username
-                       AND password = _password) THEN
-        SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Wrong password!";
-      ELSE
-        UPDATE user
-        SET password = _new_password
-        where username = _username;
-      END IF;
+    IF _new_derived_password IS NOT NULL THEN
+      UPDATE user
+      SET derived_password = _new_derived_password,
+          salt = _new_salt
+      where username = _username;
     END IF;
 
     -- Update user related data
