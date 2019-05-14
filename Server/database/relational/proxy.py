@@ -44,6 +44,7 @@ class StoredProcedures:
     REJECT_PERMISSION = "delete_permission"
     DELETE_PERMISSION = REJECT_PERMISSION
     HAS_PERMISSION = "has_permission"
+    UPDATE_PERMISSIONS_USER = "update_permissions_user"
     GET_EXPIRED_PERMISSIONS_OF_USER = "get_expired_permissions"
     GET_PENDING_PERMISSIONS_OF_USER = "get_pending_permissions"
     GET_ACCEPTED_PERMISSIONS_OF_USER = "get_accepted_permissions"
@@ -783,7 +784,7 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.HAS_PERMISSION, (medic, client))
 
-            return next(cursor.stored_results()).fetchall()[0] == 1
+            return next(cursor.stored_results()).fetchall()[0][0] == 1
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -852,7 +853,14 @@ class MySqlProxy:
         try:
             conn, cursor = self._init_connection()
 
-            cursor.callproc(StoredProcedures.GET_PENDING_PERMISSIONS_OF_USER, [user])
+            conn.start_transaction()
+
+            cursor.callproc(StoredProcedures.UPDATE_PERMISSIONS_USER, [user])
+            is_medic = next(cursor.stored_results()).fetchall()[0][0] == 1
+
+            cursor.callproc(StoredProcedures.GET_PENDING_PERMISSIONS_OF_USER, (user, is_medic))
+
+            conn.commit()
 
             return self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 0)
         except Exception as e:
@@ -876,19 +884,21 @@ class MySqlProxy:
 
             data = {}
 
-            cursor.callproc(StoredProcedures.GET_PENDING_PERMISSIONS_OF_USER, [user])
+            conn.start_transaction()
+            cursor.callproc(StoredProcedures.UPDATE_PERMISSIONS_USER, [user])
+            is_medic = next(cursor.stored_results()).fetchall()[0][0] == 1
+
+            cursor.callproc(StoredProcedures.GET_PENDING_PERMISSIONS_OF_USER, (user, is_medic))
             data["pending"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 0)
 
-            cursor.callproc(StoredProcedures.GET_ACCEPTED_PERMISSIONS_OF_USER, [user])
+            cursor.callproc(StoredProcedures.GET_ACCEPTED_PERMISSIONS_OF_USER, (user, is_medic))
             data["accepted"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 1)
 
-            cursor.callproc(StoredProcedures.GET_EXPIRED_PERMISSIONS_OF_USER, [user])
+            cursor.callproc(StoredProcedures.GET_EXPIRED_PERMISSIONS_OF_USER, (user, is_medic))
             data["expired"] = self._parse_permissions_data(next(cursor.stored_results()).fetchall(), 2)
 
+            conn.commit()
+
             return data
-        except Exception as e:
-            if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
-                raise LogicException(e.msg)
-            raise RelationalDBException(str(e))
         finally:
             self._close_conenction(conn, cursor)

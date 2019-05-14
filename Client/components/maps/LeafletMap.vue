@@ -12,6 +12,7 @@
 </template>
 
 <script>
+import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
 import Vue from "vue"
 import L from 'leaflet';
 import {antPath} from 'leaflet-ant-path';
@@ -42,12 +43,6 @@ export default {
                 end: null,
                 interval: null,
             },
-            /* datetimepicker_options: {
-                format: 'MMMM DD, YYYY h:mm:ss',
-                useCurrent: false,
-                showClear: true,
-                showClose: true,
-            }, */
             blueIcon: L.icon({
                 iconUrl: 'marker-icon-blue.png',
                 iconAnchor:   [12.5, 41],
@@ -343,8 +338,7 @@ export default {
             this.$toasted.show(message, {position: 'bottom-center', duration: duration});
         }
 
-    },
-    name: "LeafletMap"
+    }
 }
 </script>
 
