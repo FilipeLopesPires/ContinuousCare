@@ -2,27 +2,11 @@
     <div>
         <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
             <div class="blog_right_sidebar">
-                <form class="form-wrap" @submit.prevent="onLoadMap">
-                    <div class="mt-10">
-                        <date-picker class="single-input" v-model="filledform.start" name="start" :config="datetimepicker_options" placeholder="Start Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Start Time'"></date-picker>
-                    </div>
-                    <div class="mt-10">
-                        <date-picker class="single-input" v-model="filledform.end" name="end" :config="datetimepicker_options" placeholder="End Time" onfocus="this.placeholder = ''" onblur="this.placeholder = 'End Time'"></date-picker>
-                    </div>
-                    <div class="mt-10">
-                        <input class="single-input" v-model="filledform.interval" type="number" step=1 min=0 name="interval" placeholder="Time Interval" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Time Interval'" style="font-size:16px">
-                    </div>
-                    <div class="row justify-content-center d-flex align-items-center">
-                        <div class="mt-10 col-lg-6"><p></p></div>
-                        <div class="mt-10 col-lg-6">
-                            <button class="genric-btn success medium text-uppercase" type="submit">Load Data</button>
-                        </div>
-                    </div>
-                </form>
+                <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
             </div>
         </div>
-        <div class="container justify-content-center align-items-center col-lg-9 col-md-9 mt-30">
-            <div class="mb-60  leaflet-map" id="map-wrap" ref="worldmap"></div>
+        <div class="container justify-content-center align-items-center col-lg-9 col-md-9 mt-30" id="map-div">
+            <div class="mb-60 leaflet-map" id="map-wrap" ref="worldmap"></div>
         </div>
     </div>
 </template>
@@ -32,6 +16,8 @@ import Vue from "vue"
 import L from 'leaflet';
 import {antPath} from 'leaflet-ant-path';
 
+import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
+
 /* 
 https://korigan.github.io/Vue2Leaflet/#/components/
 https://github.com/schlunsen/nuxt-leaflet
@@ -39,27 +25,29 @@ https://github.com/KoRiGaN/Vue2Leaflet
 https://leafletjs.com/examples/quick-start/
 
 // http://jsfiddle.net/sowelie/3JbNY/
-
-
-
 */
 var vueComponent;
 
 export default {
+    components: {
+        TimeIntervalForm,
+    },
     data() {
         return {
             map: null,
+            map_layers: null,
+            map_markers: null,
             filledform: {
                 start: null,
                 end: null,
                 interval: null,
             },
-            datetimepicker_options: {
-                format: 'DD/MM/YYYY h:mm:ss',
+            /* datetimepicker_options: {
+                format: 'MMMM DD, YYYY h:mm:ss',
                 useCurrent: false,
                 showClear: true,
                 showClose: true,
-            },
+            }, */
             blueIcon: L.icon({
                 iconUrl: 'marker-icon-blue.png',
                 iconAnchor:   [12.5, 41],
@@ -93,60 +81,9 @@ export default {
     },
     async mounted() {
         vueComponent = this;
-        var path_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/path");
-        if(path_result) {
-            if(path_result.status==0) {
-                this.$nextTick(function () {
-                    // prepare data
-                    var view = { coords:[path_result.data.latitude[path_result.data.latitude.length-1], path_result.data.longitude[path_result.data.longitude.length-1]], zoom:13 };
-                    var userPath = [];
-                    for(var i=0; i<path_result.data.latitude.length; i++) {
-                        userPath.push([path_result.data.latitude[i], path_result.data.longitude[i]]);
-                    }
-                    // build map
-                    this.createMap(view, 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA');
-                    this.createPath(userPath);
-                });
-            }
-        }
-        var events_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/event");
-        if(events_result) {
-            if(events_result.status==0) {
-                this.$nextTick(function () {
-                    this.insertMarkers(this.getMarkers(events_result.data));
-                });
-            }
-        }
-        var foobot_result = await this.getDevices(this.$store.getters.sessionToken);
-        if(foobot_result) {
-            if(foobot_result.status==0) {
-                this.$nextTick(function () {
-                    if(foobot_result.data.length == 0) { return; }
-                    var foobots = [];
-                    for(var i in foobot_result.data) {
-                        if(foobot_result.data[i].type.includes("Foobot")) {
-                            foobots.push(foobot_result.data[i]);
-                        }
-                    }
-                    var foobot_markers = [];
-                    var marker;
-                    for(var i in foobots) {
-                        marker = {
-                            icon: this.greenIcon,
-                            coords: [foobots[i].latitude, foobots[i].longitude],
-                            popup: {
-                                id: 0,
-                                title: "Foobot",
-                                time: null,
-                                content: "UUID: " + foobots[i].uuid,
-                            }
-                        }
-                        foobot_markers.push(marker);
-                    }
-                    this.insertMarkers(foobot_markers);
-                });
-            }
-        }
+        this.map_layers = L.layerGroup();
+        await this.onLoadMap(false);
+        
     },
     methods: {
         
@@ -175,14 +112,18 @@ export default {
                                 .then(res => {
                                     if(res.status != 0) {
                                         console.log(res);
-                                        // toast
+                                        if(res.status == 1) {
+                                            this.showToast(res.msg, 7500);
+                                        } else {
+                                            this.showToast("Something went terribly wrong while trying to retrieve data from the server. Please try again later or contact us through email.", 7500);
+                                        }
                                         return null;
                                     }
                                     return res;
                                 })
                                 .catch(e => {
                                     console.log(e);
-                                    // toast
+                                    this.showToast("Something went wrong while trying to retrieve data from the server. It might be down at the moment. Please try again later.", 7500);
                                     return null;
                                 });
         },
@@ -194,16 +135,18 @@ export default {
                                 .then(res => {
                                     if(res.status != 0) {
                                         console.log(res)
-                                        this.$toasted.show('Something went wrong while trying to retrieve devices locations. The server might be down at the moment. Please try again later.', 
-                                            {position: 'bottom-center', duration: 7500});
+                                        if(res.status == 1) {
+                                            this.showToast(res.msg, 7500);
+                                        } else {
+                                            this.showToast("Something went terribly wrong while trying to retrieve devices locations. Please try again later or contact us through email.", 7500);
+                                        }
                                         return null;
                                     }
                                     return res;
                                 })
                                 .catch(e => {
                                     // Unable to get devices from server
-                                    this.$toasted.show('Something went wrong while trying to retrieve devices locations. The server might be down at the moment. Please try again later.', 
-                                        {position: 'bottom-center', duration: 7500});
+                                    this.showToast("Something went wrong while trying to retrieve devices locations. The server might be down at the moment. Please try again later.", 7500);
                                     console.log(e);
                                     return null;
                                 });
@@ -211,26 +154,102 @@ export default {
 
         /* ======================== MAP & PATH ======================== */
 
-        async onLoadMap() {
-            // to do
-            console.log(this.filledform);
-        },
-        createMap(view, mapAccessToken) {
-            /* 
-            // 3D world Map (not working)
-            // https://www.wrld3d.com/wrld.js/latest/docs/examples/adding-a-leaflet-marker-with-popup/
-            // { src: 'https://cdn-webgl.wrld3d.com/wrldjs/dist/latest/wrld.js'},
-            this.map = L.Wrld.map("map-wrap", "mapAccessToken", {
-                center: [37.7950, -122.401],
-                zoom: 15
-            }); */
-            this.map = L.map(this.$refs.worldmap).setView(view.coords, view.zoom);
-            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-                id: 'mapbox.streets',
-                accessToken: mapAccessToken,
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-            }).addTo(this.map);
+        async onLoadMap(reload) {
+            var isMapCreated = false;
+            if(reload) {
+                this.map.removeLayer(this.map_layers);
+                this.map_layers = L.layerGroup();
+                this.map.setView([40.6303, -8.6575], 13);
+                return;
+            }
+            var path_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/path");
+            if(path_result) {
+                if(path_result.status==0) {
+                    if(path_result.data.hasOwnProperty('latitude')) {
+                        // prepare data
+                        var view = { coords:[path_result.data.latitude[path_result.data.latitude.length-1], path_result.data.longitude[path_result.data.longitude.length-1]], zoom:13 };
+                        var userPath = [];
+                        for(var i=0; i<path_result.data.latitude.length; i++) {
+                            userPath.push([path_result.data.latitude[i], path_result.data.longitude[i]]);
+                        }
+                        // build map
+                        /* 
+                        // 3D world Map (not working)
+                        // https://www.wrld3d.com/wrld.js/latest/docs/examples/adding-a-leaflet-marker-with-popup/
+                        // { src: 'https://cdn-webgl.wrld3d.com/wrldjs/dist/latest/wrld.js'},
+                        this.map = L.Wrld.map("map-wrap", "mapAccessToken", {
+                            center: [37.7950, -122.401],
+                            zoom: 15
+                        }); */
+                        if(reload) {
+                            this.map.setView(view.coords, view.zoom);
+                        } else {
+                            this.map = L.map(this.$refs.worldmap).setView(view.coords, view.zoom);
+                            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                                id: 'mapbox.streets',
+                                accessToken: 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA',
+                                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                                maxZoom: 18,
+                            }).addTo(this.map);
+                            this.map_layers.addTo(this.map);
+                        }
+                        this.createPath(userPath);
+                        isMapCreated = true;
+                    }
+                }
+            }
+            if(isMapCreated) {
+                var events_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/event");
+                if(events_result) {
+                    if(events_result.status==0) {
+                        if(events_result.data.hasOwnProperty('latitude')) {
+                            this.insertMarkers(this.getMarkers(events_result.data));
+                        }
+                    }
+                }
+            }
+            var foobot_result = await this.getDevices(this.$store.getters.sessionToken);
+            if(foobot_result) {
+                if(foobot_result.status==0) {
+                    if(foobot_result.data.length != 0) { 
+                        var foobots = [];
+                        for(var i in foobot_result.data) {
+                            if(foobot_result.data[i].type.includes("Foobot")) {
+                                foobots.push(foobot_result.data[i]);
+                            }
+                        }
+                        if(foobots.length > 0) {
+                            var foobot_markers = [];
+                            var marker;
+                            for(var i in foobots) {
+                                marker = {
+                                    icon: this.greenIcon,
+                                    coords: [foobots[i].latitude, foobots[i].longitude],
+                                    popup: {
+                                        id: 0,
+                                        title: "Foobot",
+                                        time: null,
+                                        content: "UUID: " + foobots[i].uuid,
+                                    } 
+                                }
+                                foobot_markers.push(marker);
+                            }
+                            if(!isMapCreated) {
+                                var view = { coords:[foobot_markers[0].coords[0],foobot_markers[0].coords[1]], zoom:13 };
+                                this.createMap(view, 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA');
+                                isMapCreated = true;
+                            }
+                            this.insertMarkers(foobot_markers);
+                        }
+                    }
+                }
+            }
+            if(!isMapCreated) {
+                var view = { coords:[40.6303, -8.6575], zoom:13 };
+                this.createMap(view, 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA');
+                isMapCreated = true;
+                this.showToast("Warning: map was generated but information could not be retrieved. Either there is no data to sync or the server might be down at the moment.", 7500);
+            }
         },
         createPath(path) {
             var options = {
@@ -239,9 +258,8 @@ export default {
                 paused: false, reverse: false, hardwareAccelerated: true
             };
             var userPath = antPath(path, options);
-            userPath.addTo(this.map);
-            //this.map.addLayer(userPath); // it does the same as the previous line
-            //var polyline = L.polyline(path).addTo(this.map); // path version before antPath
+            //userPath.addTo(this.map);
+            this.map_layers.addLayer(userPath);
         },
 
         /* ======================== MARKERS ======================== */
@@ -298,31 +316,32 @@ export default {
                 }
                     popup_content       += "<p>" + markers[i].popup.content + "</p>"
                                     + "</div>";
-                var marker = L.marker(markers[i].coords, options).bindPopup(popup_content).addTo(this.map);
+                var marker = L.marker(markers[i].coords, options).bindPopup(popup_content)//.addTo(this.map);
                 marker.on('mouseover', function(e) { this.openPopup(); });
                 marker.on('mouseout', function(e) { this.closePopup(); });
-                marker.on('click', function(e) { vueComponent.clickEvent([e.latlng.lat, e.latlng.lng]) });  
+                marker.on('click', function(e) { vueComponent.clickEvent([e.latlng.lat, e.latlng.lng]) });
+                this.map_layers.addLayer(marker);
             }
         },
         clickEvent(coords) {
             console.log("Event Clicked! Coordenates: " + coords);
             // to do
-        }
+        },
 
         /* ======================== AUX METHODS ======================== */
 
-
-
-
-
-
-
-
-
-
-
-
-
+        time_interval_submit_handler(start, end, interval) {
+            console.log("time_interval_submit_handler")
+            console.log(this.filledform);
+            this.filledform.start = start;
+            this.filledform.end = end;
+            this.filledform.interval = interval;
+            console.log(this.filledform);
+            this.onLoadMap(true);
+        },
+        showToast(message, duration) {
+            this.$toasted.show(message, {position: 'bottom-center', duration: duration});
+        }
 
     },
     name: "LeafletMap"
