@@ -19,6 +19,11 @@
                 <b-row>
                     <div class="w-100">
                         <b-row>
+                            <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
+                                <div class="blog_right_sidebar">
+                                    <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
+                                </div>
+                            </div>
                             <h2 class="col-md-11 mt-10">{{ client_name }}</h2>
                             <div class="col-md-1">
                                 <button @click="close_charts" class="genric-btn danger radius"><i class="fa fa-times"></i></button>
@@ -53,11 +58,13 @@
 
 <script>
 import PermissionsDiv from '@/components/boxes/PermissionsDiv.vue'
+import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
 
 export default {
     middleware: ['check-log', 'log', 'medics-only'],
     components: {
-        PermissionsDiv
+        PermissionsDiv,
+        TimeIntervalForm
     },
     head: {
         title: "Patients"
@@ -141,6 +148,9 @@ export default {
 
             document.getElementById("health_status_radio").checked = true;
             this.data_source = "/healthstatus"
+        },
+
+        time_interval_submit_handler(start, end, interval) {
         }
     }
 }
