@@ -12,7 +12,7 @@ the database (in what concerns the connections)
 import influxdb
 import json
 from database.time_series import config
-from database.exceptions import TimeSeriesDBException
+from database.exceptions import TimeSeriesDBException, LogicException
 
 
 class InfluxProxy:
@@ -68,6 +68,9 @@ class InfluxProxy:
         :return: list of maps
         :rtype: list
         """
+        if begin_time and end_time and interval:
+            raise LogicException("Combination of start, end and interval arguments invalid.")
+
         # Parameters on query only work on the where clause
         params = {
             "username": username
@@ -79,29 +82,32 @@ class InfluxProxy:
 
         if interval:
 
-            if begin_time is not None:
+            if begin_time:
                 query += " AND time >= $begin_time AND time <= $begin_time + " + interval
                 params["begin_time"] = begin_time * 1000000000
 
-            elif end_time is not None:
+            elif end_time:
                 query += " AND time <= $end_time AND time >= $end_time - " + interval
                 params["end_time"] = end_time * 1000000000
             else:
                 query += " AND time >= now() - " + interval
 
-        elif begin_time:
-            query += " AND time >= $begin_time"
-            params["begin_time"] = begin_time * 1000000000
-
-        elif end_time:
-            query += " AND time <= $end_time"
-            params["end_time"] = end_time * 1000000000
+        elif not begin_time and not end_time:
+            query += " ORDER BY time DESC LIMIT 1"
 
         else:
-            query += " ORDER BY time DESC LIMIT 1"
-            
+            if begin_time:
+                query += " AND time >= $begin_time"
+                params["begin_time"] = begin_time * 1000000000
+
+            if end_time:
+                query += " AND time <= $end_time"
+                params["end_time"] = end_time * 1000000000
+
         try:
             result = self._get_connection.query(query, {"params": json.dumps(params)})
+        except LogicException:
+            raise
         except Exception as e:
             raise TimeSeriesDBException(str(e))
         return list(result.get_points(measurement))

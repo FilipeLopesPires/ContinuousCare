@@ -186,9 +186,9 @@ CREATE PROCEDURE insert_client (
     START TRANSACTION;
     -- Check duplicates
     IF EXISTS (SELECT * FROM user WHERE username = _username) THEN
-      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "username already exists";
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "username already in use.";
     ELSEIF EXISTS (SELECT * FROM client WHERE health_number = _health_number) THEN
-      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "health number already exists";
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Health number already exists.";
     ELSEIF EXISTS (SELECT * FROM user WHERE username != _username AND email = _email) THEN
 	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "Email already in use.";
     END IF;

@@ -533,7 +533,7 @@ class MySqlProxy:
                 user_type, derived_password, salt = next(cursor.stored_results()).fetchall()[0]
 
                 if not self._verify_password(password, derived_password, salt):
-                    raise errors.Error("Wrong password!", sqlstate=SQL_STATE)
+                    raise LogicException("Wrong password!")
 
                 new_password, new_salt = self._derive_password(new_password)
             else:
@@ -542,6 +542,8 @@ class MySqlProxy:
             cursor.callproc(StoredProcedures.UPDATE_MEDIC_PROFILE_DATA, (username, new_password, new_salt,
                                                                          full_name, email, company, specialities))
             conn.commit()
+        except LogicException:
+            raise
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
