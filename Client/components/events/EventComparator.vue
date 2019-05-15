@@ -4,7 +4,7 @@
             <b-row class="justify-content-center">
                 <b-col lg="3" md="4" sm="6" xs="12" v-for='evt in eventToShow' :key="evt.id" style="margin-bottom: 15px;">
                     <div class="event" style="cursor:pointer;">
-                        <p class='event-date' v-html="evt.time"></p>
+                        <p class='event-date' v-html="formatDateTime(evt.time)"></p>
                         <h3><a v-html="evt.title"></a></h3>
                         <p v-html="evt.content"></p>
                     </div>
@@ -22,6 +22,24 @@ export default {
         "startTime",
         "endTime",
     ],
+    computed: {
+        formatDateTime(datetime) {
+            var d = new Date(datetime);
+
+            Number.prototype.padLeft = function(base,chr){
+                var len = (String(base || 10).length - String(this).length)+1;
+                return len > 0? new Array(len).join(chr || '0')+this : this;
+            }
+
+            var retval = [(d.getMonth()+1).padLeft(),
+                        d.getDate().padLeft(),
+                        d.getFullYear()].join('/') +' ' +
+                        [d.getHours().padLeft(),
+                        d.getMinutes().padLeft(),
+                        d.getSeconds().padLeft()].join(':');
+            return retval;
+        },
+    },
     data() {
       return {
         eventToShow:[],

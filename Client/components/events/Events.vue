@@ -7,7 +7,7 @@
           <p v-if='dateWithEvents.length > 0' class='date'>{{ date }}</p>
           <div v-for='event in dateWithEvents' class='event' :key="event.id" @click="info(event)" style="cursor:pointer">
             <span class='dot'></span>
-            <p class='event-date' v-html="event.time"></p>
+            <p class='event-date' v-html="formaDateTime(event.time)"></p>
             <h3><a v-html="event.title"></a></h3>
             <p v-html="event.content"></p>
           </div>
@@ -37,6 +37,24 @@ export default {
       }
     },
     components:{VuePerfectScrollbar},
+    computed: {
+        formatDateTime(datetime) {
+            var d = new Date(datetime);
+
+            Number.prototype.padLeft = function(base,chr){
+                var len = (String(base || 10).length - String(this).length)+1;
+                return len > 0? new Array(len).join(chr || '0')+this : this;
+            }
+
+            var retval = [(d.getMonth()+1).padLeft(),
+                        d.getDate().padLeft(),
+                        d.getFullYear()].join('/') +' ' +
+                        [d.getHours().padLeft(),
+                        d.getMinutes().padLeft(),
+                        d.getSeconds().padLeft()].join(':');
+            return retval;
+        },
+    },
     async mounted(){
       const config = {
         params: {'start': this.startTime, 'end': this.endTime},
