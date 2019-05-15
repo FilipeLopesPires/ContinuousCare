@@ -65,7 +65,7 @@ import Vue from "vue"
 import Toasted from 'vue-toasted'
 Vue.use(Toasted)
 
-import DeviceBox from '@/components//boxes/DeviceBox.vue'
+import DeviceBox from '@/components/boxes/DeviceBox.vue'
 
 export default {
     middleware: ['check-log', 'log', 'clients-only'],

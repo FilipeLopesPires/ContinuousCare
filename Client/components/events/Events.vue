@@ -5,7 +5,7 @@
       <div class='timeline' v-if='anyEvent()'>
         <div v-for='(dateWithEvents, date) in searchedEvents' :key="dateWithEvents.id">
           <p v-if='dateWithEvents.length > 0' class='date'>{{ date }}</p>
-          <div v-for='event in dateWithEvents' class='event' :key="event.id" @click="info(event.event)" style="cursor:pointer">
+          <div v-for='event in dateWithEvents' class='event' :key="event.id" @click="info(event)" style="cursor:pointer">
             <span class='dot'></span>
             <p class='event-date' v-html="event.time"></p>
             <h3><a v-html="event.title"></a></h3>
@@ -22,6 +22,10 @@
 import VuePerfectScrollbar from 'vue-perfect-scrollbar'
 export default {
     name: 'Events',
+    props: [
+      "startTime",
+      "endTime",
+    ],
     data() {
       return {
         datesEvents: {},
@@ -35,14 +39,14 @@ export default {
     components:{VuePerfectScrollbar},
     async mounted(){
       const config = {
-        params: {'start': parseInt(new Date().setHours(0,0,0,0)/1000), 'end': parseInt(new Date().getTime()/1000)},
+        params: {'start': this.startTime, 'end': this.endTime},
         headers: {'AuthToken': this.$store.getters.sessionToken}
       }
       await this.$axios.$get("/event", config)
             .then(res => {
-                console.log(res.data)
                 if(res.status==0){
                     var events=res.data
+                    console.log(events)
                     if("time" in events){
                         var today = (new Date()).toLocaleDateString()
                         var new_datesEvents = {}
@@ -52,29 +56,31 @@ export default {
                             var content = ""
                             var evt = JSON.parse(events["events"][i])
                             if(evt){
-                                for(var j=0; i<evt["events"].length;j++){
-                                    title+=evt["events"][j]+", "
-                                    //if data is empty the only events are related to personalStatus, else there may be some metrics and events related to personal signals
-                                    if(evt["data"]=={}){
-                                        if(!content.includes(evt["metrics"][j])){
-                                            content+=evt["metrics"][j]+"<br>"
-                                        }
-                                    }else{
-                                        for (let [key, value] of Object.entries(evt["data"])) {
-                                            if(key in evt["metrics"]){
-                                                content+="<font color=\"red\""+value+"</font><br>"
-                                            }else{
-                                                content+=value+"<br>"
-                                            }
-                                        }
+                                for(var j=0; j<evt["events"].length;j++){
+                                  title+=evt["events"][j]+", "
+                                  //if data is empty the only events are related to personalStatus, else there may be some metrics and events related to personal signals
+                                  if(Object.keys(evt["data"]).length==0){
+                                    if(!content.includes(evt["metrics"][j])){
+                                      content+=evt["metrics"][j]+"<br>"
                                     }
+                                  }else{
+                                    for (let [key, value] of Object.entries(evt["data"])) {
+                                      if(evt["metrics"].includes(key)){
+                                        content+="<font color=\"red\">"+key+": "+value+"</font><br>"
+                                      }else{
+                                        content+=key+": "+value+"<br>"
+                                      }
+                                    }
+                                  }
                                 }
                             }
-                            new_datesEvents[today].push({
-                            "time": events["time"][i],
-                            "title": title,
-                            "content": content,
-                            })
+                            if(title!=""){
+                              new_datesEvents[today].push({
+                                "time": events["time"][i],
+                                "title": title.slice(0, -2),
+                                "content": content,
+                                })
+                            }
                         }
                         this.datesEvents = new_datesEvents
                     }
@@ -122,8 +128,8 @@ export default {
       myUpdate(){
         this.$forceUpdate
       },
-      info(title){
-          console.log(title)
+      info(evt){
+        this.$emit("clicked", evt.title, event.clientX/window.innerWidth, event.clientY/window.innerHeight)
       },
       anyEvent() {
         return this.countAllEvents() ? true : false;
@@ -194,7 +200,8 @@ datesEvents: {
 .mycontainer {
     margin: 0 auto;
     max-width: 80%;
-    margin-bottom: 20px;
+    margin-bottom: 100px;
+    height: inherit;
 }
 
 .mycontainer .search-box {
@@ -231,7 +238,7 @@ datesEvents: {
 
 .mycontainer .timeline .event {
     position: relative;
-    max-width: 95%;
+    max-width: 90%;
     left: 20px;
     box-shadow: 1px 5px 10px 1px rgba(0, 0, 0, 0.2);
     border-radius: 5px;
@@ -268,6 +275,6 @@ datesEvents: {
     position: relative;
     margin: auto;
     width: 100%;
-    height: 600px;
+    height: inherit;
 }
 </style>

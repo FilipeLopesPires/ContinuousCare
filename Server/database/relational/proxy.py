@@ -17,8 +17,10 @@ from database.exceptions import RelationalDBException, LogicException
 
 # for password hashing
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-import base64
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from cryptography.exceptions import InvalidKey
+from base64 import b64encode, b64decode
+from os import urandom
 
 
 class StoredProcedures:
@@ -26,7 +28,7 @@ class StoredProcedures:
     REGISTER_MEDIC = "insert_medic"
     GET_ALL_USERNAMES = "get_all_usernames"
     INSERT_DEVICE = "insert_device"
-    VERIFY_CREDENTIALS = "verify_credentials"
+    GET_CREDENTIALS = "get_credentials"
     GET_ALL_CLIENT_DEVICES = "get_all_client_devices"
     GET_ALL_SUPPORTED_DEVICES = "get_all_supported_devices"
     GET_USER_PROFILE_DATA = "get_user_info"
@@ -52,6 +54,8 @@ class StoredProcedures:
 
 SQL_STATE = "03000"
 
+SALT_SIZE = 32
+
 class MySqlProxy:
     """Proxy used to interact with a MySql database allowing ..."""
 
@@ -66,17 +70,6 @@ class MySqlProxy:
             user      = config.USERNAME,
             password  = config.PASSWORD
         )
-
-        self.__hash_algorithm = hashes.SHA512()
-        self.__cipher_backend = default_backend()
-
-    @property
-    def _hash_algorithm(self):
-        return self.__hash_algorithm
-
-    @property
-    def _cipher_backend(self):
-        return self.__cipher_backend
 
     @property
     def _pool(self):
@@ -107,21 +100,59 @@ class MySqlProxy:
         cursor.close()
         conn.close()
 
-    def _hash_password(self, password):
+    def _derive_password(self, password):
         """
-        Applies a hash function (SHA512) to a clear text password to
-        either compared or stored.
+        Derives a password with a salt
 
         :param password: clear text password
         :type password: str
-        :return: password after hash function applied and encoded in base 64
-        :rtype: str
+        :return: derived password and salt used encoded in base64
+        :rtype: (str, str)
         """
-        hash_parser = hashes.Hash(self._hash_algorithm, self._cipher_backend)
-        hash_parser.update(bytes(password, "utf-8"))
-        password = base64.b64encode(hash_parser.finalize()).decode()
+        salt = urandom(SALT_SIZE)
 
-        return password
+        password = bytes(password, "utf-8")
+
+        kdf = Scrypt(
+            salt    = salt,
+            length  = 32,
+            n       = 2**14,
+            r       = 8,
+            p       = 1,
+            backend = default_backend()
+        )
+
+        derived_password = kdf.derive(password)
+
+        return b64encode(derived_password), b64encode(salt)
+
+    def _verify_password(self, password, derived_password, salt):
+        """
+
+        :param password: clear text received from the user that wants to be authenticated
+        :param password: str
+        :return: true if password received matches the one stored
+        :rtype: bool
+        """
+        derived_password = b64decode(derived_password)
+        salt = b64decode(salt)
+
+        password = bytes(password, "utf-8")
+
+        kdf = Scrypt(
+            salt    = salt,
+            length  = 32,
+            n       = 2**14,
+            r       = 8,
+            p       = 1,
+            backend = default_backend()
+        )
+
+        try:
+            kdf.verify(password, derived_password)
+            return True
+        except InvalidKey:
+            return False
 
     def register_client(self, username, password, full_name, email, health_number,
                               birth_date, weight, height, additional_information):
@@ -159,15 +190,15 @@ class MySqlProxy:
         try:
             conn, cursor = self._init_connection()
 
-            password = self._hash_password(password)
+            password, salt = self._derive_password(password)
 
             cursor.callproc(
                 StoredProcedures.REGISTER_CLIENT,
-                (username, password, full_name, email, health_number,
+                (username, password, salt, full_name, email, health_number,
                  birth_date, weight, height, additional_information)
             )
 
-            new_id = next(cursor.stored_results()).fetchall()[0]
+            new_id = next(cursor.stored_results()).fetchall()[0][0]
 
             return new_id
         except Exception as e:
@@ -203,14 +234,14 @@ class MySqlProxy:
         try:
             conn, cursor = self._init_connection()
 
-            password = self._hash_password(password)
+            password, salt = self._derive_password(password)
 
             cursor.callproc(
                 StoredProcedures.REGISTER_MEDIC,
-                (username, password, full_name, email, company, specialities)
+                (username, password, salt, full_name, email, company, specialities)
             )
 
-            new_id = next(cursor.stored_results()).fetchall()[0]
+            new_id = next(cursor.stored_results()).fetchall()[0][0]
 
             return new_id
         except Exception as e:
@@ -229,16 +260,18 @@ class MySqlProxy:
         :param password:
         :type password: str
         :return: 0 - invalid credentials, 1 - valid and its a client, 2 - valid and its a medic
-        :rtype: int
+        :rtype: (int, bool)
         """
         try:
             conn, cursor = self._init_connection()
 
-            password = self._hash_password(password)
+            cursor.callproc(StoredProcedures.GET_CREDENTIALS, [username])
+            user_type, derived_password, salt = next(cursor.stored_results()).fetchall()[0]
 
-            cursor.callproc(StoredProcedures.VERIFY_CREDENTIALS, (username, password))
+            if not user_type:
+                return 0
 
-            return next(cursor.stored_results()).fetchone()[0]
+            return user_type if self._verify_password(password, derived_password, salt) else 0
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -418,8 +451,8 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def update_client_profile_data(self, username, password, new_password, full_name, email, health_number,
-                                       birth_date, weight, height, additional_information):
+    def update_client_profile_data(self, username, password, new_password, full_name, email,
+                                         health_number, birth_date, weight, height, additional_information):
         """
         Updates the profile information for a user. The function receives all information
         to overload all data, assuming that some of it is the same as the stored one.
@@ -449,14 +482,21 @@ class MySqlProxy:
         try:
             conn, cursor = self._init_connection()
 
-            if password:
-                password = self._hash_password(password)
-            if new_password:
-                new_password = self._hash_password(new_password)
+            if password and new_password:
+                cursor.callproc(StoredProcedures.GET_CREDENTIALS, [username])
+                user_type, derived_password, salt = next(cursor.stored_results()).fetchall()[0]
 
-            cursor.callproc(StoredProcedures.UPDATE_CLIENT_PROFILE_DATA, (username, password, new_password, full_name, email,
-                                                                        health_number, birth_date, weight, height,
-                                                                        additional_information))
+                if not self._verify_password(password, derived_password, salt):
+                    raise errors.Error("Wrong password!", sqlstate=SQL_STATE)
+
+                new_password, new_salt = self._derive_password(new_password)
+            else:
+                new_password, new_salt = None, None
+
+            cursor.callproc(StoredProcedures.UPDATE_CLIENT_PROFILE_DATA, (username, new_password, new_salt,
+                                                                          full_name, email, health_number,
+                                                                          birth_date, weight, height,
+                                                                          additional_information))
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -464,8 +504,8 @@ class MySqlProxy:
         finally:
             self._close_conenction(conn, cursor)
 
-    def update_medic_profile_data(self, username, password, new_password, full_name, email,
-                                   company, specialities):
+    def update_medic_profile_data(self, username, password, new_password,
+                                        full_name, email, company, specialities):
         """
         Updates the profile information for a user. The function receives all information
         to overload all data, assuming that some of it is the same as the stored one.
@@ -488,12 +528,18 @@ class MySqlProxy:
         try:
             conn, cursor = self._init_connection()
 
-            if password:
-                password = self._hash_password(password)
-            if new_password:
-                new_password = self._hash_password(new_password)
+            if password and new_password:
+                cursor.callproc(StoredProcedures.GET_CREDENTIALS, [username])
+                user_type, derived_password, salt = next(cursor.stored_results()).fetchall()[0]
 
-            cursor.callproc(StoredProcedures.UPDATE_MEDIC_PROFILE_DATA, (username, password, new_password,
+                if not self._verify_password(password, derived_password, salt):
+                    raise errors.Error("Wrong password!", sqlstate=SQL_STATE)
+
+                new_password, new_salt = self._derive_password(new_password)
+            else:
+                new_password, new_salt = None, None
+
+            cursor.callproc(StoredProcedures.UPDATE_MEDIC_PROFILE_DATA, (username, new_password, new_salt,
                                                                          full_name, email, company, specialities))
             conn.commit()
         except Exception as e:

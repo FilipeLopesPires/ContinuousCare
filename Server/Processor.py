@@ -162,7 +162,7 @@ class Processor:
 
         user = self.clientTokens.get(token, None)
         if not user:
-            return  json.dumps({"status":1, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             devices=self.database.getAllDevices(user)
@@ -276,7 +276,7 @@ class Processor:
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return  json.dumps({"status":2, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
             if client:

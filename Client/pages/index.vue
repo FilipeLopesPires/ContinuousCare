@@ -50,7 +50,7 @@
       <div class="justify-content-center d-flex align-items-top">
         <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920">
           <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 mr--30 mt-30 ">
-            <Events/>
+            <Events style="height:600px;" :startTime="startEvents" :endTime="endEvents"/>
           </div>
           <div class="col-lg-7 col-md-7 col-sm-7 col-xs-7 ml--30">
             <TagsArea :areas="tags_area"/>
@@ -82,6 +82,8 @@ export default {
   },
   data() {
     return {
+      startEvents:parseInt(new Date().setHours(0,0,0,0)/1000),
+      endEvents:parseInt(new Date().getTime()/1000),
       full_name: this.$store.getters.profile.full_name,
       tags_area: [
         {
