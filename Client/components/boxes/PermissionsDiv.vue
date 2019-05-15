@@ -7,12 +7,12 @@
                     <h3  class="title_color text-center" >Request Permission</h3>
                     <h5>Patient Username:</h5>
                     <div class="form-inline">
-                        <input @click="on_request_option_change(true)" type="radio" class="col-md-1" name="request_option" />
+                        <input @click="on_request_option_change(true)" id="client_username_radio" type="radio" class="col-md-1" name="request_option" />
                         <b-input v-model="client_username" ref="client_username_input" class="single-input col-md-11" :disabled="!request_by_username"></b-input>
                     </div>
                     <h5>Patient Health Number:</h5>
                     <div class="form-inline">
-                        <input @click="on_request_option_change(false)" type="radio" class="col-md-1" name="request_option" checked />
+                        <input @click="on_request_option_change(false)" id="health_number_radio" type="radio" class="col-md-1" name="request_option" :checked="true" />
                         <b-input v-model="health_number" ref="health_number_input" class="single-input col-md-11" :disabled="request_by_username"></b-input>
                     </div>
                 </div>
@@ -39,7 +39,7 @@
                 </div>
             </b-modal>
             <button
-                class="genric-btn info radius mb-20"
+                class="genric-btn radius mb-20" :class="btn_class"
                 @click="$refs.request_grant_permission_modal.show()">
                 <span v-if="user_type === 'medic'"><i class="fa fa-plus"></i> Request Permission</span>
                 <span v-else-if="user_type === 'client'"><i class="fa fa-plus"></i> Grant Permission</span>
@@ -69,7 +69,12 @@ export default {
         PermissionsTable
     },
     data() {
+        var btn_class = "info";
+        if(this.$store.getters.isMedic) {
+            btn_class = "primary";
+        }
         return {
+            btn_class,
             user_type: this.$store.getters.userType,
             permissions: {
                 "pending":[],
@@ -338,9 +343,14 @@ export default {
          * Clears all inputs on the modal and closes it
          */
         close_modal() {
+            this.$refs.request_grant_permission_modal.hide();
+
             if (this.user_type === "medic") {
                 this.$refs.client_username_input.value = "";
                 this.$refs.health_number_input.value = "";
+
+                this.on_request_option_change(false)
+                document.getElementById("health_number_radio").checked = true;
             }
             else if (this.user_type === "client")
                 this.$refs.medic_username_input.value = "";
@@ -348,7 +358,6 @@ export default {
             this.$refs.duration_hours_input.value = "";
             this.$refs.duration_minutes_input.value = "";
 
-            this.$refs.request_grant_permission_modal.hide();
         },
 
         /**
@@ -417,34 +426,11 @@ export default {
                 else
                     this.display_error_toasts(false, res, "accepting permission")
             })
-            .catch(e => this.display_error_toasts(true, e, "accepting permission"))
+            .catch(e => this.display_error_toasts(true, e, "accepting permission"));
         },
 
-        /**
-         * TODO
-         */
-        async use_permission(idx, client_username) {
-
-            return;
-
-            return await this.$axios.$post("", this.requests_header)
-            .then(res => {
-                if (res.status == 0) {
-                    this.$toasted.show(
-                        "Permission started.",
-                        this.toast_configs
-                    );
-                }
-                else if (res.status == 1) {
-                    this.$toasted.show(
-                        res.msg,
-                        this.toast_configs
-                    );
-                }
-                else
-                    this.display_error_toasts(false, res, "starting permission")
-            })
-            .catch(e => this.display_error_toasts(true, e, "starting permission"));
+        use_permission(client_name, client_username) {
+            this.$emit('use', client_name, client_username);
         }
     }
 }

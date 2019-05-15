@@ -14,8 +14,6 @@ import json
 from database.time_series import config
 from database.exceptions import TimeSeriesDBException
 
-import re
-
 
 class InfluxProxy:
     """
@@ -83,21 +81,21 @@ class InfluxProxy:
 
             if begin_time is not None:
                 query += " AND time >= $begin_time AND time <= $begin_time + " + interval
-                params["begin_time"] = begin_time
+                params["begin_time"] = begin_time * 1000000000
 
             elif end_time is not None:
                 query += " AND time <= $end_time AND time >= $end_time - " + interval
-                params["end_time"] = end_time
+                params["end_time"] = end_time * 1000000000
             else:
                 query += " AND time >= now() - " + interval
 
         elif begin_time:
             query += " AND time >= $begin_time"
-            params["begin_time"] = begin_time
+            params["begin_time"] = begin_time * 1000000000
 
         elif end_time:
             query += " AND time <= $end_time"
-            params["end_time"] = end_time
+            params["end_time"] = end_time * 1000000000
 
         else:
             query += " ORDER BY time DESC LIMIT 1"

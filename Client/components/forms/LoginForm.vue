@@ -96,7 +96,8 @@ export default {
             /* this.logInDev("medic"); */
         }, 
         forgotMyPassword() {
-            this.showToast("This feature is not yet implemented. We are sorry for the inconvenience :(", 5000);
+            //this.showToast("This feature is not yet implemented. We are sorry for the inconvenience :(", 5000);
+            this.$router.push("/contact");
         },
 
         async checkLogin(filledform) {
@@ -111,7 +112,7 @@ export default {
                                 console.log(res);
                                 //this.showToast("Invalid username or password. Please make sure you fill in the fields correctly.", 5000);
                                 if(res.status == 1) {
-                                    this.showToast(res.message, 5000);
+                                    this.showToast(res.msg, 5000);
                                 } else {
                                     this.showToast("Something went wrong with the login process. The server might be down at the moment. Please re-submit or try again later.", 7500);
                                 }
@@ -137,7 +138,7 @@ export default {
                                 console.log(res);
                                 //this.showToast("Something went terribly wrong while trying to retrieve information about the user. Please try to login again, if it does not work contact us through email.", 7500);
                                 if(res.status == 1) {
-                                    this.showToast(res.message, 5000);
+                                    this.showToast(res.msg, 5000);
                                 } else {
                                     this.showToast("Something went wrong while trying to retrieve information about the user. The server might be down at the moment. Please re-submit or try again later.", 7500);
                                 }

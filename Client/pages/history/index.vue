@@ -199,9 +199,6 @@ export default {
             }
             this.onLoadChart();
         },
-        onClickTimeline(content) {
-            console.log(content)
-        }
         /* onGoBack() {
             this.$router.push("/")
         } */

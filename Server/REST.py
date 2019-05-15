@@ -48,7 +48,7 @@ def logout():
 
     authToken = request.headers.get("AuthToken")
     if not authToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     return processor.logout(authToken)
 
@@ -56,7 +56,7 @@ def logout():
 def devices():
     authToken = request.headers.get("AuthToken")
     if not authToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     data = request.json
     if not data:
@@ -104,7 +104,7 @@ def registerMood():
 def getData():
     userToken = request.headers.get("AuthToken")
     if not userToken and request.endpoint != "download":
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     start=request.args.get('start', type=int)
     end=request.args.get('end', type=int)
@@ -126,7 +126,7 @@ def getData():
 def profile():
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     if request.method == 'PUT':
         data = request.json
@@ -161,7 +161,7 @@ def permissions():
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     if request.method == 'GET':
         return processor.getAllPermissions(userToken)
@@ -179,7 +179,7 @@ def acceptPermission(medic):
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     return processor.acceptPermission(userToken, medic)
 
@@ -190,7 +190,7 @@ def rejectPermission(medic):
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     return processor.rejectPermission(userToken, medic)
 
@@ -201,7 +201,7 @@ def removePendingPermission(client):
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     return processor.removePendingPermission(userToken, client)
 
@@ -212,7 +212,7 @@ def removeAcceptedPermission(medic):
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":4, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
 
     return processor.removeAcceptedPermission(userToken, medic)
 

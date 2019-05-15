@@ -69,7 +69,7 @@
                     <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.weight" type="number" name="weight" placeholder="Weight (kg)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Weight (kg)'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team ">
-                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.height" type="number" min="0.10" max="2.50" step="0.10" name="height" placeholder="Height (m)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height (m)'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.height" type="number" min="0.10" max="2.50" step="0.10" name="height" placeholder="Height (cm)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height (cm)'">
                 </div>
             </div>
             <!-- Aditional Info -->
@@ -220,7 +220,7 @@ export default {
                                 console.log(res);
                                 //this.showToast("Registration was invalid. Please make sure you fill in the form correctly.", 5000);
                                 if(res.status == 1) {
-                                    this.showToast(res.message, 5000);
+                                    this.showToast(res.msg, 5000);
                                 } else {
                                     this.showToast("Something went wrong with the registration process. The server might be down at the moment. Please re-submit or try again later.", 7500);
                                 }
@@ -246,7 +246,7 @@ export default {
                                 console.log(res);
                                 //this.showToast("Something went terribly wrong with the registration process. Please try to login, if it does not work contact us through email.", 7500);
                                 if(res.status == 1) {
-                                    this.showToast(res.message, 5000);
+                                    this.showToast(res.msg, 5000);
                                 } else {
                                     this.showToast("Something went wrong with the registration process. The server might be down at the moment. Please try to login, if it does not work re-register or contact us through email.", 7500);
                                 }
