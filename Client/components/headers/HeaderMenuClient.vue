@@ -22,9 +22,9 @@
                                     <nuxt-link :class="{ active: isActive('Home') }" class="nav-item" to="/">
                                         <span class="nav-link">Home</span>
                                     </nuxt-link>
-                                    <!-- <nuxt-link :class="{ active: isActive('TMP') }" class="nav-item" to="/tmp">
-                                        <span class="nav-link">TMP</span>
-                                    </nuxt-link> -->
+                                    <nuxt-link :class="{ active: isActive('Events') }" class="nav-item" to="/events">
+                                        <span class="nav-link">Events</span>
+                                    </nuxt-link>
                                     <nuxt-link :class="{ active: isActive('History') }" class="nav-item" to="/history">
                                         <span class="nav-link">History</span>
                                     </nuxt-link>

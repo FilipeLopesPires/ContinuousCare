@@ -22,3 +22,10 @@ Vue.use(Notifications)
 
 import VueNativeSock from 'vue-native-websocket'
 Vue.use(VueNativeSock, 'ws://mednat.ieeta.pt:8344', {connectManually:true, format: 'json'})
+
+import VModal from 'vue-js-modal'
+Vue.component('vmodal', VModal)
+Vue.use(VModal)
+
+import VueScrollTo from 'vue-scrollto'
+Vue.use(VueScrollTo)
