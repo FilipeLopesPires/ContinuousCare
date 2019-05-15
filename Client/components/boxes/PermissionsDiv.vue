@@ -97,15 +97,22 @@ export default {
 
         this.permissions = await this.$axios.$get("/permission", this.requests_header)
         .then(res => {
-            if(res.status == 0)
+            if(res.status == 0) {
                 return res.data;
-            else if (res.status == 1)
+            }
+            else if (res.status == 1) {
                 this.$toasted.show(
                     res.msg,
                     this.toast_configs
                 );
-            else
+            }
+            else if(res.status == 4) {
+                this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                this.$router.push("/login");
+            }
+            else {
                 this.display_error_toasts(false, res, "retrieving permissions");
+            }
             return {
                 pending: [],
                 accepted: [],
@@ -260,6 +267,10 @@ export default {
                         this.toast_configs
                     );
                 }
+                else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
+                }
                 else
                     this.display_error_toasts(false, res, "requesting permission");
             })
@@ -333,6 +344,10 @@ export default {
                         res.msg,
                         this.toast_configs
                     );
+                else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
+                }
                 else
                     this.display_error_toasts(false, res, "granting permission")
             })
@@ -422,6 +437,10 @@ export default {
                         res.msg,
                         this.toast_configs
                     );
+                }
+                else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
                 }
                 else
                     this.display_error_toasts(false, res, "accepting permission")

@@ -178,6 +178,10 @@ export default {
             this.serverData = await this.$axios.$get(restPath,config)
                                 .then(res => {
                                     if(res.status != 0) {
+                                        if(res.status == 4) {
+                                            this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                            this.$router.push("/login");
+                                        }
                                         this.requestError = true;
                                         return {};
                                     }

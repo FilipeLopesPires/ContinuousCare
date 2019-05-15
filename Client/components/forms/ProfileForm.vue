@@ -228,8 +228,11 @@ export default {
             return await this.$axios.$put("/profile", data, config)
                         .then(res => {
                             if(res.status != 0) {
-                                // warn which registration fields are invalid
                                 console.log(res);
+                                if(res.status == 4) {
+                                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                    this.$router.push("/login");
+                                }
                                 this.showToast("Update was invalid. Please make sure you fill in the form correctly.", 5000);
                             }
                             return res;

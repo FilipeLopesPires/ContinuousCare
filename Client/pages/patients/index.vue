@@ -15,47 +15,51 @@
             </div>
 
             <!--================ Permissions Boxes Area ============-->
-            <b-container ref="client_container" class="mb-20" :hidden="!data_loaded">
-                <b-row>
-                    <div class="w-100">
+            <div class="row justify-content-center align-items-center">
+                <div class="col-lg-11 col-md-11">
+                    <b-container ref="client_container" class="mb-20" :hidden="!data_loaded">
                         <b-row>
-                            <h1 class="col-md-11 mt-10">{{ client_name }}</h1>
-                            <div class="col-md-1">
-                                <button @click="close_charts" class="genric-btn danger radius"><i class="fa fa-times"></i></button>
+                            <div class="w-100">
+                                <b-row>
+                                    <h1 class="col-md-11 mt-10">{{ client_name }}</h1>
+                                    <div class="col-md-1 mt-10">
+                                        <button @click="close_charts" class="genric-btn-xtra radius"><i class="fa fa-times"></i></button>
+                                    </div>
+                                </b-row>
+                                <b-row>
+                                    <b-col md="3">
+                                        <b-card style="width:200px">
+                                            <h4>Metrics</h4>
+                                            <div class="form-inline">
+                                                <input @click="on_metric_option_change(true)" type="radio" name="metric_option" id="health_status_radio" checked />
+                                                <label for="health_status_radio"> Health Status</label>
+                                            </div>
+                                            <div class="form-inline mb-20">
+                                                <input @click="on_metric_option_change(false)" type="radio" name="metric_option" id="environment_radio" />
+                                                <label for="environment_radio"> Environment</label>
+                                            </div>
+                                        </b-card>
+                                    </b-col>
+
+                                    <b-col offset-md="1" md=7>
+                                        <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
+                                    </b-col>
+                                </b-row>
+                                <b-card v-if="Object.keys(charts_data).length > 0" no-body>
+                                    <b-tabs card justified>
+                                        <b-tab v-for="(data, metric) in charts_data" :key="metric" :title="metric">
+                                            <apexchart width="100%" height="80%" type="line" :options="charts_options" :series="[{data:data}]"></apexchart>
+                                        </b-tab>
+                                    </b-tabs>
+                                </b-card>
+                                <div class="text-center" v-else>
+                                    <p>No data for the given patient, interval and metrics option requested.</p>
+                                </div>
                             </div>
                         </b-row>
-                        <b-row>
-                            <b-col md="3">
-                                <b-card style="width:200px">
-                                    <h4>Metrics</h4>
-                                    <div class="form-inline">
-                                        <input @click="on_metric_option_change(true)" type="radio" name="metric_option" id="health_status_radio" checked />
-                                        <label for="health_status_radio"> Health Status</label>
-                                    </div>
-                                    <div class="form-inline mb-20">
-                                        <input @click="on_metric_option_change(false)" type="radio" name="metric_option" id="environment_radio" />
-                                        <label for="environment_radio"> Environment</label>
-                                    </div>
-                                </b-card>
-                            </b-col>
-
-                            <b-col offset-md="1" md=4>
-                                <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
-                            </b-col>
-                        </b-row>
-                        <b-card v-if="Object.keys(charts_data).length > 0" no-body>
-                            <b-tabs card justified>
-                                <b-tab v-for="(data, metric) in charts_data" :key="metric" :title="metric">
-                                    <apexchart width="100%" height="80%" type="line" :options="charts_options" :series="[{data:data}]"></apexchart>
-                                </b-tab>
-                            </b-tabs>
-                        </b-card>
-                        <div class="text-center" v-else>
-                            <p>No data for the given patient, interval and metrics option requested.</p>
-                        </div>
-                    </div>
-                </b-row>
-            </b-container>
+                    </b-container>
+                </div>
+            </div>
             
             <!--================ Footer Area =================-->
             <PageFooter />
@@ -118,6 +122,10 @@ export default {
                 else if (res.status == 1) {
 
                 }
+                else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
+                }
                 else {
 
                 }
@@ -138,7 +146,7 @@ export default {
         },
 
         async on_metric_option_change(health_status_clicked) {
-            let new_data_source = health_status_clicked ? "/health_status" : "/environmnet";
+            let new_data_source = health_status_clicked ? "/healthstatus" : "/environment";
 
             if (new_data_source === this.data_source)
                 return;

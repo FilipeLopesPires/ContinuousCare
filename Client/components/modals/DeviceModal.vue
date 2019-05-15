@@ -171,6 +171,9 @@ export default {
                             if(res.status != 0) {
                                 if(res.status == 1) { 
                                     this.showToast(res.msg, 5000);
+                                } else if(res.status == 4) {
+                                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                    this.$router.push("/login");
                                 } else {
                                     this.showToast("Something went wrong while adding your device. Please try again later.", 5000);
                                 }
@@ -193,6 +196,10 @@ export default {
                         .then(res => {
                             if(res.status != 0) {
                                 console.log(res);
+                                if(res.status == 4) {
+                                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                    this.$router.push("/login");
+                                }
                                 this.showToast("Something went wrong while updating your device. Please try again later.", 5000);
                                 return null;
                             }
@@ -213,6 +220,10 @@ export default {
                         .then(res => {
                             if(res.status != 0) {
                                 console.log(res);
+                                if(res.status == 4) {
+                                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                    this.$router.push("/login");
+                                }
                                 this.showToast("Something went wrong while removing your device. Please try again later.", 5000);
                                 return null;
                             }
