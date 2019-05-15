@@ -1,5 +1,6 @@
 <template>
-    <b-container class='mt-25'>
+    <b-container style="padding-top:90px">
+        <h3 v-if="event" class="widget_title"> All {{event}} episodes of the month </h3>
             <b-row class="justify-content-center">
                 <b-col lg="3" md="4" sm="6" xs="12" v-for='evt in eventToShow' :key="evt.id" style="margin-bottom: 15px;">
                     <div class="event" style="cursor:pointer;">
@@ -26,14 +27,88 @@ export default {
         eventToShow:[],
         height:null,
         width:null,
+        healthSate:null,
+        envState:null,
       }
     },
     watch:{
         event: function() {
+            var health=false
+            var env=false
+
             const config = {
                 params: {'start': this.startTime, 'end': this.endTime},
                 headers: {'AuthToken': this.$store.getters.sessionToken}
             }
+
+
+            this.$axios.$get("/healthstatus", config)
+            .then(res => {
+                if(res.status==0){
+                    var output={}
+                    var status=res.data
+                    if("time" in status){
+                        for(var key in status){
+                            if(!"time,latitude,longitude".includes(key)){
+                                if(status[key][status["time"].length-1]){
+                                    output[key]=status[key][status["time"].length-1]
+                                }
+                            }
+                        }
+                    }
+                    this.healthState=output
+                    health=true
+                }else if(res.status==1){
+                    this.$toasted.show(res.msg, 
+                                {position: 'bottom-center', duration: 7500});
+                }else{
+                    this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
+                                {position: 'bottom-center', duration: 7500});
+                }
+            })
+            .catch(e => {
+                // Unable to get devices from server
+                console.log(e)
+                this.$toasted.show('Something went wrong while trying to retrieve data. The server might be down at the moment. Please try again later.', 
+                    {position: 'bottom-center', duration: 7500});
+            })
+
+
+            this.$axios.$get("/environment", config)
+            .then(res => {
+                if(res.status==0){
+                    var output={}
+                    var status=res.data
+                    if("time" in status){
+                        for(var key in status){
+                            if(!"time,latitude,longitude".includes(key)){
+                                if(status[key][status["time"].length-1]){
+                                    output[key]=status[key][status["time"].length-1]
+                                }
+                            }
+                        }
+                    }
+                    this.envState=output
+                    env=true
+                }else if(res.status==1){
+                    this.$toasted.show(res.msg, 
+                                {position: 'bottom-center', duration: 7500});
+                }else{
+                    this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
+                                {position: 'bottom-center', duration: 7500});
+                }
+            })
+            .catch(e => {
+                // Unable to get devices from server
+                console.log(e)
+                this.$toasted.show('Something went wrong while trying to retrieve data. The server might be down at the moment. Please try again later.', 
+                    {position: 'bottom-center', duration: 7500});
+            })
+
+
+            while(!(health && env)){}
+
+
             this.$axios.$get("/event", config)
             .then(res => {
                 if(res.status==0){
@@ -47,20 +122,12 @@ export default {
                             if(evt){
                                 for(var j=0; j<evt["events"].length;j++){
                                     if(evt["events"][j]==this.event){
-                                        console.log("key")
                                         title+=evt["events"][j]+", "
-                                        //if data is empty the only events are related to personalStatus, else there may be some metrics and events related to personal signals
-                                        if(Object.keys(evt["data"]).length==0){
-                                            if(!content.includes(evt["metrics"][j])){
-                                                content+=evt["metrics"][j]+"<br>"
-                                            }
-                                        }else{
-                                            for (let [key, value] of Object.entries(evt["data"])) {
-                                                if(evt["metrics"].includes(key)){
-                                                    content+="<font color=\"red\">"+key+": "+value+"</font><br>"
-                                                }else{
-                                                    content+=value+"<br>"
-                                                }
+                                        for(let [key, value] of Object.entries({...this.healthState, ...this.envState})){
+                                            if(evt["metrics"].includes(key)){
+                                                content+="<font color=\"red\">"+key+": "+value+"</font><br>"
+                                            }else{
+                                                content+=key+": "+value+"<br>"
                                             }
                                         }
                                     }
@@ -115,4 +182,12 @@ export default {
     font-weight: 300;
     font-size: 14px;
 }
+.widget_title {
+    font-size: 18px;
+    line-height: 25px;
+    background: #3face4;
+    text-align: center;
+    color: #fff;
+    padding: 8px 0px;
+    margin-bottom: 30px; }
 </style>

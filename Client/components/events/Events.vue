@@ -46,7 +46,6 @@ export default {
             .then(res => {
                 if(res.status==0){
                     var events=res.data
-                    console.log(events)
                     if("time" in events){
                         var today = (new Date()).toLocaleDateString()
                         var new_datesEvents = {}
@@ -196,7 +195,6 @@ datesEvents: {
 .mycontainer {
     margin: 0 auto;
     max-width: 80%;
-    margin-bottom: 100px;
     height: inherit;
 }
 
@@ -271,6 +269,6 @@ datesEvents: {
     position: relative;
     margin: auto;
     width: 100%;
-    height: inherit;
+    height: 90%;
 }
 </style>

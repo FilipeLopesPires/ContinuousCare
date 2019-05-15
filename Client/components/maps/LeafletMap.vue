@@ -17,8 +17,6 @@ import Vue from "vue"
 import L from 'leaflet';
 import {antPath} from 'leaflet-ant-path';
 
-import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
-
 /* 
 https://korigan.github.io/Vue2Leaflet/#/components/
 https://github.com/schlunsen/nuxt-leaflet
@@ -109,6 +107,8 @@ export default {
                                         console.log(res);
                                         if(res.status == 1) {
                                             this.showToast(res.msg, 7500);
+                                        } else if(res.status == 4) {
+                                            
                                         } else {
                                             this.showToast("Something went terribly wrong while trying to retrieve data from the server. Please try again later or contact us through email.", 7500);
                                         }
