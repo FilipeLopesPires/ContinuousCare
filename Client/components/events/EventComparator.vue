@@ -58,7 +58,10 @@ export default {
                     }
                     this.healthState=output
                     health=true
-                }else if(res.status==1){
+                } else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
+                } else if(res.status==1){
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});
                 }else{
@@ -90,7 +93,10 @@ export default {
                     }
                     this.envState=output
                     env=true
-                }else if(res.status==1){
+                } else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
+                } else if(res.status==1){
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});
                 }else{
@@ -143,7 +149,10 @@ export default {
                         }
                         this.eventToShow = newEvents
                     }
-                }else if(res.status==1){
+                } else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
+                } else if(res.status==1){
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});
                 }else{

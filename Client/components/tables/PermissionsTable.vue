@@ -104,6 +104,10 @@ export default {
             return await this.$axios.$get("/permission/" + medic_username + "/reject", this.requests_header)
             .then(res => {
                 if (res.status == 0) {
+                    if(res.status == 4) {
+                        this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                        this.$router.push("/login");
+                    }
                     this.$toasted.show(
                         'Permission rejected',
                         this.toast_configs
@@ -127,6 +131,10 @@ export default {
             return await this.$axios.$delete("/permission/" + client_username + "/pending", this.requests_header)
             .then(res => {
                 if (res.status == 0) {
+                    if(res.status == 4) {
+                        this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                        this.$router.push("/login");
+                    }
                     this.permissions.splice(idx, 1);
                     this.$toasted.show(
                         "Pending permissiosn deleted.",
@@ -149,6 +157,10 @@ export default {
             return await this.$axios.$delete("/permission/" + medic_username + "/accepted", this.requests_header)
             .then(res => {
                 if (res.status == 0) {
+                    if(res.status == 4) {
+                        this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                        this.$router.push("/login");
+                    }
                     this.permissions.splice(idx, 1);
                     this.$toasted.show(
                         "Accepted permissiosn deleted.",

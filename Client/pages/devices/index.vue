@@ -109,6 +109,10 @@ export default {
             this.supported_devices = await this.$axios.$get("/supportedDevices")
                                     .then(res => {
                                         if(res.status != 0) {
+                                            if(res.status == 4) {
+                                                this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                                this.$router.push("/login");
+                                            }
                                             console.log(res)
                                             return [];
                                         } 
@@ -130,6 +134,10 @@ export default {
             var new_devices = await this.$axios.$get("/devices",config)
                                 .then(res => {
                                     if(res.status != 0) {
+                                        if(res.status == 4) {
+                                            this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                            this.$router.push("/login");
+                                        }
                                         this.requestError = true;
                                         console.log(res)
                                         return [];

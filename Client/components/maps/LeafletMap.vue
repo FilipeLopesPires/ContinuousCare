@@ -2,7 +2,7 @@
     <div>
         <div class="row justify-content-center d-flex align-items-center col-lg-12 ">
             <div class="blog_right_sidebar">
-                <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
+                <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" @time_interval_clear="time_interval_clear_handler"/>
             </div>
         </div>
         <div class="container justify-content-center align-items-center col-lg-9 col-md-9 mt-30" id="map-div">
@@ -12,19 +12,11 @@
 </template>
 
 <script>
-import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
-import Vue from "vue"
 import L from 'leaflet';
 import {antPath} from 'leaflet-ant-path';
 
-/* 
-https://korigan.github.io/Vue2Leaflet/#/components/
-https://github.com/schlunsen/nuxt-leaflet
-https://github.com/KoRiGaN/Vue2Leaflet
-https://leafletjs.com/examples/quick-start/
+import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
 
-// http://jsfiddle.net/sowelie/3JbNY/
-*/
 var vueComponent;
 
 export default {
@@ -87,9 +79,9 @@ export default {
             if(filledform.end == null && filledform.interval == null) {
                 var params = {};
                 var today = new Date();
-                params['end'] = today.getTime();
+                params['end'] = today.getTime() / 1000;
                 today.setHours(0,0,0,0);
-                params['start'] = today.getTime();
+                params['start'] = today.getTime() / 1000;
                 params['interval'] = null;
                 config = {
                     params: params,
@@ -97,10 +89,12 @@ export default {
                 }
             } else {
                 config = {
-                    params: {'start': new Date(filledform.start).getTime(), 'end': new Date(filledform.end).getTime(), 'interval': filledform.interval},
+                    params: {'start': new Date(filledform.start).getTime() / 1000, 'end': new Date(filledform.end).getTime() / 1000, 'interval': filledform.interval},
                     headers: {'AuthToken': AuthToken}
                 }
             }
+            console.log("getServerData");
+            console.log(config);
             return await this.$axios.$get(restPath, config)
                                 .then(res => {
                                     if(res.status != 0) {
@@ -108,7 +102,8 @@ export default {
                                         if(res.status == 1) {
                                             this.showToast(res.msg, 7500);
                                         } else if(res.status == 4) {
-                                            
+                                            this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                            this.$router.push("/login");
                                         } else {
                                             this.showToast("Something went terribly wrong while trying to retrieve data from the server. Please try again later or contact us through email.", 7500);
                                         }
@@ -126,12 +121,16 @@ export default {
             const config = {
                 headers: {'AuthToken': AuthToken}
             }
+            console.log("getDevices");
             return await this.$axios.$get("/devices",config)
                                 .then(res => {
                                     if(res.status != 0) {
-                                        console.log(res)
+                                        console.log(res);
                                         if(res.status == 1) {
                                             this.showToast(res.msg, 7500);
+                                        } else if(res.status == 4) {
+                                            this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                            this.$router.push("/login");
                                         } else {
                                             this.showToast("Something went terribly wrong while trying to retrieve devices locations. Please try again later or contact us through email.", 7500);
                                         }
@@ -155,9 +154,10 @@ export default {
                 this.map.removeLayer(this.map_layers);
                 this.map_layers = L.layerGroup();
                 this.map.setView([40.6303, -8.6575], 13);
-                return;
             }
             var path_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/path");
+            console.log("path_result");
+            console.log(path_result);
             if(path_result) {
                 if(path_result.status==0) {
                     if(path_result.data.hasOwnProperty('latitude')) {
@@ -190,11 +190,16 @@ export default {
                         }
                         this.createPath(userPath);
                         isMapCreated = true;
+                        console.log("userPath");
+                        console.log(userPath);
                     }
                 }
             }
             if(isMapCreated) {
                 var events_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/event");
+                console.log("events_result");
+                console.log(events_result);
+                return;
                 if(events_result) {
                     if(events_result.status==0) {
                         if(events_result.data.hasOwnProperty('latitude')) {
@@ -204,6 +209,8 @@ export default {
                 }
             }
             var foobot_result = await this.getDevices(this.$store.getters.sessionToken);
+            console.log("foobot_result");
+            console.log(foobot_result);
             if(foobot_result) {
                 if(foobot_result.status==0) {
                     if(foobot_result.data.length != 0) { 
@@ -231,7 +238,16 @@ export default {
                             }
                             if(!isMapCreated) {
                                 var view = { coords:[foobot_markers[0].coords[0],foobot_markers[0].coords[1]], zoom:13 };
-                                this.createMap(view, 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA');
+                                
+                                this.map = L.map(this.$refs.worldmap).setView(view.coords, view.zoom);
+                                L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                                    id: 'mapbox.streets',
+                                    accessToken: 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA',
+                                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                                    maxZoom: 18,
+                                }).addTo(this.map);
+                                this.map_layers.addTo(this.map);
+                                
                                 isMapCreated = true;
                             }
                             this.insertMarkers(foobot_markers);
@@ -241,7 +257,16 @@ export default {
             }
             if(!isMapCreated) {
                 var view = { coords:[40.6303, -8.6575], zoom:13 };
-                this.createMap(view, 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA');
+                
+                this.map = L.map(this.$refs.worldmap).setView(view.coords, view.zoom);
+                L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                    id: 'mapbox.streets',
+                    accessToken: 'pk.eyJ1IjoiZmlsaXBlcGlyZXM5OCIsImEiOiJjanYzbmUzODUxNDVlNDNwOTB2M290eXo4In0.VgJ4YV1nGaxXglw-c8I5FA',
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                    maxZoom: 18,
+                }).addTo(this.map);
+                this.map_layers.addTo(this.map);
+                
                 isMapCreated = true;
                 this.showToast("Warning: map was generated but information could not be retrieved. Either there is no data to sync or the server might be down at the moment.", 7500);
             }
@@ -253,8 +278,8 @@ export default {
                 paused: false, reverse: false, hardwareAccelerated: true
             };
             var userPath = antPath(path, options);
-            //userPath.addTo(this.map);
-            this.map_layers.addLayer(userPath);
+            userPath.addTo(this.map);
+            //this.map_layers.addLayer(userPath);
         },
 
         /* ======================== MARKERS ======================== */
@@ -267,9 +292,10 @@ export default {
             var markers = [];
             var marker;
             for(var i=0; i<events.time.length; i++) {
+                var event_obj = JSON.parse(events[i]);
                 var title = "";
                 var content = "";
-                for(var key in events) {
+                for(var key in event_obj) {
                     if(key != "time" && key != "latitude" && key != "longitude") {
                         if(events[key][i] != null) {
                             title += ", <br>" + key;
@@ -326,13 +352,15 @@ export default {
         /* ======================== AUX METHODS ======================== */
 
         time_interval_submit_handler(start, end, interval) {
-            console.log("time_interval_submit_handler")
-            console.log(this.filledform);
             this.filledform.start = start;
             this.filledform.end = end;
             this.filledform.interval = interval;
-            console.log(this.filledform);
             this.onLoadMap(true);
+        },
+        time_interval_clear_handler() {
+            this.filledform.start = null;
+            this.filledform.end = null;
+            this.filledform.interval = null;
         },
         showToast(message, duration) {
             this.$toasted.show(message, {position: 'bottom-center', duration: duration});
