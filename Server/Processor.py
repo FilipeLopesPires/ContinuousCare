@@ -615,7 +615,7 @@ class Processor:
         if data=={}:
             return  json.dumps({"status":2, "msg":"No moods were passed to register."}).encode("UTF-8")
         moods=data["moods"]
-        concatMoods="moods[0]"
+        concatMoods=moods[0]
         allMoods={"events":[], "metrics":[], "data":{}}
         for m in moods:
             allMoods["events"].append(m)
@@ -624,6 +624,21 @@ class Processor:
         try: 
             self.process([("PersonalStatus", {"moods":concatMoods[:-1]}),("Event", {"events":json.dumps(allMoods)})], user)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Mood(s) registered with success."}).encode("UTF-8")
+        except Exception as e:
+            return  json.dumps({"status":-1, "msg":"While saving data.Database internal error. "+str(e)}).encode("UTF-8")
+
+    def deleteMood(self, token, data):
+        user=self.clientTokens.get(token)
+        if not user:
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+        if data=={}:
+            return  json.dumps({"status":2, "msg":"Undentified time of event to delete."}).encode("UTF-8")
+        time=data["time"]
+        deleteMetrics=["Event", "PersonalStatus"]
+        try: 
+            for metric in deleteMetrics:
+                self.database.delete(metric, time, user)
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Mood(s) deleted with success."}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"While saving data.Database internal error. "+str(e)}).encode("UTF-8")
         

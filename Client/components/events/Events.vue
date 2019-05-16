@@ -5,9 +5,10 @@
       <div class='timeline' v-if='anyEvent()'>
         <div v-for='(dateWithEvents, date) in searchedEvents' :key="dateWithEvents.id">
           <p v-if='dateWithEvents.length > 0' class='date'>{{ date }}</p>
-          <div v-for='event in dateWithEvents' class='event' :key="event.id" @click="info(event)" style="cursor:pointer">
+          <div v-for='event in dateWithEvents' class='event' :key="event.id" @click="info(event,eventClickObjective)" style="cursor:pointer">
+            <button @click="eventClickObjective='close'" type="button" class="close" aria-label="Close" style="font-size:2rem; margin-right:5px;"><span aria-hidden="true">×</span></button>
             <span class='dot'></span>
-            <p class='event-date' v-html="formaDateTime(event.time)"></p>
+            <p class='event-date' v-html="event.time"></p>
             <h3><a v-html="event.title"></a></h3>
             <p v-html="event.content"></p>
           </div>
@@ -28,6 +29,7 @@ export default {
     ],
     data() {
       return {
+        eventClickObjective: "show",
         datesEvents: {},
         searchQuery: '',
         settings: {
@@ -37,25 +39,8 @@ export default {
       }
     },
     components:{VuePerfectScrollbar},
-    computed: {
-        formatDateTime(datetime) {
-            var d = new Date(datetime);
-
-            Number.prototype.padLeft = function(base,chr){
-                var len = (String(base || 10).length - String(this).length)+1;
-                return len > 0? new Array(len).join(chr || '0')+this : this;
-            }
-
-            var retval = [(d.getMonth()+1).padLeft(),
-                        d.getDate().padLeft(),
-                        d.getFullYear()].join('/') +' ' +
-                        [d.getHours().padLeft(),
-                        d.getMinutes().padLeft(),
-                        d.getSeconds().padLeft()].join(':');
-            return retval;
-        },
-    },
     async mounted(){
+
       const config = {
         params: {'start': this.startTime, 'end': this.endTime},
         headers: {'AuthToken': this.$store.getters.sessionToken}
@@ -93,7 +78,7 @@ export default {
                             }
                             if(title!=""){
                               new_datesEvents[today].push({
-                                "time": events["time"][i],
+                                "time": this.formatDateTime(events["time"][i]),
                                 "title": title.slice(0, -2),
                                 "content": content,
                                 })
@@ -142,11 +127,61 @@ export default {
       }
     },
     methods: {
+      formatDateTime(datetime) {
+            var d = new Date(datetime);
+
+            Number.prototype.padLeft = function(base,chr){
+                var len = (String(base || 10).length - String(this).length)+1;
+                return len > 0? new Array(len).join(chr || '0')+this : this;
+            }
+
+            var retval = [(d.getMonth()+1).padLeft(),
+                        d.getDate().padLeft(),
+                        d.getFullYear()].join('/') +' ' +
+                        [d.getHours().padLeft(),
+                        d.getMinutes().padLeft(),
+                        d.getSeconds().padLeft()].join(':');
+            return retval;
+      },
       myUpdate(){
         this.$forceUpdate
       },
-      info(evt){
-        this.$emit("clicked", evt.title, event.clientX/window.innerWidth, event.clientY/window.innerHeight)
+      info(evt, objective){
+        this.eventClickObjective="show"
+        if(objective=="show"){
+          this.$emit("clicked", evt.title, event.clientX/window.innerWidth, event.clientY/window.innerHeight)
+        }else{
+          this.deleteEvent(evt)
+        }
+      },
+      async deleteEvent(event){
+        const config = {
+          headers: {'AuthToken': this.$store.getters.sessionToken},
+          data: {"time": parseInt(new Date(event["time"]).getTime()/1000)}
+        }
+        await this.$axios.$delete("/mood", config)
+        .then(res => {
+            if(res.status==0){
+            }else if(res.status==1){
+                this.$toasted.show(res.msg, 
+                            {position: 'bottom-center', duration: 7500});
+            }
+            else if(res.status == 4) {
+                this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                this.$router.push("/login");
+            }else{
+                this.$toasted.show('Something went wrong while deleting your event. Please try again, if it still does not work, contact us through email.', 
+                            {position: 'bottom-center', duration: 7500});
+            }
+        })
+        .catch(e => {
+          // Unable to get devices from server
+          console.log(e)
+          this.$toasted.show('Something went wrong while trying to delete your event. The server might be down at the moment. Please try again later.', 
+              {position: 'bottom-center', duration: 7500});
+          this.requestError = true;
+        });
+        this.searchQuery=""
       },
       anyEvent() {
         return this.countAllEvents() ? true : false;

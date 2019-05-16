@@ -7,7 +7,7 @@
             <!--================ Banner Area =================-->
             <PageBanner parent_page="Home" page="Events" />
 
-            <div class="justify-content-center d-flex" style="margin-bottom:-120px">
+            <div class="justify-content-center d-flex" style="margin-bottom:-50px">
                 <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920 row">
                     <div class="col-lg-5 col-md-12 col-sm-12 col-xs-12 mr--30 mt-30">
                         <Events style="height:500px;" @clicked="changeEvent" :startTime="startEvents" :endTime="endEvents"/>
@@ -84,7 +84,17 @@ export default {
         .then(res => {
             if(res.status==0){
                 var ser=[]
-                var lab=[]
+                var lab={
+                    labels: [],
+                    responsive: [{
+                        breakpoint: 480,
+                        options: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }]
+                }
                 var events=res.data
                 if("time" in events){
                     for(var i=events["time"].length-1; i>-1; i--){
@@ -92,17 +102,17 @@ export default {
                         if(evt){
                             for(var j=0; j<evt["events"].length;j++){
                                 var title=evt["events"][j]
-                                if(lab.includes(title)){
-                                    ser[lab.indexOf(title)]+=1
+                                if(lab["labels"].includes(title)){
+                                    ser[lab["labels"].indexOf(title)]+=1
                                 }else{
                                     ser.push(1)
-                                    lab.push(title)
+                                    lab["labels"].push(title)
                                 }
                             }
                         }
                     }
                     this.series=ser
-                    this.chartOptions.labels=lab
+                    this.chartOptions=lab
                 }
             }else if(res.status==1){
                 this.$toasted.show(res.msg, 

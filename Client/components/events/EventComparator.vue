@@ -1,10 +1,10 @@
 <template>
-    <b-container style="padding-top:90px">
+    <b-container style="padding-top:80px">
         <h3 v-if="event" class="widget_title"> All {{event}} episodes of the month </h3>
             <b-row class="justify-content-center">
                 <b-col lg="3" md="4" sm="6" xs="12" v-for='evt in eventToShow' :key="evt.id" style="margin-bottom: 15px;">
                     <div class="event" style="cursor:pointer;">
-                        <p class='event-date' v-html="formatDateTime(evt.time)"></p>
+                        <p class='event-date' v-html="evt.time"></p>
                         <h3><a v-html="evt.title"></a></h3>
                         <p v-html="evt.content"></p>
                     </div>
@@ -22,7 +22,12 @@ export default {
         "startTime",
         "endTime",
     ],
-    computed: {
+    data() {
+      return {
+        eventToShow:[],
+      }
+    },
+    methods: {
         formatDateTime(datetime) {
             var d = new Date(datetime);
 
@@ -39,32 +44,16 @@ export default {
                         d.getSeconds().padLeft()].join(':');
             return retval;
         },
-    },
-    data() {
-      return {
-        eventToShow:[],
-        height:null,
-        width:null,
-        healthSate:null,
-        envState:null,
-      }
-    },
-    watch:{
-        event: function() {
-            var health=false
-            var env=false
-
-            const config = {
-                params: {'start': this.startTime, 'end': this.endTime},
-                headers: {'AuthToken': this.$store.getters.sessionToken}
-            }
 
 
-            this.$axios.$get("/healthstatus", config)
+        async getEnvStatus(config){
+            var result
+            await this.$axios.$get("/environment", config)
             .then(res => {
                 if(res.status==0){
                     var output={}
                     var status=res.data
+                    console.log(res)
                     if("time" in status){
                         for(var key in status){
                             if(!"time,latitude,longitude".includes(key)){
@@ -74,17 +63,18 @@ export default {
                             }
                         }
                     }
-                    this.healthState=output
-                    health=true
+                    result=output
                 } else if(res.status == 4) {
                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
                     this.$router.push("/login");
                 } else if(res.status==1){
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});
+                    result={}
                 }else{
                     this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
                                 {position: 'bottom-center', duration: 7500});
+                    result={}
                 }
             })
             .catch(e => {
@@ -92,14 +82,18 @@ export default {
                 console.log(e)
                 this.$toasted.show('Something went wrong while trying to retrieve data. The server might be down at the moment. Please try again later.', 
                     {position: 'bottom-center', duration: 7500});
+                result={}
             })
-
-
-            this.$axios.$get("/environment", config)
+            return result
+        },
+        async getHealthStatus(config){
+            var result
+            await this.$axios.$get("/healthstatus", config)
             .then(res => {
                 if(res.status==0){
                     var output={}
                     var status=res.data
+                    console.log(res)
                     if("time" in status){
                         for(var key in status){
                             if(!"time,latitude,longitude".includes(key)){
@@ -109,17 +103,18 @@ export default {
                             }
                         }
                     }
-                    this.envState=output
-                    env=true
+                    result=output
                 } else if(res.status == 4) {
                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
                     this.$router.push("/login");
                 } else if(res.status==1){
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});
+                    result={}
                 }else{
                     this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
                                 {position: 'bottom-center', duration: 7500});
+                    result={}
                 }
             })
             .catch(e => {
@@ -127,13 +122,14 @@ export default {
                 console.log(e)
                 this.$toasted.show('Something went wrong while trying to retrieve data. The server might be down at the moment. Please try again later.', 
                     {position: 'bottom-center', duration: 7500});
+                result={}
             })
-
-
-            while(!(health && env)){}
-
-
-            this.$axios.$get("/event", config)
+            return result
+        },
+        async showEvents(config){
+            var healthState = await this.getHealthStatus(config)
+            var envState = await this.getEnvStatus(config)
+            await this.$axios.$get("/event", config)
             .then(res => {
                 if(res.status==0){
                     var events=res.data
@@ -147,7 +143,7 @@ export default {
                                 for(var j=0; j<evt["events"].length;j++){
                                     if(evt["events"][j]==this.event){
                                         title+=evt["events"][j]+", "
-                                        for(let [key, value] of Object.entries({...this.healthState, ...this.envState})){
+                                        for(let [key, value] of Object.entries({...healthState, ...envState})){
                                             if(evt["metrics"].includes(key)){
                                                 content+="<font color=\"red\">"+key+": "+value+"</font><br>"
                                             }else{
@@ -156,13 +152,13 @@ export default {
                                         }
                                     }
                                 }
-                            }
-                            if(title!=""){
-                                newEvents.push({
-                                "time": events["time"][i],
-                                "title": title.slice(0,-2),
-                                "content": content,
-                                })
+                                if(title!=""){
+                                    newEvents.push({
+                                    "time": this.formatDateTime(events["time"][i]),
+                                    "title": title.slice(0,-2),
+                                    "content": content,
+                                    })
+                                }
                             }
                         }
                         this.eventToShow = newEvents
@@ -185,6 +181,15 @@ export default {
                     {position: 'bottom-center', duration: 7500});
                 this.requestError = true;
             })
+        }
+    },
+    watch:{
+        event: function() {
+            const config = {
+                params: {'start': this.startTime, 'end': this.endTime},
+                headers: {'AuthToken': this.$store.getters.sessionToken}
+            }
+            this.showEvents(config)
         }
     },
 }

@@ -86,13 +86,17 @@ def devices():
 
     return processor.deleteDevice(authToken, data)
 
-@app.route('/mood',methods = ['POST'])
+@app.route('/mood',methods = ['POST', 'DELETE'])
 def registerMood():
     userToken=request.headers["AuthToken"]
     data = request.json
     if not data:
         data = {}
-    return processor.registerMood(userToken, data)
+    if request.methos=="POST":
+        return processor.registerMood(userToken, data)
+    else:
+        return processor.deleteMood(userToken, data)
+
 
 @app.route('/environment', endpoint="Environment", methods = ['GET'])
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
