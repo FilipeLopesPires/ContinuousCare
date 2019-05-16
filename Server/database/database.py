@@ -6,6 +6,7 @@ from database.relational.proxy import *
 from database.exceptions import ProxyException, InternalException, LogicException
 
 import datetime
+import time
 
 """
 This class uses acts as a proxy for the proxies of the different database used.
@@ -289,27 +290,29 @@ class Database:
             data = {}
 
             if measurement == "Sleep":
-                if not start and not end: #both None -> last
-                    results = self.relational_proxy.get_sleep_sessions(user)
-                elif start: # just end None -> from start
-                    start_date = datetime.date.fromtimestamp(start)
-                    results = self.relational_proxy.get_sleep_sessions(user, start_date)
-                else: # within
+                if start and end: # within
                     start_date = datetime.date.fromtimestamp(start)
                     end_date = datetime.date.fromtimestamp(end)
                     results = self.relational_proxy.get_sleep_sessions(user, start_date, end_date)
+                elif start: # just end None -> from start to now
+                    start_date = datetime.date.fromtimestamp(start)
+                    results = self.relational_proxy.get_sleep_sessions(user, begin=start_date)
+                elif end: # just start None -> all from until end
+                    start_date = datetime.date.fromtimestamp(start)
+                    results = self.relational_proxy.get_sleep_sessions(user, end=end_date)
+                else: #both None -> last
+                    results = self.relational_proxy.get_sleep_sessions(user)
 
-                return_value = {
-                    "sessions_info": [], # list of dicts
-                    "sessions_data": [] # list of dicts [{time:[...], level:[...], duration:[...]},{X},...]
-                }
-                for day, sleep_begin, sleep_end, duration in results: # TODO maybe filipe wants this other way
-                    return_value["sessions_info"].append({
-                        "day": day,
-                        "begin": sleep_begin,
-                        "end": sleep_end,
-                        "duration": duration
-                    })
+                return_value = []
+                for day, sleep_begin, sleep_end, duration in results:
+                    data = {
+                        "info": {
+                            "day": day.strftime("%d-%m-%Y"),
+                            "begin": time.mktime(sleep_begin.timetuple()),
+                            "end": time.mktime(sleep_end.timetuple()),
+                            "duration": duration
+                        }
+                    }
                     session_data = {}
                     for read in self.time_series_proxy.read(user, measurement, sleep_begin.timestamp(),
                                                                                sleep_end.timestamp()):
@@ -320,7 +323,9 @@ class Database:
                                 session_data[key] = []
 
                             session_data[key].append(value)
-                    return_value["sessions_data"].append(session_data)
+                    data["data"] = session_data
+
+                    return_value.append(data)
 
                 return return_value
 
@@ -408,10 +413,10 @@ class Database:
             if measurement == "Sleep":
 
                 self.relational_proxy.insert_sleep_session(user,
-                                                           data["day"], #TODO may receive, Agree format
-                                                           data["duration"], #TODO agree format
-                                                           data["begin"], #TODO may not be this key. Agree format
-                                                           data["end"]) #TODO may not be this key. Agree format
+                    data["day"],
+                    data["duration"],
+                    datetime.datetime.fromtimestamp(data["begin"]),
+                    datetime.datetime.fromtimestamp(data["end"]))
 
                 to_write = []
                 for point in data["sleep"]:
@@ -449,6 +454,21 @@ class Database:
             raise
         except Exception as e:
             raise ProxyException(str(e))
+
+    def delete(self, measurement, time, user):
+        """
+        Deletes a value from the time series database
+         associated with a given user and measurement
+         on a given time
+
+        :param measurement: from where to delete
+        :type measurement: str
+        :param time: timestamp
+        :type time: int
+        :param user: of the client
+        :type user: str
+        """
+        self.time_series_proxy.delete(user, measurement, time)
 
     def requestPermission(self, medic, data):
         """
@@ -518,7 +538,8 @@ class Database:
 
     def removeAcceptedPermission(self, client, medic):
         """
-        Allows a client to delete an accepted permission (still not active)
+        Allows a client to delete an accepted
+        permission
 
         :param client: username of the client
         :type client: str
@@ -570,7 +591,7 @@ class Database:
 
         :param user: username of the USER (can be both client and medic)
         :param user: str
-        :return: three lists concerning the three types of permissions (pending, accepted and active)
+        :return: three lists concerning the three types of permissions (pending, accepted and expired)
         :return: dict
         """
         try:

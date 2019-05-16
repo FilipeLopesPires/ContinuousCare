@@ -111,3 +111,29 @@ class InfluxProxy:
         except Exception as e:
             raise TimeSeriesDBException(str(e))
         return list(result.get_points(measurement))
+
+    def delete(self, username, measurement, time):
+        """
+        Deletes a single value associated with an user of a specific measurement
+
+        :param username: of the client
+        :type username: str
+        :param measurement: measurement of the value to delete
+        :type measurement: str
+        :param time: timestamp
+        :param time: int
+        """
+        query = "DELETE FROM %s" % measurement + \
+                "WHERE username = $username" + \
+                  "AND time = $time"
+
+        params = {
+            "username": username,
+            "time": time * 1000000000
+        }
+
+        try:
+            result = self._get_connection.query(query, {"params": json.dumps(params)})
+        except Exception as e:
+            raise TimeSeriesDBException(str(e))
+        return list(result.get_points(measurement))

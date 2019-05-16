@@ -82,11 +82,11 @@ create table sleep_session (
   client_id               integer,
   foreign key (client_id) references client (client_id),
   day                     date,
-  begin                   datetime,
+  begin                   DATETIME,
   primary key (client_id, day, begin),
 -- PRIMARY KEY
-  end                     datetime,
-  duration                time
+  end                     DATETIME,
+  duration                INTEGER -- in seconds
 );
 
 create table supported_device (
@@ -514,11 +514,11 @@ CREATE PROCEDURE update_medic_info (
  * Fails if time interval overlaps a existing sleep session
  */
 CREATE PROCEDURE insert_sleep_session (
-  IN _username varchar(30),
-  IN _day date,
-  IN _duration time,
-  IN _begin datetime,
-  IN _end datetime)
+  IN _username VARCHAR(30),
+  IN _day CHAR(10),
+  IN _duration INTEGER,
+  IN _begin DATETIME,
+  IN _end DATETIME)
   BEGIN
     DECLARE __client_id INTEGER;
 
@@ -540,7 +540,7 @@ CREATE PROCEDURE insert_sleep_session (
 
     -- Insert sleep session
     INSERT INTO sleep_session (client_id, day, duration, begin, end)
-    VALUES (__client_id, _day, _duration, _begin, _end);
+    VALUES (__client_id, STR_TO_DATE(_day, "%Y-%m-%d"), _duration, _begin, _end);
 
     COMMIT;
   END //
@@ -549,13 +549,13 @@ CREATE PROCEDURE insert_sleep_session (
  * Obtains all sleep session within the received time interval
  */
 CREATE PROCEDURE get_sleep_sessions (
-  IN _username varchar(30),
-  IN _begin date,
-  IN _end date
+  IN _username VARCHAR(30),
+  IN _begin DATE,
+  IN _end DATE
 )
   BEGIN
 
-  IF _begin IS NULL AND _end IS NULL THEN
+  IF _begin IS NOT NULL AND _end IS NOT NULL THEN
     SELECT sleep_session.day, sleep_session.begin, sleep_session.end, sleep_session.duration
     FROM sleep_session JOIN client_username ON sleep_session.client_id = client_username.client_id
     WHERE sleep_session.day >= _begin AND sleep_session.day <= _end AND client_username.username = _username;
@@ -563,6 +563,10 @@ CREATE PROCEDURE get_sleep_sessions (
     SELECT sleep_session.day, sleep_session.begin, sleep_session.end, sleep_session.duration
     FROM sleep_session JOIN client_username ON sleep_session.client_id = client_username.client_id
     WHERE sleep_session.day >= _begin AND client_username.username = _username;
+  ELSEIF _end IS NOT NULL THEN
+    SELECT sleep_session.day, sleep_session.begin, sleep_session.end, sleep_session.duration
+    FROM sleep_session JOIN client_username ON sleep_session.client_id = client_username.client_id
+    WHERE sleep_session.day <= _end AND client_username.username = _username;
   ELSE
     SELECT sleep_session.day, sleep_session.begin, sleep_session.end, sleep_session.duration
     FROM sleep_session JOIN client_username ON sleep_session.client_id = client_username.client_id
