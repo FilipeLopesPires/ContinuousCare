@@ -24,6 +24,7 @@ export default {
     ],
     data() {
       return {
+        oldEvent:"",
         eventToShow:[],
       }
     },
@@ -188,7 +189,14 @@ export default {
                 params: {'start': this.startTime, 'end': this.endTime},
                 headers: {'AuthToken': this.$store.getters.sessionToken}
             }
-            this.showEvents(config)
+            
+            if(this.event=="refresh"){
+                console.log("aqui")
+                this.event=this.oldEvent
+            }else{
+                this.oldEvent=this.event
+                this.showEvents(config)
+            }
         }
     },
 }

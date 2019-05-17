@@ -26,6 +26,7 @@ export default {
     props: [
       "startTime",
       "endTime",
+      "refresh",
     ],
     data() {
       return {
@@ -40,72 +41,7 @@ export default {
     },
     components:{VuePerfectScrollbar},
     async mounted(){
-
-      const config = {
-        params: {'start': this.startTime, 'end': this.endTime},
-        headers: {'AuthToken': this.$store.getters.sessionToken}
-      }
-      await this.$axios.$get("/event", config)
-            .then(res => {
-                if(res.status==0){
-                    var events=res.data
-                    if("time" in events){
-                        var d = new Date()
-                        var today = [(d.getMonth()+1), d.getDate(), d.getFullYear()].join('/')
-                        var new_datesEvents = {}
-                        new_datesEvents[today]=[]
-                        for(var i=events["time"].length-1; i>-1; i--){
-                            var title = ""
-                            var content = ""
-                            var evt = JSON.parse(events["events"][i])
-                            if(evt){
-                                for(var j=0; j<evt["events"].length;j++){
-                                  title+=evt["events"][j]+", "
-                                  //if data is empty the only events are related to personalStatus, else there may be some metrics and events related to personal signals
-                                  if(Object.keys(evt["data"]).length==0){
-                                    if(!content.includes(evt["metrics"][j])){
-                                      content+=evt["metrics"][j]+"<br>"
-                                    }
-                                  }else{
-                                    for (let [key, value] of Object.entries(evt["data"])) {
-                                      if(evt["metrics"].includes(key)){
-                                        content+="<font color=\"red\">"+key+": "+value+"</font><br>"
-                                      }else{
-                                        content+=key+": "+value+"<br>"
-                                      }
-                                    }
-                                  }
-                                }
-                            }
-                            if(title!=""){
-                              new_datesEvents[today].push({
-                                "time": this.formatDateTime(events["time"][i]),
-                                "title": title.slice(0, -2),
-                                "content": content,
-                                })
-                            }
-                        }
-                        this.datesEvents = new_datesEvents
-                    }
-                }else if(res.status==1){
-                    this.$toasted.show(res.msg, 
-                                {position: 'bottom-center', duration: 7500});
-                }
-                else if(res.status == 4) {
-                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                    this.$router.push("/login");
-                }else{
-                    this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
-                                {position: 'bottom-center', duration: 7500});
-                }
-            })
-            .catch(e => {
-              // Unable to get devices from server
-              console.log(e)
-              this.$toasted.show('Something went wrong while trying to retrieve data. The server might be down at the moment. Please try again later.', 
-                  {position: 'bottom-center', duration: 7500});
-              this.requestError = true;
-            });
+      await this.buildEvents()      
     },
     computed: {
       searchedEvents() {
@@ -128,6 +64,80 @@ export default {
       }
     },
     methods: {
+      async buildEvents(){
+        const config = {
+          params: {'start': this.startTime, 'end': this.endTime},
+          headers: {'AuthToken': this.$store.getters.sessionToken}
+        }
+        await this.$axios.$get("/event", config)
+        .then(res => {
+            if(res.status==0){
+                var events=res.data
+                var yesterday
+                if("time" in events){
+                    var d
+                    var today 
+                    var new_datesEvents = {}
+                    for(var i=events["time"].length-1; i>-1; i--){
+                      d = new Date(events["time"][i])
+                      today = [(d.getMonth()+1), d.getDate(), d.getFullYear()].join('/')
+                      if(!Object.keys(new_datesEvents).includes(today)){
+                        new_datesEvents[today]=[]
+                      }
+                      
+                      var title = ""
+                      var content = ""
+                      var evt = JSON.parse(events["events"][i])
+                      if(evt){
+                          for(var j=0; j<evt["events"].length;j++){
+                            title+=evt["events"][j]+", "
+                            //if data is empty the only events are related to personalStatus, else there may be some metrics and events related to personal signals
+                            if(Object.keys(evt["data"]).length==0){
+                              if(!content.includes(evt["metrics"][j])){
+                                content+=evt["metrics"][j]+"<br>"
+                              }
+                            }else{
+                              for (let [key, value] of Object.entries(evt["data"])) {
+                                if(evt["metrics"].includes(key)){
+                                  content+="<font color=\"red\">"+key+": "+value+"</font><br>"
+                                }else{
+                                  content+=key+": "+value+"<br>"
+                                }
+                              }
+                            }
+                          }
+                      }
+                      if(title!=""){
+                        new_datesEvents[today].push({
+                          "time": this.formatDateTime(events["time"][i]),
+                          "title": title.slice(0, -2),
+                          "content": content,
+                          })
+                      }
+                  }
+                  this.datesEvents = new_datesEvents
+              }
+          }else if(res.status==1){
+              this.$toasted.show(res.msg, 
+                          {position: 'bottom-center', duration: 7500});
+          }
+          else if(res.status == 4) {
+              this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+              this.$router.push("/login");
+          }else{
+              this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
+                          {position: 'bottom-center', duration: 7500});
+          }
+        })
+        .catch(e => {
+          // Unable to get devices from server
+          console.log(e)
+          this.$toasted.show('Something went wrong while trying to retrieve data. The server might be down at the moment. Please try again later.', 
+              {position: 'bottom-center', duration: 7500});
+          this.requestError = true;
+        });
+      },
+
       formatDateTime(datetime) {
             var d = new Date(datetime);
 
@@ -144,16 +154,13 @@ export default {
                         d.getSeconds().padLeft()].join(':');
             return retval;
       },
-      myUpdate(){
-        this.$forceUpdate
-      },
       async info(evt, objective){
-        this.eventClickObjective="show"
         if(objective=="show"){
-          this.$emit("clicked", evt.title, event.clientX/window.innerWidth, event.clientY/window.innerHeight)
+          this.$emit("clicked", evt.title, event.clientX/window.innerWidth, event.clientY/window.innerHeight, "")
         }else{
           await this.deleteEvent(evt)
         }
+        this.eventClickObjective="show"
       },
       async deleteEvent(event){
         const config = {
@@ -163,16 +170,24 @@ export default {
         await this.$axios.$delete("/mood", config)
         .then(res => {
             if(res.status==0){
+              for(let date in this.datesEvents){
+                for(let ev in this.datesEvents[date]){
+                  if(this.datesEvents[date][ev]["time"]==event["time"]){
+                    this.$delete(this.datesEvents[date],ev)
+                  }
+                }
+              }
+              this.$emit("clicked", null, null, null, "refresh")
             }else if(res.status==1){
                 this.$toasted.show(res.msg, 
-                            {position: 'bottom-center', duration: 7500});
+                  {position: 'bottom-center', duration: 7500});
             }
             else if(res.status == 4) {
                 this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
                 this.$router.push("/login");
             }else{
-                this.$toasted.show('Something went wrong while deleting your event. Please try again, if it still does not work, contact us through email.', 
-                            {position: 'bottom-center', duration: 7500});
+              this.$toasted.show('Something went wrong while deleting your event. Please try again, if it still does not work, contact us through email.', 
+                          {position: 'bottom-center', duration: 7500});
             }
         })
         .catch(e => {
@@ -182,7 +197,6 @@ export default {
               {position: 'bottom-center', duration: 7500});
           this.requestError = true;
         });
-        this.searchQuery=""
       },
       anyEvent() {
         return this.countAllEvents() ? true : false;
@@ -194,7 +208,12 @@ export default {
         }
         return count;
       }
-    }
+    },
+    watch: {
+      refresh:function(){
+        this.buildEvents() 
+      }
+    },
 }
 
 
