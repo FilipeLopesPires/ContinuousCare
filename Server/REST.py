@@ -96,7 +96,7 @@ def registerMood():
     if not data:
         data = {}
 
-    if request.methos=="POST":
+    if request.method=="POST":
         argsErrors =  ArgumentValidator.registerMood(data)
         if len(argsErrors) > 0:
             return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")

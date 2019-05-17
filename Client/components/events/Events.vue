@@ -50,7 +50,8 @@ export default {
                 if(res.status==0){
                     var events=res.data
                     if("time" in events){
-                        var today = (new Date()).toLocaleDateString()
+                        var d = new Date()
+                        var today = [(d.getMonth()+1), d.getDate(), d.getFullYear()].join('/')
                         var new_datesEvents = {}
                         new_datesEvents[today]=[]
                         for(var i=events["time"].length-1; i>-1; i--){
@@ -146,12 +147,12 @@ export default {
       myUpdate(){
         this.$forceUpdate
       },
-      info(evt, objective){
+      async info(evt, objective){
         this.eventClickObjective="show"
         if(objective=="show"){
           this.$emit("clicked", evt.title, event.clientX/window.innerWidth, event.clientY/window.innerHeight)
         }else{
-          this.deleteEvent(evt)
+          await this.deleteEvent(evt)
         }
       },
       async deleteEvent(event){

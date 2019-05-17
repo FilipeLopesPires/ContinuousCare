@@ -93,7 +93,6 @@ export default {
                 if(res.status==0){
                     var output={}
                     var status=res.data
-                    console.log(res)
                     if("time" in status){
                         for(var key in status){
                             if(!"time,latitude,longitude".includes(key)){
