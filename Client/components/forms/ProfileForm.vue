@@ -231,7 +231,11 @@ export default {
                                 console.log(res);
                                 if(res.status == 4) {
                                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                                    this.$router.push("/login");
+                                    this.$disconnect()
+                                    this.$nextTick(() => { 
+                                        this.$store.dispatch('logout'),
+                                        this.$router.push("/login")
+                                    });
                                 }
                                 this.showToast("Update was invalid. Please make sure you fill in the form correctly.", 5000);
                             }

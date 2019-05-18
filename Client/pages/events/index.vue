@@ -77,6 +77,11 @@ export default {
         }
     },
     async mounted() {
+        var params = this.$route.params
+        if(Object.keys(params).length>0 && Object.keys(params).includes("event")){
+            this.event=params.event
+            this.$scrollTo("#comparator", 500, this.options)
+        }
         this.updateChart()
     },
     methods: {
@@ -132,7 +137,7 @@ export default {
                         for(let i=10; i<Object.keys(tmp).length; i++){
                             for(var key in tmp){
                                 if(tmp[key]==orderedValues[i]){
-                                    sum=tmp[key]
+                                    sum+=tmp[key]
                                     this.$delete(tmp, key)
                                     break
                                 }

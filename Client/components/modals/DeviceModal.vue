@@ -173,7 +173,11 @@ export default {
                                     this.showToast(res.msg, 5000);
                                 } else if(res.status == 4) {
                                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                                    this.$router.push("/login");
+                                    this.$disconnect()
+                                    this.$nextTick(() => { 
+                                        this.$store.dispatch('logout'),
+                                        this.$router.push("/login")
+                                    });
                                 } else {
                                     this.showToast("Something went wrong while adding your device. Please try again later.", 5000);
                                 }
@@ -198,7 +202,11 @@ export default {
                                 console.log(res);
                                 if(res.status == 4) {
                                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                                    this.$router.push("/login");
+                                    this.$disconnect()
+                                    this.$nextTick(() => { 
+                                        this.$store.dispatch('logout'),
+                                        this.$router.push("/login")
+                                    });
                                 }
                                 this.showToast("Something went wrong while updating your device. Please try again later.", 5000);
                                 return null;
@@ -222,7 +230,11 @@ export default {
                                 console.log(res);
                                 if(res.status == 4) {
                                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                                    this.$router.push("/login");
+                                    this.$disconnect()
+                                    this.$nextTick(() => { 
+                                        this.$store.dispatch('logout'),
+                                        this.$router.push("/login")
+                                    });
                                 }
                                 this.showToast("Something went wrong while removing your device. Please try again later.", 5000);
                                 return null;

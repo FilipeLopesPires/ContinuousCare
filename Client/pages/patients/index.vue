@@ -286,7 +286,12 @@ export default {
                     this.show_toast(res.msg);
                 }
                 else if(res.status == 4) {
-                    this.$router.push("/login");
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$disconnect()
+                    this.$nextTick(() => { 
+                        this.$store.dispatch('logout'),
+                        this.$router.push("/login")
+                    });
                 }
                 else {
                     this.valid_data = false;

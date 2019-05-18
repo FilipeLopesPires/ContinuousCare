@@ -8,6 +8,7 @@
         <div class="container justify-content-center align-items-center col-lg-9 col-md-9 mt-30" id="map-div">
             <div class="mb-60 leaflet-map" id="map-wrap" ref="worldmap"></div>
         </div>
+        <EventOptions :height="height" :width="width" :options="options" @option="changeEvt"/>
     </div>
 </template>
 
@@ -16,18 +17,24 @@ import L from 'leaflet';
 import {antPath} from 'leaflet-ant-path';
 
 import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
+import EventOptions from '@/components/modals/EventOptions.vue'
 
 var vueComponent;
 
 export default {
     components: {
         TimeIntervalForm,
+        EventOptions,
     },
     data() {
         return {
+            width:null,
+            height:null,
+            options:null,
             map: null,
             map_layers: null,
             map_markers: null,
+            default_coords: [40.6303, -8.6575],
             filledform: {
                 start: null,
                 end: null,
@@ -103,7 +110,11 @@ export default {
                                             this.showToast(res.msg, 7500);
                                         } else if(res.status == 4) {
                                             this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                                            this.$router.push("/login");
+                                            this.$disconnect()
+                                            this.$nextTick(() => { 
+                                                this.$store.dispatch('logout'),
+                                                this.$router.push("/login")
+                                            });
                                         } else {
                                             this.showToast("Something went terribly wrong while trying to retrieve data from the server. Please try again later or contact us through email.", 7500);
                                         }
@@ -130,7 +141,11 @@ export default {
                                             this.showToast(res.msg, 7500);
                                         } else if(res.status == 4) {
                                             this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                                            this.$router.push("/login");
+                                            this.$disconnect()
+                                            this.$nextTick(() => { 
+                                                this.$store.dispatch('logout'),
+                                                this.$router.push("/login")
+                                            });
                                         } else {
                                             this.showToast("Something went terribly wrong while trying to retrieve devices locations. Please try again later or contact us through email.", 7500);
                                         }
@@ -153,21 +168,24 @@ export default {
             if(reload) {
                 this.map.removeLayer(this.map_layers);
                 this.map_layers = L.layerGroup();
-                this.map.setView([40.6303, -8.6575], 13);
+                this.map_layers.addTo(this.map);
+                this.map.setView(this.default_coords, 13);
+                isMapCreated = true;
             }
+            var view = null;
             var path_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/path");
-            console.log("path_result");
-            console.log(path_result);
+            console.log("path_result")
+            console.log(path_result)
             if(path_result) {
                 if(path_result.status==0) {
                     if(path_result.data.hasOwnProperty('latitude')) {
                         // prepare data
-                        var view = { coords:[path_result.data.latitude[path_result.data.latitude.length-1], path_result.data.longitude[path_result.data.longitude.length-1]], zoom:13 };
+                        view = { coords:[path_result.data.latitude[path_result.data.latitude.length-1], path_result.data.longitude[path_result.data.longitude.length-1]], zoom:13 };
                         var userPath = [];
                         for(var i=0; i<path_result.data.latitude.length; i++) {
                             userPath.push([path_result.data.latitude[i], path_result.data.longitude[i]]);
                         }
-                        // build map
+                        // build MAP
                         /* 
                         // 3D world Map (not working)
                         // https://www.wrld3d.com/wrld.js/latest/docs/examples/adding-a-leaflet-marker-with-popup/
@@ -187,19 +205,29 @@ export default {
                                 maxZoom: 18,
                             }).addTo(this.map);
                             this.map_layers.addTo(this.map);
+                            isMapCreated = true;
                         }
+                        // User Path
                         this.createPath(userPath);
-                        isMapCreated = true;
-                        console.log("userPath");
-                        console.log(userPath);
                     }
                 }
+            }
+            if(isMapCreated && view != null) {
+                // Fitbit Marker
+                var options = {
+                    riseOnHover: true,
+                    icon: this.greenIcon,
+                };
+                var popup_content = "<div id='0'> <h5 class='mb--20'>Personal Device</h5> <p>Last position tracked.</p> </div>";
+                var fitbit_marker = L.marker(view.coords, options).bindPopup(popup_content).addTo(this.map_layers);//.addTo(this.map);
+                fitbit_marker.on('mouseover', function(e) { this.openPopup(); });
+                fitbit_marker.on('mouseout', function(e) { this.closePopup(); });
+                fitbit_marker.on('click', function(e) { vueComponent.clickEvent([e.latlng.lat, e.latlng.lng]) });
             }
             if(isMapCreated) {
                 var events_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/event");
                 console.log("events_result");
                 console.log(events_result);
-                return;
                 if(events_result) {
                     if(events_result.status==0) {
                         if(events_result.data.hasOwnProperty('latitude')) {
@@ -237,6 +265,7 @@ export default {
                                 foobot_markers.push(marker);
                             }
                             if(!isMapCreated) {
+                                console.log("shouldnt be here")
                                 var view = { coords:[foobot_markers[0].coords[0],foobot_markers[0].coords[1]], zoom:13 };
                                 
                                 this.map = L.map(this.$refs.worldmap).setView(view.coords, view.zoom);
@@ -247,7 +276,6 @@ export default {
                                     maxZoom: 18,
                                 }).addTo(this.map);
                                 this.map_layers.addTo(this.map);
-                                
                                 isMapCreated = true;
                             }
                             this.insertMarkers(foobot_markers);
@@ -257,7 +285,6 @@ export default {
             }
             if(!isMapCreated) {
                 var view = { coords:[40.6303, -8.6575], zoom:13 };
-                
                 this.map = L.map(this.$refs.worldmap).setView(view.coords, view.zoom);
                 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
                     id: 'mapbox.streets',
@@ -278,45 +305,50 @@ export default {
                 paused: false, reverse: false, hardwareAccelerated: true
             };
             var userPath = antPath(path, options);
-            userPath.addTo(this.map);
+            userPath.addTo(this.map_layers);
             //this.map_layers.addLayer(userPath);
         },
 
         /* ======================== MARKERS ======================== */
 
-        defineMarkerIcon() {
-            // to do...
-            return this.blueIcon;
-        },
         getMarkers(events) {
             var markers = [];
             var marker;
+            console.log("events");
+            console.log(events);
             for(var i=0; i<events.time.length; i++) {
-                var event_obj = JSON.parse(events[i]);
-                var title = "";
-                var content = "";
-                for(var key in event_obj) {
-                    if(key != "time" && key != "latitude" && key != "longitude") {
-                        if(events[key][i] != null) {
-                            title += ", <br>" + key;
-                            if(!content.includes(events[key][i])) {
-                                content += ", <br>" + events[key][i];
+                if(events.latitude[i]) {
+                    var event_obj = JSON.parse(events["events"][i]);
+                    var title = "";
+                    var content = "";
+                    if(event_obj) {
+                        var severity = 0;
+                        for(var j=0; j<event_obj["events"].length; j++) {
+                            title += ", <br>" + event_obj["events"][j];
+                            if(!content.includes(event_obj["metrics"][j])) {
+                                if(event_obj["metrics"][j] != "PersonalStatus") {
+                                    content += ", <br><font color='red'>" + event_obj["metrics"][j];
+                                    content += ": " + event_obj["data"][event_obj["metrics"][j]] + "</font>";
+                                } else {
+                                    content += ", <br>" + event_obj["metrics"][j];
+                                }
                             }
+                            if(event_obj["metrics"][j] != "PersonalStatus") { severity = 1; }
                         }
+                        marker = {
+                            icon: (severity > 0) ? this.redIcon : this.blueIcon,
+                            coords: [events.latitude[i], events.longitude[i]],
+                            popup: {
+                                id: i+1,
+                                title: title.substring(6),
+                                time: this.formatDateTime(events.time[i]),
+                                content: content.substring(6),
+                                // ...
+                            }
+                        };
+                        markers.push(marker);
                     }
                 }
-                marker = {
-                    icon: this.defineMarkerIcon(),
-                    coords: [events.latitude[i], events.longitude[i]],
-                    popup: {
-                        id: i+1,
-                        title: title.substring(2),
-                        time: events.time[i],
-                        content: content.substring(2),
-                        // ...
-                    }
-                };
-                markers.push(marker);
             }
             return markers;
         },
@@ -337,16 +369,45 @@ export default {
                 }
                     popup_content       += "<p>" + markers[i].popup.content + "</p>"
                                     + "</div>";
-                var marker = L.marker(markers[i].coords, options).bindPopup(popup_content)//.addTo(this.map);
+                var marker = L.marker(markers[i].coords, options).bindPopup(popup_content).addTo(this.map_layers);//.addTo(this.map);
                 marker.on('mouseover', function(e) { this.openPopup(); });
                 marker.on('mouseout', function(e) { this.closePopup(); });
-                marker.on('click', function(e) { vueComponent.clickEvent([e.latlng.lat, e.latlng.lng]) });
-                this.map_layers.addLayer(marker);
+                marker.on('click', function(e) { vueComponent.clickEvent(e) });
+                //this.map_layers.addLayer(marker);
+            }
+            var center = this.map.getCenter()
+            if(center.lat == this.default_coords[0] && center.lng == this.default_coords[1]) {
+                this.map.setView(markers[0].coords, 13);
             }
         },
-        clickEvent(coords) {
+        clickEvent(e) {
+            var coords=[e.latlng.lat, e.latlng.lng]
             console.log("Event Clicked! Coordenates: " + coords);
             // to do
+            for(let l in this.map_layers._layers){
+                if(this.map_layers._layers[l]._latlng){
+                    if(JSON.stringify([this.map_layers._layers[l]._latlng.lat, this.map_layers._layers[l]._latlng.lng])==JSON.stringify(coords)){
+                        var events = $(this.map_layers._layers[l]._popup._content)[0].firstChild.innerHTML.replace("<br>","").split(", ")
+                        if(events.length>1){
+                            this.width=e.originalEvent.clientX/window.innerWidth
+                            this.height=e.originalEvent.clientY/window.innerHeight
+                            this.options=events
+                            this.$modal.show("eventOptions")
+                        }else{
+                            this.$router.push({name:"events", params:{event: events[0]}})
+                        }
+                    }
+                }
+            }
+        },
+
+        changeEvt(eventTitle){
+            if(eventTitle=="Others"){
+                return
+            }
+            if(eventTitle){
+                this.$router.push({name:"events", params:{event: eventTitle}})
+            }
         },
 
         /* ======================== AUX METHODS ======================== */
@@ -361,6 +422,22 @@ export default {
             this.filledform.start = null;
             this.filledform.end = null;
             this.filledform.interval = null;
+        },
+        formatDateTime(datetime) {
+            var d = new Date(datetime);
+
+            Number.prototype.padLeft = function(base,chr){
+                var len = (String(base || 10).length - String(this).length)+1;
+                return len > 0? new Array(len).join(chr || '0')+this : this;
+            }
+
+            var retval = [(d.getMonth()+1).padLeft(),
+                        d.getDate().padLeft(),
+                        d.getFullYear()].join('/') +' ' +
+                        [d.getHours().padLeft(),
+                        d.getMinutes().padLeft(),
+                        d.getSeconds().padLeft()].join(':');
+            return retval;
         },
         showToast(message, duration) {
             this.$toasted.show(message, {position: 'bottom-center', duration: duration});

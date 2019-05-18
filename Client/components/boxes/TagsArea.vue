@@ -139,41 +139,41 @@ export default {
             }
             // send data
             await this.$axios.$post("/mood", data, config)
-            .then(res => {
-                if(res.status != 0) {
-                    console.log(res);
-                    if(res.status == 4) {
-                        this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                        this.$router.push("/login");
+                .then(res => {
+                    if(res.status != 0) {
+                        console.log(res);
+                        if(res.status == 4) {
+                            this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                            this.$disconnect()
+                            this.$nextTick(() => { 
+                                this.$store.dispatch('logout'),
+                                this.$router.push("/login")
+                            });
+                        }
+                        this.$toasted.show('Something went wrong while sending your health update. Please try again, if it still does not work, contact us through email.', 
+                            {position: 'bottom-center', duration: 7500});
+                    } else {
+                        this.$toasted.show('Daily update submitted.', 
+                            {position: 'bottom-center', duration: 2500});
+                        if(process.client) {
+                            window.location.reload(true);
+                        }
+                        /*
+                        this.availableTags = [];
+                        this.selectedTags = [];
+                        for(var i in this.areas) {
+                            this.availableTags.push(this.areas[i]);
+                        }
+                        */
                     }
                     this.$toasted.show('Something went wrong while sending your health update. Please try again, if it still does not work, contact us through email.', 
                         {position: 'bottom-center', duration: 7500});
-                } else {
-                    this.$toasted.show('Daily update submitted.', 
-                        {position: 'bottom-center', duration: 2500});
-                    if(process.client) {
-                        //window.location.reload(true);
-                        var copy = this.$data.selectedTags
-                        for(let sel in copy){
-                            this.unclickTag(copy[sel])
-                        }
-                        this.$emit("submited", event)
-                    }
-                    /*
-                    this.availableTags = [];
-                    this.selectedTags = [];
-                    for(var i in this.areas) {
-                        this.availableTags.push(this.areas[i]);
-                    }
-                    */
-                }
-            })
-            .catch(e => {
-                console.log(e);
-                this.$toasted.show('Something went wrong while sending your health update. The server might be down at the moment. Please try again later.', 
-                    {position: 'bottom-center', duration: 7500});
-            });
-
+                })
+                .catch(e => {
+                    console.log(e);
+                    this.$toasted.show('Something went wrong while sending your health update. The server might be down at the moment. Please try again later.', 
+                        {position: 'bottom-center', duration: 7500});
+                });
         },
     }
 }

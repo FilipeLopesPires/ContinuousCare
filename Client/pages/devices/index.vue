@@ -111,7 +111,11 @@ export default {
                                         if(res.status != 0) {
                                             if(res.status == 4) {
                                                 this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                                                this.$router.push("/login");
+                                                this.$disconnect()
+                                                this.$nextTick(() => { 
+                                                    this.$store.dispatch('logout'),
+                                                    this.$router.push("/login")
+                                                });
                                             }
                                             console.log(res)
                                             return [];
@@ -136,7 +140,11 @@ export default {
                                     if(res.status != 0) {
                                         if(res.status == 4) {
                                             this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                                            this.$router.push("/login");
+                                            this.$disconnect()
+                                            this.$nextTick(() => { 
+                                                this.$store.dispatch('logout'),
+                                                this.$router.push("/login")
+                                            });
                                         }
                                         this.requestError = true;
                                         console.log(res)
