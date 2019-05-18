@@ -124,7 +124,11 @@ export default {
                 }
                 else if(res.status == 4) {
                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                    this.$router.push("/login");
+                    this.$disconnect()
+                    this.$nextTick(() => { 
+                        this.$store.dispatch('logout'),
+                        this.$router.push("/login")
+                    });
                 }
                 else {
 

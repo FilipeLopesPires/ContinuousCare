@@ -106,7 +106,11 @@ export default {
                 if (res.status == 0) {
                     if(res.status == 4) {
                         this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                        this.$router.push("/login");
+                        this.$disconnect()
+                        this.$nextTick(() => { 
+                            this.$store.dispatch('logout'),
+                            this.$router.push("/login")
+                        });
                     }
                     this.$toasted.show(
                         'Permission rejected',
@@ -133,7 +137,11 @@ export default {
                 if (res.status == 0) {
                     if(res.status == 4) {
                         this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                        this.$router.push("/login");
+                        this.$disconnect()
+                        this.$nextTick(() => { 
+                            this.$store.dispatch('logout'),
+                            this.$router.push("/login")
+                        });
                     }
                     this.permissions.splice(idx, 1);
                     this.$toasted.show(
@@ -159,7 +167,11 @@ export default {
                 if (res.status == 0) {
                     if(res.status == 4) {
                         this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                        this.$router.push("/login");
+                        this.$disconnect()
+                        this.$nextTick(() => { 
+                            this.$store.dispatch('logout'),
+                            this.$router.push("/login")
+                        });
                     }
                     this.permissions.splice(idx, 1);
                     this.$toasted.show(

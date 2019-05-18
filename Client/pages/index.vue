@@ -46,7 +46,7 @@
       <!--================ Banner Area =================-->
       <PageBanner parent_page="Home" page="Profile" :name="full_name" />
 
-      <!--================ Tags Area =================-->
+      <!--================ Main Area =================-->
       <div class="justify-content-center d-flex align-items-top">
         <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920">
           <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 mr--30 mt-30 ">
@@ -57,6 +57,14 @@
           </div>
         </div>
       </div>
+
+      <!--================ Sleep Area =================-->
+      <div class="justify-content-center d-flex align-items-top">
+        <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+          <SleepBox />
+        </div>
+      </div>
+      
       
       <!--================ Footer Area =================-->
       <PageFooter />
@@ -71,6 +79,7 @@ import HomeBanner from '@/components/banners/HomeBanner.vue'
 import ServiceBox from '@/components/boxes/ServiceBox.vue'
 import TagsArea from '@/components/boxes/TagsArea.vue'
 import Events from '@/components/events/Events.vue'
+import SleepBox from '@/components/boxes/SleepBox.vue'
 
 export default { 
   middleware: ['check-log', 'clients-only'],
@@ -79,11 +88,12 @@ export default {
     ServiceBox,
     TagsArea,
     Events,
+    SleepBox,
   },
   data() {
     return {
-      startEvents:parseInt(new Date().setHours(0,0,0,0)/1000),
-      endEvents:parseInt(new Date().getTime()/1000),
+      startEvents: parseInt(new Date().setHours(0,0,0,0)/1000),
+      endEvents: parseInt(new Date().getTime()/1000),
       full_name: this.$store.getters.profile.full_name,
       tags_area: [
         {
