@@ -67,7 +67,8 @@ export default {
                     result=output
                 } else if(res.status == 4) {
                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                    this.$router.push("/login");
+                    this.$store.dispatch('logout'),
+                    this.$router.push("/login")
                 } else if(res.status==1){
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});
@@ -106,7 +107,8 @@ export default {
                     result=output
                 } else if(res.status == 4) {
                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                    this.$router.push("/login");
+                    this.$store.dispatch('logout'),
+                    this.$router.push("/login")
                 } else if(res.status==1){
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});
@@ -165,7 +167,8 @@ export default {
                     }
                 } else if(res.status == 4) {
                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                    this.$router.push("/login");
+                    this.$store.dispatch('logout'),
+                    this.$router.push("/login")
                 } else if(res.status==1){
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});

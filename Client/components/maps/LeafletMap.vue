@@ -8,6 +8,7 @@
         <div class="container justify-content-center align-items-center col-lg-9 col-md-9 mt-30" id="map-div">
             <div class="mb-60 leaflet-map" id="map-wrap" ref="worldmap"></div>
         </div>
+        <EventOptions :height="height" :width="width" :options="options" @option="changeEvt"/>
     </div>
 </template>
 
@@ -16,15 +17,20 @@ import L from 'leaflet';
 import {antPath} from 'leaflet-ant-path';
 
 import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
+import EventOptions from '@/components/modals/EventOptions.vue'
 
 var vueComponent;
 
 export default {
     components: {
         TimeIntervalForm,
+        EventOptions,
     },
     data() {
         return {
+            width:null,
+            height:null,
+            options:null,
             map: null,
             map_layers: null,
             map_markers: null,
@@ -366,7 +372,7 @@ export default {
                 var marker = L.marker(markers[i].coords, options).bindPopup(popup_content).addTo(this.map_layers);//.addTo(this.map);
                 marker.on('mouseover', function(e) { this.openPopup(); });
                 marker.on('mouseout', function(e) { this.closePopup(); });
-                marker.on('click', function(e) { vueComponent.clickEvent([e.latlng.lat, e.latlng.lng]) });
+                marker.on('click', function(e) { vueComponent.clickEvent(e) });
                 //this.map_layers.addLayer(marker);
             }
             var center = this.map.getCenter()
@@ -374,9 +380,34 @@ export default {
                 this.map.setView(markers[0].coords, 13);
             }
         },
-        clickEvent(coords) {
+        clickEvent(e) {
+            var coords=[e.latlng.lat, e.latlng.lng]
             console.log("Event Clicked! Coordenates: " + coords);
             // to do
+            for(let l in this.map_layers._layers){
+                if(this.map_layers._layers[l]._latlng){
+                    if(JSON.stringify([this.map_layers._layers[l]._latlng.lat, this.map_layers._layers[l]._latlng.lng])==JSON.stringify(coords)){
+                        var events = $(this.map_layers._layers[l]._popup._content)[0].firstChild.innerHTML.replace("<br>","").split(", ")
+                        if(events.length>1){
+                            this.width=e.originalEvent.clientX/window.innerWidth
+                            this.height=e.originalEvent.clientY/window.innerHeight
+                            this.options=events
+                            this.$modal.show("eventOptions")
+                        }else{
+                            this.$router.push({name:"events", params:{event: events[0]}})
+                        }
+                    }
+                }
+            }
+        },
+
+        changeEvt(eventTitle){
+            if(eventTitle=="Others"){
+                return
+            }
+            if(eventTitle){
+                this.$router.push({name:"events", params:{event: eventTitle}})
+            }
         },
 
         /* ======================== AUX METHODS ======================== */

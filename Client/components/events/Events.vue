@@ -123,7 +123,8 @@ export default {
           }
           else if(res.status == 4) {
               this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-              this.$router.push("/login");
+              this.$store.dispatch('logout'),
+              this.$router.push("/login")
           }else{
               this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
                           {position: 'bottom-center', duration: 7500});
@@ -184,7 +185,8 @@ export default {
             }
             else if(res.status == 4) {
                 this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
-                this.$router.push("/login");
+                this.$store.dispatch('logout'),
+                this.$router.push("/login")
             }else{
               this.$toasted.show('Something went wrong while deleting your event. Please try again, if it still does not work, contact us through email.', 
                           {position: 'bottom-center', duration: 7500});
