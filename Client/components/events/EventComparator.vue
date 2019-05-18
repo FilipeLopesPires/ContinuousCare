@@ -1,5 +1,6 @@
 <template>
-    <b-container class='mt-25'>
+    <b-container style="padding-top:80px">
+        <h3 v-if="event" class="widget_title"> All {{event}} episodes of the month </h3>
             <b-row class="justify-content-center">
                 <b-col lg="3" md="4" sm="6" xs="12" v-for='evt in eventToShow' :key="evt.id" style="margin-bottom: 15px;">
                     <div class="event" style="cursor:pointer;">
@@ -23,18 +24,112 @@ export default {
     ],
     data() {
       return {
+        oldEvent:"",
         eventToShow:[],
-        height:null,
-        width:null,
       }
     },
-    watch:{
-        event: function() {
-            const config = {
-                params: {'start': this.startTime, 'end': this.endTime},
-                headers: {'AuthToken': this.$store.getters.sessionToken}
+    methods: {
+        formatDateTime(datetime) {
+            var d = new Date(datetime);
+
+            Number.prototype.padLeft = function(base,chr){
+                var len = (String(base || 10).length - String(this).length)+1;
+                return len > 0? new Array(len).join(chr || '0')+this : this;
             }
-            this.$axios.$get("/event", config)
+
+            var retval = [(d.getMonth()+1).padLeft(),
+                        d.getDate().padLeft(),
+                        d.getFullYear()].join('/') +' ' +
+                        [d.getHours().padLeft(),
+                        d.getMinutes().padLeft(),
+                        d.getSeconds().padLeft()].join(':');
+            return retval;
+        },
+
+
+        async getEnvStatus(config){
+            var result
+            await this.$axios.$get("/environment", config)
+            .then(res => {
+                if(res.status==0){
+                    var output={}
+                    var status=res.data
+                    console.log(res)
+                    if("time" in status){
+                        for(var key in status){
+                            if(!"time,latitude,longitude".includes(key)){
+                                if(status[key][status["time"].length-1]){
+                                    output[key]=status[key][status["time"].length-1]
+                                }
+                            }
+                        }
+                    }
+                    result=output
+                } else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
+                } else if(res.status==1){
+                    this.$toasted.show(res.msg, 
+                                {position: 'bottom-center', duration: 7500});
+                    result={}
+                }else{
+                    this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
+                                {position: 'bottom-center', duration: 7500});
+                    result={}
+                }
+            })
+            .catch(e => {
+                // Unable to get devices from server
+                console.log(e)
+                this.$toasted.show('Something went wrong while trying to retrieve data. The server might be down at the moment. Please try again later.', 
+                    {position: 'bottom-center', duration: 7500});
+                result={}
+            })
+            return result
+        },
+        async getHealthStatus(config){
+            var result
+            await this.$axios.$get("/healthstatus", config)
+            .then(res => {
+                if(res.status==0){
+                    var output={}
+                    var status=res.data
+                    if("time" in status){
+                        for(var key in status){
+                            if(!"time,latitude,longitude".includes(key)){
+                                if(status[key][status["time"].length-1]){
+                                    output[key]=status[key][status["time"].length-1]
+                                }
+                            }
+                        }
+                    }
+                    result=output
+                } else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
+                } else if(res.status==1){
+                    this.$toasted.show(res.msg, 
+                                {position: 'bottom-center', duration: 7500});
+                    result={}
+                }else{
+                    this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
+                                {position: 'bottom-center', duration: 7500});
+                    result={}
+                }
+            })
+            .catch(e => {
+                // Unable to get devices from server
+                console.log(e)
+                this.$toasted.show('Something went wrong while trying to retrieve data. The server might be down at the moment. Please try again later.', 
+                    {position: 'bottom-center', duration: 7500});
+                result={}
+            })
+            return result
+        },
+        async showEvents(config){
+            var healthState = await this.getHealthStatus(config)
+            var envState = await this.getEnvStatus(config)
+            await this.$axios.$get("/event", config)
             .then(res => {
                 if(res.status==0){
                     var events=res.data
@@ -47,36 +142,31 @@ export default {
                             if(evt){
                                 for(var j=0; j<evt["events"].length;j++){
                                     if(evt["events"][j]==this.event){
-                                        console.log("key")
                                         title+=evt["events"][j]+", "
-                                        //if data is empty the only events are related to personalStatus, else there may be some metrics and events related to personal signals
-                                        if(Object.keys(evt["data"]).length==0){
-                                            if(!content.includes(evt["metrics"][j])){
-                                                content+=evt["metrics"][j]+"<br>"
-                                            }
-                                        }else{
-                                            for (let [key, value] of Object.entries(evt["data"])) {
-                                                if(evt["metrics"].includes(key)){
-                                                    content+="<font color=\"red\">"+key+": "+value+"</font><br>"
-                                                }else{
-                                                    content+=value+"<br>"
-                                                }
+                                        for(let [key, value] of Object.entries({...healthState, ...envState})){
+                                            if(evt["metrics"].includes(key)){
+                                                content+="<font color=\"red\">"+key+": "+value+"</font><br>"
+                                            }else{
+                                                content+=key+": "+value+"<br>"
                                             }
                                         }
                                     }
                                 }
-                            }
-                            if(title!=""){
-                                newEvents.push({
-                                "time": events["time"][i],
-                                "title": title.slice(0,-2),
-                                "content": content,
-                                })
+                                if(title!=""){
+                                    newEvents.push({
+                                    "time": this.formatDateTime(events["time"][i]),
+                                    "title": title.slice(0,-2),
+                                    "content": content,
+                                    })
+                                }
                             }
                         }
                         this.eventToShow = newEvents
                     }
-                }else if(res.status==1){
+                } else if(res.status == 4) {
+                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                    this.$router.push("/login");
+                } else if(res.status==1){
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});
                 }else{
@@ -91,6 +181,22 @@ export default {
                     {position: 'bottom-center', duration: 7500});
                 this.requestError = true;
             })
+        }
+    },
+    watch:{
+        event: function() {
+            const config = {
+                params: {'start': this.startTime, 'end': this.endTime},
+                headers: {'AuthToken': this.$store.getters.sessionToken}
+            }
+            
+            if(this.event=="refresh"){
+                console.log("aqui")
+                this.event=this.oldEvent
+            }else{
+                this.oldEvent=this.event
+                this.showEvents(config)
+            }
         }
     },
 }
@@ -115,4 +221,12 @@ export default {
     font-weight: 300;
     font-size: 14px;
 }
+.widget_title {
+    font-size: 18px;
+    line-height: 25px;
+    background: #3face4;
+    text-align: center;
+    color: #fff;
+    padding: 8px 0px;
+    margin-bottom: 30px; }
 </style>

@@ -3,7 +3,10 @@ import datetime
 import re
 
 """
-
+Does validation on user input
+Are done on:
+  -REST level when the type of user is not needed
+  -Processor level when the type of user is needed for validation
 """
 
 
@@ -179,6 +182,22 @@ class ArgumentValidator:
         return ArgumentValidator._validate(
             data, [
                 ("id", int, True)
+            ]
+        )
+
+    @staticmethod
+    def registerMood(data):
+        return ArgumentValidator._validate(
+            data, [
+                ("moods", list, True)
+            ]
+        )
+
+    @staticmethod
+    def deleteMood(data):
+        return ArgumentValidator._validate(
+            data, [
+                ("time", int, True)
             ]
         )
 

@@ -166,6 +166,8 @@ export default {
                         }
                         */
                     }
+                    this.$toasted.show('Something went wrong while sending your health update. Please try again, if it still does not work, contact us through email.', 
+                        {position: 'bottom-center', duration: 7500});
                 })
                 .catch(e => {
                     console.log(e);

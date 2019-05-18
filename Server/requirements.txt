@@ -5,6 +5,7 @@ geopy
 cryptography
 websockets
 gevent
+python-dateutil
 
 # databases drivers
 influxdb

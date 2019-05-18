@@ -30,7 +30,7 @@
                             <button class="genric-btn info medium text-uppercase col-lg-12 col-md-12 col-sm-12 " type="submit">Load</button>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
             <!-- <div class="row justify-content-center d-flex align-items-center">
@@ -71,7 +71,7 @@ export default {
                 this.showToast("Please choose an interval unit.", 2500);
                 return;
             }
-            if(this.interval == null && interval_unit == null) {
+            if((this.interval == null || this.interval == "") && (interval_unit == null || interval_unit == "")) {
                 this.$emit('time_interval_submit', this.start, this.end, null);
             } else {
                 this.$emit('time_interval_submit', this.start, this.end, this.interval + interval_unit);

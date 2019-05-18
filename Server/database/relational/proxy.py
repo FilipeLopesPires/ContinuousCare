@@ -22,6 +22,8 @@ from cryptography.exceptions import InvalidKey
 from base64 import b64encode, b64decode
 from os import urandom
 
+import datetime
+
 
 class StoredProcedures:
     REGISTER_CLIENT = "insert_client"
@@ -34,7 +36,6 @@ class StoredProcedures:
     GET_USER_PROFILE_DATA = "get_user_info"
     UPDATE_CLIENT_PROFILE_DATA = "update_client_info"
     UPDATE_MEDIC_PROFILE_DATA = "update_medic_info"
-    REGISTER_SLEEP_SESSION = "register_sleep_session"
     INSERT_SLEEP_SESSION = "insert_sleep_session"
     GET_SLEEP_SESSIONS = "get_sleep_sessions"
     UPDATE_DEVICE = "update_device"
@@ -50,7 +51,6 @@ class StoredProcedures:
     GET_EXPIRED_PERMISSIONS_OF_USER = "get_expired_permissions"
     GET_PENDING_PERMISSIONS_OF_USER = "get_pending_permissions"
     GET_ACCEPTED_PERMISSIONS_OF_USER = "get_accepted_permissions"
-    GET_ACTIVE_PERMISSIONS_OF_USER = "get_active_permissions"
 
 SQL_STATE = "03000"
 
@@ -558,14 +558,14 @@ class MySqlProxy:
 
         :param username: of the client
         :type username: str
-        :param day: with a format of %d-%m-%y
-        :type day: str
-        :param duration: with a format of %H-%M-%S
-        :type duration: str
-        :param begin: with a format of %d-%m-%y %H-%M-%S
-        :type begin: str
-        :param end: with a format of %d-%m-%y %H-%M-%S
-        :type end: str
+        :param day:
+        :type day: datetime.date
+        :param duration: seconds
+        :type duration: int
+        :param begin:
+        :type begin: datetime.datetime
+        :param end:
+        :type end: datetime.datetime
         """
         try:
             conn, cursor = self._init_connection()
@@ -778,7 +778,7 @@ class MySqlProxy:
 
     def remove_accepted_permission(self, client, medic):
         """
-        Allows a client to delete an accepted permission (still not active)
+        Allows a client to delete an accepted permission
 
         :param client: username of the medic
         :type client: str

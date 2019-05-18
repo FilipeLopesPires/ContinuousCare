@@ -33,7 +33,6 @@ const createStore = () => {
             },
             SOCKET_ONMESSAGE (state, message)  {
                 var jsonData = JSON.parse(message.data.replace(/'/g,"\"").replace(/None/g,"null"));
-                console.log(jsonData);
                 for(var permIndex in jsonData){
                     state.vue.$notify({
                         group: 'permissions',

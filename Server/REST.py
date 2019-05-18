@@ -86,13 +86,29 @@ def devices():
 
     return processor.deleteDevice(authToken, data)
 
-@app.route('/mood',methods = ['POST'])
+@app.route('/mood',methods = ['POST', 'DELETE'])
 def registerMood():
-    userToken=request.headers["AuthToken"]
+    userToken = request.headers.get("AuthToken")
+    if not userToken:
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+
     data = request.json
     if not data:
         data = {}
-    return processor.registerMood(userToken, data)
+
+    if request.method=="POST":
+        argsErrors =  ArgumentValidator.registerMood(data)
+        if len(argsErrors) > 0:
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
+        return processor.registerMood(userToken, data)
+    else:
+        argsErrors =  ArgumentValidator.deleteMood(data)
+        if len(argsErrors) > 0:
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
+        return processor.deleteMood(userToken, data)
+
 
 @app.route('/environment', endpoint="Environment", methods = ['GET'])
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
