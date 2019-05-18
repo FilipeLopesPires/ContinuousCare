@@ -114,11 +114,12 @@ class Sleep(Metric):
             raise Exception("Error while fetching information for "+self.__class__.__name__+": "+str(e))
 
     def normalizeData(self, jsonData):
-        duration=round(jsonData["sleep"][0]["duration"]/1000)
-        begin=int(dp.parse(jsonData["sleep"][0]["startTime"]+"Z").strftime("%s"))
-        end=int(dp.parse(jsonData["sleep"][0]["endTime"]+"Z").strftime("%s"))
-        sleepEvents=[{k if k!="dateTime" else "time" : v if k!="dateTime" else int(dp.parse(v+"Z").strftime("%s")) for k,v in e.items()} for e in jsonData["sleep"][0]["levels"]["data"]]
-        return {"duration":duration, "day":jsonData["sleep"][0]["dateOfSleep"], "begin":begin, "end":end, "sleep":sleepEvents}
+        sleepData = jsonData["sleep"][0]
+        duration=round(sleepData["duration"]/1000)
+        begin=int(dp.parse(sleepData["startTime"]+"Z").strftime("%s"))
+        end=int(dp.parse(sleepData["endTime"]+"Z").strftime("%s"))
+        sleepEvents=[{k if k!="dateTime" else "time" : v if k!="dateTime" else int(dp.parse(v+"Z").strftime("%s")) for k,v in e.items()} for e in sleepData["levels"]["data"]]
+        return {"duration":duration, "day":sleepData["dateOfSleep"], "begin":begin, "end":end, "sleep":sleepEvents}
 
     def checkEvent(self, normalJsonData):
         duration = normalJsonData["duration"]
@@ -322,7 +323,7 @@ class Foobotmetric(Metric):
         if voc:
             if voc >= 350:
                 output["events"].append("High Percentage of Volatile Compounds")
-                output["metrics"].append("pm10")
+                output["metrics"].append("voc")
         if output["events"]!=[]:
             return output
         return None

@@ -49,14 +49,14 @@
                                         <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
                                     </b-col>
                                 </b-row>
-                                <b-card v-show="valid_data" no-body>
+                                <b-card v-if="valid_data" no-body>
                                     <b-tabs card justified>
-                                        <b-tab v-for="(data, metric) in charts_data" :key="metric" :title="metric">
-                                            <apexchart width="100%" type="line" :options="charts_options" :series="[{data:data}]"></apexchart>
+                                        <b-tab v-for="(chart_build_data, metric) in charts_build_data" :key="metric" :title="metric">
+                                            <apexchart :options="chart_build_data.options" :series="[{name:metric, data:chart_build_data.data}]"></apexchart>
                                         </b-tab>
                                     </b-tabs>
                                 </b-card>
-                                <div v-show="!valid_data" class="text-center">
+                                <div v-else class="text-center">
                                     <p>No data for the given patient, interval and metrics option requested.</p>
                                 </div>
                             </div>
@@ -92,12 +92,7 @@ export default {
             data_source: "/healthstatus",
             client_name: "",
             client_username: "",
-            charts_data: {},
-            charts_options: {
-                xaxis: {
-                    type:'seconds',
-                    categories: []
-                }
+            charts_build_data: {
             },
             start: null,
             end: null,
@@ -108,6 +103,121 @@ export default {
     methods: {
         show_toast(message) {
             this.$toasted.show(message, {position: 'bottom-center', duration: 7500});
+        },
+
+        /**
+         * Used to insert into the options of a specific chart
+         *  an upper or lower bound
+         * 
+         * @param charts_option option of the chart to change
+         * @param is_upper_bound if the bound to insert limits
+         *  lower or upper values
+         * @param y_value y value where the annotation will be placed
+         */
+        construct_annotation(charts_options, is_upper_bound, y_value) {
+            charts_options.annotations.yaxis.push({
+                y: y_value,
+                borderColor: '#ff0000',
+                label: {
+                    borderColor: '#ff0000',
+                    style: {
+                    color: '#fff',
+                    background: '#ff0000',
+                    },
+                    text: (is_upper_bound ? 'Upper' : 'Lower') + ' bound',
+                }
+            });
+        },
+
+        /**
+         * Returns an object used as options to use
+         *  on all charts. Same as making a copy of
+         *  one object returns on data() method
+         */
+        get_base_chart_option() {
+            return {
+                zoom: {
+                    enable: true,
+                    type: 'x'
+                },
+                xaxis: {
+                    type: "datetime",
+                    labels: {
+                        format: "dd-MMM-yyyy HH:mm",
+                        rotate: 0
+                    },
+                    title: {
+                        text: "Time"
+                    },
+                    tickAmount: 'dataPoints'
+                },
+                yaxis: {
+                    title: {}
+                },
+                tooltip: {
+                    x: {
+                        format: "dd-MMM-yyyy HH:mm"
+                    }
+                },
+                annotations: {
+                    yaxis: []
+                }
+            };
+        },
+
+        /**
+         * Creates customized chart option according to the metric
+         *  that the chart will display
+         */
+        create_chart_options(metric) {
+            let lower, upper, metric_units;
+
+            switch(metric) {
+                case "Heart Rate":
+                    lower = 50;
+                    upper = 100;
+                    metric = "bpm";
+                    break;
+                case "Steps":
+                    lower = 1000;
+                    break;
+                case "Aqi":
+                    lower = 75;
+                    break;
+                case "Pm10":
+                    lower = 40;
+                    metric_units = "µg/m3";
+                    break;
+                case "Voc":
+                    lower = 350;
+                    metric_units = "ppm"
+                    break;
+                case "O3":
+                    lower = 130;
+                    metric_units = "µm";
+                    break;
+                case "Pm25":
+                    lower = 55;
+                    metric_units = "µm";
+                    break;
+                case "So2":
+                    lower = 180;
+                    metric_units = "µm";
+                    break;
+            };
+
+            let chart_options = this.get_base_chart_option();
+
+            if (lower)
+                this.construct_annotation(chart_options, false, lower);
+
+            if (upper)
+                this.construct_annotation(chart_options, true, upper);
+
+            if (metric_units)
+                this.chart_options.yaxis.title.text = metric_units;
+            
+            return chart_options
         },
 
         /**
@@ -133,9 +243,10 @@ export default {
                         this.valid_data = false;
                         return;
                     }
-                    
-                    this.charts_options.xaxis.categories = res.data.time;
 
+                    let time = res.data.time;
+
+                    let new_charts_build_data = {};
                     /**
                      * Because some metrics come in lowerCalmelCase, with this
                      *  metric name is transformed readable for "normal people"
@@ -143,24 +254,30 @@ export default {
                     for (let key in res.data) {
 
                         if (key == "latitude" || key == "longitude" || key == "time")
-                            delete res.data[key];
-                        else {
-                            let new_key = key.charAt(0).toUpperCase();
+                            continue;
 
-                            for (let j = 1; j < key.length; j++)
-                                if (key.charAt(j).match(/[A-Z]/))
-                                    new_key += " " + key.charAt(j);
-                                else
-                                    new_key += key.charAt(j);
+                        let new_key = key.charAt(0).toUpperCase();
+                        for (let j = 1; j < key.length; j++)
+                            if (key.charAt(j).match(/[A-Z]/))
+                                new_key += " " + key.charAt(j);
+                            else
+                                new_key += key.charAt(j);
 
-                            let tmp = res.data[key];
-                            delete res.data[key];
-                            res.data[new_key] = tmp;
+
+                        let data = res.data[key];
+                        for (let i = 0; i < time.length; i++) {
+                            let y_value = data[i];
+                            let parsed_time = Date.parse(time[i]);
+                            data[i] = [parsed_time, y_value];
                         }
 
+                        new_charts_build_data[new_key] = {
+                            options: this.create_chart_options(new_key),
+                            data: data
+                        }
                     }
 
-                    this.charts_data = res.data;
+                    this.charts_build_data = new_charts_build_data;
 
                     this.valid_data = true;
                 }
@@ -207,7 +324,7 @@ export default {
         close_charts() {
             this.data_loaded = false;
 
-/*             this.charts_data = {};
+          /*this.charts_data = {};
             this.charts_options.xaxis.categories = []; */
 
             this.client_name = "";
@@ -223,7 +340,7 @@ export default {
             this.interval = interval;
 
             this.display_graphics();
-        }
+        },
     }
 }
 </script>
