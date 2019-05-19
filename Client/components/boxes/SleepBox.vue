@@ -1,5 +1,10 @@
 <template>
     <div class="sleep-box">
+        <div class="container">
+            <h5 class="text-heading title_color">Last night's review:</h5>
+            <p class="sample-text mt--10">You slept for {{sleep_time}} hours.</p>
+            <p class="sample-text">Check out your pattern bellow.</p>
+        </div>
         <apexchart id="sleep-box" width="100%" height="100%" type="line" :options="charts_options" :series="series"></apexchart>
     </div>
 </template>
@@ -12,6 +17,7 @@ export default {
             data: [],
         }];
         return {
+            sleep_time: 0,
             series,
             charts_options: {
                 chart: {
@@ -19,7 +25,7 @@ export default {
                     type: 'line',
                     shadow: { enabled: false, color: '#bbb', top: 3, left: 2, blur: 3, opacity: 1 },
                 },
-                title: {
+                /* title: {
                     text: 'Sleep Pattern',
                     align: 'left',
                     offsetX: 30,
@@ -27,7 +33,7 @@ export default {
                         fontSize: "32px",
                         color: '#3face4'
                     }
-                },
+                }, */
                 fill: {
                     type: 'gradient',
                     gradient: {
@@ -58,6 +64,20 @@ export default {
                 tooltip: {
                     x: {
                         format: 'dd MMM HH:mm'
+                    },
+                    y: {
+                        formatter: (value) => {
+                            if(value==4) {
+                                return "Awake";
+                            }
+                            if(value==3) {
+                                return "Light Sleep";
+                            }
+                            if(value==2) {
+                                return "Rem Sleep";
+                            }
+                            return "Deep Sleep";
+                        },
                     }
                 },
                 //series: series,
@@ -69,7 +89,12 @@ export default {
                         text: 'Time',
                     },
                     labels: {
-                        format: 'HH',
+                        formatter: function(value) {
+                            var d = new Date(value);
+                            return d.getHours() + ":" + d.getMinutes();
+                        },
+                        //format: 'HH',
+                        tickPlacement: 'between'
                     }
                 },
                 yaxis: {
@@ -91,6 +116,8 @@ export default {
                 console.log(result);
                 if(result.data &&  result.data.length>0 && result.data[0].data && result.data[0].data.level && result.data[0].data.level.length>0) {
                     // process result.data
+                    this.sleep_time = result.data[0].info.duration / 60 / 60;
+
                     var sleep_times = [];
                     var t = null;
                     var t_format = null;
@@ -142,8 +169,8 @@ export default {
             const config = {
                 headers: {'AuthToken': AuthToken},
                 parameters: {
-                    'start': 1557964800,    // 1555369200
-                    'end': 1558051200,      // 1555455600
+                    'start': 1555369200,// 1557964800,    // 1555369200
+                    'end': 1555455600, //1558051200,      // 1555455600
                 }
             }
             return await this.$axios.$get("/sleep",config)
@@ -184,5 +211,7 @@ export default {
 .sleep-box {
     height: 60vh;
     margin-right: 5vh;
+    margin-bottom: 10vh;
 }
+
 </style>

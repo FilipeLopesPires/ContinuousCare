@@ -61,6 +61,7 @@
       <!--================ Sleep Area =================-->
       <div class="justify-content-center d-flex align-items-top">
         <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+          <h3 class="widget_title"> Sleep Pattern </h3>
           <SleepBox />
         </div>
       </div>
@@ -132,5 +133,12 @@ export default {
 </script>
 
 <style scoped>
-
+.widget_title {
+    font-size: 18px;
+    line-height: 25px;
+    background: #3face4;
+    text-align: center;
+    color: #fff;
+    padding: 8px 0px;
+    margin-bottom: 30px; }
 </style>

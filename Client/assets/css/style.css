@@ -103,6 +103,9 @@ a {
 .pt-30 {
   padding-top: 30px !important; }
 
+.mb--10 {
+  margin-bottom: -10px; } 
+
 .mb--20 {
   margin-bottom: -20px; } 
 
@@ -132,6 +135,9 @@ a {
 
 .mt-25 {
   margin-top: 25px; }
+
+.mt--10 {
+  margin-top: -10px; }
 
 .mt-30 {
   margin-top: 30px; }
