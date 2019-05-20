@@ -196,13 +196,19 @@ export default {
                 xaxis: {
                     type: "datetime",
                     labels: {
-                        format: "dd-MMM-yyyy HH:mm",
-                        rotate: 0
+                        formatter: value => {
+                            let d = new Date(value);
+                            return this.format_number(d.getDay()) + "-" +
+                                   this.format_number(d.getMonth()) + "-" +
+                                   this.format_number(d.getFullYear()) + " " +
+                                   this.format_number(d.getHours()) + ":" +
+                                   this.format_number(d.getMinutes());
+                        },
+                        //rotate: 0
                     },
                     title: {
                         text: "Time"
                     },
-                    tickAmount: 'dataPoints'
                 },
                 yaxis: {
                     title: {}
@@ -425,6 +431,16 @@ export default {
         changeEvt(eventTitle){
             if (eventTitle)
                 this.event=eventTitle;
+        },
+
+        /**
+         * Formats numbers se they show the same way
+         *  they are display when they came from the REST
+         */
+        format_number(number) {
+            if (number >= 10)
+                return number;
+            return "0" + number;
         },
     }
 }

@@ -102,13 +102,14 @@ export default {
                         text: 'Time',
                     },
                     labels: {
-                        formatter: function(value) {
+                        formatter: value => {
                             var d = new Date(value);
-                            return d.getHours() + ":" + d.getMinutes();
+                            return this.format_number(d.getHours()) + ":" + this.format_number(d.getMinutes());
                         },
                         //format: 'HH',
                         tickPlacement: 'between'
-                    }
+                    },
+                    tickAmount: 'dataPoints'
                 },
                 yaxis: {
                     min: 1,
@@ -248,6 +249,16 @@ export default {
             if(this.series[0].data.length == 0) {
                 this.showToast("Your sleep log is empty. Perhaps you did not sleep with the bracelet today?", 5000);
             }
+        },
+
+        /**
+         * Formats numbers se they show the same way
+         *  they are display when they came from the REST
+         */
+        format_number(number) {
+            if (number >= 10)
+                return number;
+            return "0" + number;
         },
     }
 }
