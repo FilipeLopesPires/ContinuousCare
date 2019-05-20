@@ -11,6 +11,17 @@
 
 <script>
 export default {
+    props: {
+        patient: {
+            type: String,
+            required: false,
+            default: null
+        },
+        date: {
+            type: Number,
+            required: false
+        },
+    },
     data() {
         var series = [{
             name: 'Levels',
@@ -19,6 +30,8 @@ export default {
         return {
             sleep_time: 0,
             series,
+            start: null,
+            end: null,
             charts_options: {
                 chart: {
                     height: 100,
@@ -109,74 +122,39 @@ export default {
         }
     },
     async mounted() {
-        var result = await this.getSleep(this.$store.getters.sessionToken);
-        if(result) {
-            if(result.status==0) {
-                console.log("Sleep");
-                console.log(result);
-                if(result.data &&  result.data.length>0 && result.data[0].data && result.data[0].data.level && result.data[0].data.level.length>0) {
-                    // process result.data
-                    this.sleep_time = result.data[0].info.duration / 60 / 60;
-
-                    var sleep_times = [];
-                    var t = null;
-                    var t_format = null;
-
-                    var sleep_levels = [];
-                    var lvl = null;
-                    var lvl_code = null;
-
-                    for(var i=0; i<result.data[0].data.level.length; i++) {
-                        t = result.data[0].data.time[i];
-                        t_format = new Date(t).getTime(); //this.formatDateTime(t);
-                        sleep_times.push(t_format);
-
-                        lvl = result.data[0].data.level[i];
-                        if(lvl == "wake") {
-                            lvl_code = 4;
-                        } else if(lvl == "light" || lvl == "awake") { 
-                            lvl_code = 3;
-                        } else if(lvl == "rem" || lvl == "restless") {
-                            lvl_code = 2;
-                        } else { // "deep" || "asleep"
-                            lvl_code = 1;
-                        }
-                        sleep_levels.push(lvl_code);
-
-                        var t_format_next = t_format + result.data[0].data.seconds[i]*1000 - 60*1000;
-                        var lvl_code_next = lvl_code + 0;
-
-                        sleep_times.push(t_format_next);
-                        sleep_levels.push(lvl_code_next);
-                    }
-
-                    // append data to chart
-                    for(var i=0; i<sleep_times.length; i++) {
-                        this.series[0]["data"].push([sleep_times[i], sleep_levels[i]]);
-                    }
-
-                    console.log(this.series[0]);
-                    
-                }
-            }
-        }
-        if(this.series[0].data.length == 0) {
-            this.showToast("Your sleep log is empty. Perhaps you did not sleep with the bracelet today?", 5000);
-        }
+        this.updateChart(this.date);
     },
     methods: {
-        async getSleep(AuthToken) {
-            const config = {
+        async getSleep(AuthToken, date) {
+            let config = {
                 headers: {'AuthToken': AuthToken},
-                parameters: {
-                    'start': 1555369200,// 1557964800,    // 1555369200
-                    'end': 1555455600, //1558051200,      // 1555455600
-                }
+                params: {}
+            };
+
+            if (this.patient) {
+                config.params.patient = this.patient;
             }
+
+            if (!date) {
+                let now = parseInt(Date.now() / 1000);
+
+                /*
+                 * Here I assign the same value to both fields because
+                 *  1. only the date part is taken into account (seconds and minutes are discarded)
+                 *  2. internaly the server does "begin_date_column >= start_date AND end_date_column <= end_date"
+                 *      what returns all sleep sessions from the current day
+                 */
+                config.params.start = now;
+                config.params.end = now;
+            }
+            else {
+                config.params.start = date;
+                config.params.end = date;
+            }
+
             return await this.$axios.$get("/sleep",config)
                                 .then(res => {
                                     if(res.status != 0) {
-                                        console.log(res);
                                         if(res.status == 1) {
                                             this.showToast(res.msg, 7500);
                                         } else if(res.status == 4) {
@@ -200,9 +178,77 @@ export default {
                                     return null;
                                 });
         },
+
         showToast(message, duration) {
             this.$toasted.show(message, {position: 'bottom-center', duration: duration});
-        }
+        },
+
+        /**
+         * Function used to force the update of the chart
+         * Used by
+         *  1. mounted()
+         *  2. whenever the date is changed. See method sleep_interval_submit_handler of patients page
+         */
+        async updateChart(date) {
+            var result = await this.getSleep(this.$store.getters.sessionToken, date);
+            console.log("result from axios", result);
+            if(result) {
+                if(result.status==0) {
+                    let sleepSessions = result.data;
+                    let mostRecentSleepSession = sleepSessions[sleepSessions.length - 1];
+                    if(sleepSessions &&  sleepSessions.length>0 && mostRecentSleepSession.data && mostRecentSleepSession.data.level && mostRecentSleepSession.data.level.length>0) {
+                        // process sleep session
+                        this.sleep_time = mostRecentSleepSession.info.duration / 60 / 60;
+
+                        var sleep_times = [];
+                        var t = null;
+                        var t_format = null;
+
+                        var sleep_levels = [];
+                        var lvl = null;
+                        var lvl_code = null;
+
+                        for(var i=0; i<mostRecentSleepSession.data.level.length; i++) {
+                            t = mostRecentSleepSession.data.time[i];
+                            t_format = new Date(t).getTime(); //this.formatDateTime(t);
+                            sleep_times.push(t_format);
+
+                            lvl = mostRecentSleepSession.data.level[i];
+                            if(lvl == "wake") {
+                                lvl_code = 4;
+                            } else if(lvl == "light" || lvl == "awake") { 
+                                lvl_code = 3;
+                            } else if(lvl == "rem" || lvl == "restless") {
+                                lvl_code = 2;
+                            } else { // "deep" || "asleep"
+                                lvl_code = 1;
+                            }
+                            sleep_levels.push(lvl_code);
+
+                            var t_format_next = t_format + mostRecentSleepSession.data.seconds[i]*1000 - 60*1000;
+                            var lvl_code_next = lvl_code + 0;
+
+                            sleep_times.push(t_format_next);
+                            sleep_levels.push(lvl_code_next);
+                        }
+
+                        // create new series to chart
+                        let newSeriesData = [];
+                        for(var i=0; i<sleep_times.length; i++) {
+                            newSeriesData.push([sleep_times[i], sleep_levels[i]]);
+                        }
+
+                        this.series[0].data = newSeriesData;
+                    }
+                    else { //if empty results, empty series aswell
+                        this.series[0].data = [];
+                    }
+                }
+            }
+            if(this.series[0].data.length == 0) {
+                this.showToast("Your sleep log is empty. Perhaps you did not sleep with the bracelet today?", 5000);
+            }
+        },
     }
 }
 </script>

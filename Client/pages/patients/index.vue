@@ -38,24 +38,49 @@
                                                 <input @click="on_metric_option_change('/environment')" type="radio" name="metric_option" id="environment_radio" />
                                                 <label for="environment_radio"> Environment</label>
                                             </div>
+                                            <div class="form-inline">
+                                                <input @click="on_metric_option_change('/sleep')" type="radio" name="metric_option" id="sleep_radio" />
+                                                <label for="sleep_radio"> Sleep</label>
+                                            </div>
                                             <div class="form-inline mb-20">
-                                                <input @click="on_metric_option_change('/sleep')" type="radio" name="metric_option" id="environment_radio" />
-                                                <label for="environment_radio"> Sleep</label>
+                                                <input @click="on_metric_option_change('/event')" type="radio" name="metric_option" id="events_radio" />
+                                                <label for="events_radio"> Events</label>
                                             </div>
                                         </b-card>
                                     </b-col>
 
-                                    <b-col offset-md="1" md=7>
+                                    <b-col v-if="data_source != '/sleep'" offset-md="1" md=7>
                                         <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
                                     </b-col>
+                                    <b-col v-else offset-md="1" md=7>
+                                        <SleepIntervalForm @sleep_interval_submit="sleep_interval_submit_handler" />
+                                    </b-col>
                                 </b-row>
-                                <b-card v-if="valid_data" no-body>
-                                    <b-tabs card justified>
-                                        <b-tab v-for="(chart_build_data, metric) in charts_build_data" :key="metric" :title="metric">
-                                            <apexchart :options="chart_build_data.options" :series="[{name:metric, data:chart_build_data.data}]"></apexchart>
-                                        </b-tab>
-                                    </b-tabs>
-                                </b-card>
+                                <div v-if="valid_data">
+                                    <b-card v-if="data_source == '/healthstatus' || data_source == '/environmnet'" no-body>
+                                        <b-tabs card justified>
+                                            <b-tab v-for="(chart_build_data, metric) in charts_build_data" :key="metric" :title="metric">
+                                                <apexchart :options="chart_build_data.options" :series="[{name:metric, data:chart_build_data.data}]"></apexchart>
+                                            </b-tab>
+                                        </b-tabs>
+                                    </b-card>
+                                    <SleepBox v-else-if="data_source == '/sleep'" :patient="client_username" :date="start" ref="sleep_box" />
+                                    <!--
+                                    <div v-else-if="data_source == '/event'" class="justify-content-center d-flex" style="margin-bottom:-50px">
+                                        <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920 row">
+                                            <div class="col-lg-5 col-md-12 col-sm-12 col-xs-12 mr--30 mt-30">
+                                                <Events style="height:500px;" @clicked="changeEvent" :startTime="startEvents" :endTime="endEvents" :refresh="refresh"/>
+                                            </div>
+                                            <div class="col-lg-7 col-md-12 col-sm-12 col-xs-12 ml--30">
+                                                <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10" style="margin: auto; margin-top:29px">
+                                                    <h3 class="widget_title"> Your most frequent episodes </h3>
+                                                    <EventComparator @clicked="changeEvent" id="comparator" :event="event" :startTime="startEvents" :endTime="endEvents"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    -->
+                                </div>
                                 <div v-else class="text-center">
                                     <p>No data for the given patient, interval and metrics option requested.</p>
                                 </div>
@@ -76,12 +101,16 @@
 <script>
 import PermissionsDiv from '@/components/boxes/PermissionsDiv.vue'
 import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
+import SleepBox from '@/components/boxes/SleepBox.vue'
+import SleepIntervalForm from '@/components/forms/SleepIntervalForm.vue'
 
 export default {
     middleware: ['check-log', 'log', 'medics-only'],
     components: {
         PermissionsDiv,
-        TimeIntervalForm
+        TimeIntervalForm,
+        SleepBox,
+        SleepIntervalForm
     },
     head: {
         title: "Patients"
@@ -92,8 +121,7 @@ export default {
             data_source: "/healthstatus",
             client_name: "",
             client_username: "",
-            charts_build_data: {
-            },
+            charts_build_data: {},
             start: null,
             end: null,
             interval: null,
@@ -323,14 +351,12 @@ export default {
 
             this.data_source = new_data_source;
 
-            this.display_graphics();
+            if (this.data_source == "/healthstatus" || this.data_source == "/environment")
+                this.display_graphics();
         },
 
         close_charts() {
             this.data_loaded = false;
-
-          /*this.charts_data = {};
-            this.charts_options.xaxis.categories = []; */
 
             this.client_name = "";
             this.client_username = "";
@@ -340,12 +366,19 @@ export default {
         },
 
         time_interval_submit_handler(start, end, interval) {
-            this.start = new Date(start).getTime() / 1000;
-            this.end = new Date(end).getTime() / 1000;
+            this.start = start ? new Date(start).getTime() / 1000 : null;
+            this.end = end ? new Date(end).getTime() / 1000 : null;
             this.interval = interval;
 
-            this.display_graphics();
+            if (this.data_source == "/healthstatus" || this.data_source == "/environment")
+                this.display_graphics();
         },
+
+        sleep_interval_submit_handler(date) {
+            console.log("sleep data update");
+            console.log(date);
+            this.$refs.sleep_box.updateChart(date ? new Date(date).getTime() / 1000 : null);
+        }
     }
 }
 </script>
