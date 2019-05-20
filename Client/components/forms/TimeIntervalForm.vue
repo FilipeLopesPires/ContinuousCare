@@ -48,7 +48,7 @@ export default {
     data() {
         return {
             datetimepicker_options: {
-                format: 'MMMM DD, YYYY h:mm:ss',
+                format: 'MMMM DD, YYYY HH:mm:ss',
                 useCurrent: false,
                 showClear: true,
                 showClose: true,
