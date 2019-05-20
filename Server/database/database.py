@@ -478,6 +478,8 @@ class Database:
         :type medic: str
         :param data: keys : {username: str, health_number: int, duration: int}
         :type data: dict
+        :return: information of source and destination intervenients of the permission
+        :rtype: (dict, dict)
         """
         try:
             return self.relational_proxy.request_permission(
@@ -509,6 +511,8 @@ class Database:
         :type client: str
         :param data: keys : {username:str, duration: int}
         :type data: dict
+        :return: information of source and destination intervenients of the permission
+        :rtype: (dict, dict)
         """
         try:
             return self.relational_proxy.grant_permission(

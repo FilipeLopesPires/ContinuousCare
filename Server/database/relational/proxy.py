@@ -309,7 +309,7 @@ class MySqlProxy:
 
             conn.commit()
 
-            return next(cursor.stored_results()).fetchone()[0]
+            return next(cursor.stored_results()).fetchall()[0][0]
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -694,15 +694,23 @@ class MySqlProxy:
         :type client: str
         :param duration: for how long the permission will be up
         :type duration: datetime.timedelta
+        :return: information of source and destination intervenients of the permission
+        :rtype: (dict, dict)
         """
         try:
             conn, cursor = self._init_connection()
 
             cursor.callproc(StoredProcedures.REQUEST_PERMISSION, (medic, client, health_number, duration))
 
-            result = next(cursor.stored_results()).fetchall()[0]
+            stored_results = cursor.stored_results()
 
-            return {key: result[ind] for ind, key in enumerate(["username", "name", "email", "health_number"])}
+            destinationResult = next(stored_results).fetchall()[0]
+            destination = {key: destinationResult[ind] for ind, key in enumerate(["username", "name", "email", "health_number"])}
+
+            sourceResult = next(stored_results).fetchall()[0]
+            source = {key: sourceResult[ind] for ind, key in enumerate(["username", "name", "email", "company"])}
+
+            return source, destination
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
@@ -746,9 +754,15 @@ class MySqlProxy:
 
             cursor.callproc(StoredProcedures.GRANT_PERMISSION, (client, medic, duration))
 
-            result = next(cursor.stored_results()).fetchall()[0]
+            stored_results = cursor.stored_results()
 
-            return {key: result[ind] for ind, key in enumerate(["name", "email", "company"])}
+            destinationResult = next(stored_results).fetchall()[0]
+            destination = {key: result[ind] for ind, key in enumerate(["name", "email", "company"])}
+
+            sourceResult = next(stored_results).fetchall()[0]
+            source = {key: sourceResult[ind] for ind, key in enumerate(["username", "name", "email", "health_number"])}
+
+            return source, destination
         except Exception as e:
             if isinstance(e, errors.Error) and e.sqlstate == SQL_STATE:
                 raise LogicException(e.msg)
