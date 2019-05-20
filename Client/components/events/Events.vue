@@ -56,10 +56,7 @@ export default {
   
         for(var date in this.datesEvents) {
           searchedObj[date] = this.datesEvents[date].filter((event) => {
-            return searchRegex.test(event.title) ||
-                   searchRegex.test(event.teaser) ||
-                   searchRegex.test(event.published_at) ||
-                   searchRegex.test(date);
+            return searchRegex.test(event.title);
           });
         }
         return searchedObj;

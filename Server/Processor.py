@@ -398,13 +398,13 @@ class Processor:
                     targetToken = (k1 if v1==target else k2) 
 
             if client:
-                data = self.database.grantPermission(client, jsonData)
+                source, destination = self.database.grantPermission(client, jsonData)
             elif medic:
-                data = self.database.requestPermission(medic, jsonData)
+                source, destination  = self.database.requestPermission(medic, jsonData)
         
-            permissionThread(data, targetToken, self.socket).start()
+            permissionThread([source], targetToken, self.socket).start()
 
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":data}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":destination}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:

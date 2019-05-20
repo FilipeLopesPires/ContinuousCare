@@ -772,6 +772,10 @@ CREATE PROCEDURE request_permission (
 
     SELECT _client, __full_name, __email, __health_number;
 
+    SELECT username, full_name, email, company
+    FROM user JOIN medic ON user.user_id = medic.user_id
+    WHERE medic_id = __medic_id;
+
     COMMIT;
   END //
 
@@ -813,6 +817,10 @@ CREATE PROCEDURE grant_permission (
     SELECT full_name, email, company
     FROM user JOIN medic ON user.user_id = medic.user_id
     WHERE username = _medic;
+
+    SELECT username, full_name, email, health_number
+    FROM user JOIN client ON user.user_id = client.user_id
+    WHERE client_id = __client_id;
 
     COMMIT;
   END //

@@ -36,7 +36,7 @@ const createStore = () => {
                 for(var permIndex in jsonData){
                     state.vue.$notify({
                         group: 'permissions',
-                        title: 'Pending Permission',
+                        title: 'New Permission',
                         text: 'User: '+jsonData[permIndex].name + ((jsonData[permIndex].health_number==null)?'':'<br/>Health Number: '+jsonData[permIndex].health_number) +'<br/>Duration(Hours): '+jsonData[permIndex].duration,
                         duration: 5000,
                         });

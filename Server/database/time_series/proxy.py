@@ -105,7 +105,7 @@ class InfluxProxy:
                 params["end_time"] = end_time * 1000000000
 
         try:
-            result = self._get_connection.query(query, {"params": json.dumps(params)})
+            result = self._get_connection.query(query, {"params": json.dumps(params)}) # , epoch="s")
         except LogicException:
             raise
         except Exception as e:
@@ -123,8 +123,8 @@ class InfluxProxy:
         :param time: timestamp
         :param time: int
         """
-        query = "DELETE FROM %s" % measurement + \
-                "WHERE username = $username" + \
+        query = "DELETE FROM %s " % measurement + \
+                "WHERE username = $username " + \
                   "AND time = $time"
 
         params = {
