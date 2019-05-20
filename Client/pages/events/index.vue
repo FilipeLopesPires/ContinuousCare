@@ -10,7 +10,7 @@
             <div class="justify-content-center d-flex" style="margin-bottom:-50px">
                 <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920 row">
                     <div class="col-lg-5 col-md-12 col-sm-12 col-xs-12 mr--30 mt-30">
-                        <Events style="height:500px;" @clicked="changeEvent" :startTime="startEvents" :endTime="endEvents" :refresh="refresh"/>
+                        <Events style="height:500px;" @clicked="changeEvent" :startTime="startEvents" :endTime="endEvents" :intervalTime="intervalEvents" :refresh="refresh"/>
                     </div>
                     <div class="col-lg-7 col-md-12 col-sm-12 col-xs-12 ml--30">
                         <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10" style="margin: auto; margin-top:29px">
@@ -20,7 +20,7 @@
                     </div>
                 </div>
             </div>
-            <EventComparator @clicked="changeEvent" id="comparator" :event="event" :startTime="startEvents" :endTime="endEvents"/>
+            <EventComparator @clicked="changeEvent" id="comparator" :event="event" :startTime="startEvents" :endTime="endEvents" :intervalTime="intervalEvents"/>
             
             
             <EventOptions :height="height" :width="width" :options="options" @option="changeEvt"/>
@@ -51,10 +51,10 @@ export default {
             refresh:null,
             startEvents:parseInt(d.setMonth(d.getMonth() - 1)/1000),
             endEvents:parseInt(new Date().getTime()/1000),
+            intervalEvents:null,
             event:"",
             width:0,
             height:0,
-            options:[],
             series: [1],
             chartOptions: {
                 labels: ["No Events"],

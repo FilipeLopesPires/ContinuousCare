@@ -6,7 +6,7 @@
         <div v-for='(dateWithEvents, date) in searchedEvents' :key="dateWithEvents.id">
           <p v-if='dateWithEvents.length > 0' class='date'>{{ date }}</p>
           <div v-for='event in dateWithEvents' class='event' :key="event.id" @click="info(event,eventClickObjective)" style="cursor:pointer">
-            <button @click="eventClickObjective='close'" type="button" class="close" aria-label="Close" style="font-size:2rem; margin-right:5px;"><span aria-hidden="true">×</span></button>
+            <button v-if="!patient" @click="eventClickObjective='close'" type="button" class="close" aria-label="Close" style="font-size:2rem; margin-right:5px;"><span aria-hidden="true">×</span></button>
             <span class='dot'></span>
             <p class='event-date' v-html="event.time"></p>
             <h3><a v-html="event.title"></a></h3>
@@ -26,7 +26,9 @@ export default {
     props: [
       "startTime",
       "endTime",
+      "intervalTime",
       "refresh",
+      "patient"
     ],
     data() {
       return {
@@ -65,10 +67,14 @@ export default {
     },
     methods: {
       async buildEvents(){
-        const config = {
-          params: {'start': this.startTime, 'end': this.endTime},
-          headers: {'AuthToken': this.$store.getters.sessionToken}
+        let config = {
+          params: {'start': this.startTime, 'end': this.endTime, 'interval': this.intervalTime},
+          headers: {'AuthToken': this.$store.getters.sessionToken},
         }
+        if(this.patient)
+          config.params.patient = this.patient;
+
+        console.log("before request /event", config);
         await this.$axios.$get("/event", config)
         .then(res => {
             if(res.status==0){

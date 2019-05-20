@@ -1,6 +1,9 @@
 <template>
     <b-container style="padding-top:80px">
-        <h3 v-if="event" class="widget_title"> All {{event}} episodes of the month </h3>
+        <h3 v-if="event" class="widget_title">
+            <span v-if="!patient">All {{event}} episodes of the month</span>
+            <span v-else>All {{event}} episodes for the choosen time interval</span>
+        </h3>
             <b-row class="justify-content-center">
                 <b-col lg="3" md="4" sm="6" xs="12" v-for='evt in eventToShow' :key="evt.id" style="margin-bottom: 15px;">
                     <div class="event" style="cursor:pointer;">
@@ -20,7 +23,10 @@ export default {
     props: [
         "event",
         "startTime",
+        "intervalTime",
         "endTime",
+        "patient",
+        "refresh"
     ],
     data() {
       return {
@@ -188,10 +194,13 @@ export default {
     },
     watch:{
         event: function() {
-            const config = {
-                params: {'start': this.startTime, 'end': this.endTime},
-                headers: {'AuthToken': this.$store.getters.sessionToken}
+            let config = {
+                params: {'start': this.startTime, 'end': this.endTime, 'interval': this.intervalTime},
+                headers: {'AuthToken': this.$store.getters.sessionToken},
             }
+
+            if(this.patient)
+                config.params.patient = this.patient;
             
             if(this.event=="refresh"){
                 console.log("aqui")
@@ -200,6 +209,17 @@ export default {
                 this.oldEvent=this.event
                 this.showEvents(config)
             }
+        },
+        refresh: function() {
+            let config = {
+                params: {'start': this.startTime, 'end': this.endTime, 'interval': this.intervalTime},
+                headers: {'AuthToken': this.$store.getters.sessionToken},
+            }
+
+            if(this.patient)
+                config.params.patient = this.patient;
+
+            this.showEvents(config);
         }
     },
 }

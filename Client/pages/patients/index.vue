@@ -17,13 +17,13 @@
             <!--================ Permissions Boxes Area ============-->
             <div class="row justify-content-center align-items-center">
                 <div class="col-lg-11 col-md-11">
-                    <b-container ref="client_container" class="mb-20" v-show="data_loaded">
+                    <b-container ref="client_container" class="mb-20" v-if="data_loaded">
                         <b-row>
                             <div class="w-100">
                                 <b-row>
                                     <h1 class="col-md-11 mt-10">{{ client_name }}</h1>
                                     <div class="col-md-1 mt-10">
-                                        <button @click="close_charts" class="genric-btn-xtra radius"><i class="fa fa-times"></i></button>
+                                        <button @click="data_loaded = false" class="genric-btn-xtra radius"><i class="fa fa-times"></i></button>
                                     </div>
                                 </b-row>
                                 <b-row>
@@ -65,21 +65,15 @@
                                         </b-tabs>
                                     </b-card>
                                     <SleepBox v-else-if="data_source == '/sleep'" :patient="client_username" :date="start" ref="sleep_box" />
-                                    <!--
-                                    <div v-else-if="data_source == '/event'" class="justify-content-center d-flex" style="margin-bottom:-50px">
-                                        <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920 row">
-                                            <div class="col-lg-5 col-md-12 col-sm-12 col-xs-12 mr--30 mt-30">
-                                                <Events style="height:500px;" @clicked="changeEvent" :startTime="startEvents" :endTime="endEvents" :refresh="refresh"/>
-                                            </div>
-                                            <div class="col-lg-7 col-md-12 col-sm-12 col-xs-12 ml--30">
-                                                <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10" style="margin: auto; margin-top:29px">
-                                                    <h3 class="widget_title"> Your most frequent episodes </h3>
-                                                    <EventComparator @clicked="changeEvent" id="comparator" :event="event" :startTime="startEvents" :endTime="endEvents"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    -->
+                                    <b-row v-else-if="data_source == '/event'" class="mt-25">
+                                        <b-col md="6">
+                                            <Events style="height:500px;" @clicked="changeEvent" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
+                                        </b-col>
+                                        <b-col md="6">
+                                            <EventComparator @clicked="changeEvent" id="comparator" :event="event" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
+                                        </b-col>
+                                        <EventOptions :height="height" :width="width" :options="options" @option="changeEvt"/>
+                                    </b-row>
                                 </div>
                                 <div v-else class="text-center">
                                     <p>No data for the given patient, interval and metrics option requested.</p>
@@ -100,17 +94,29 @@
 
 <script>
 import PermissionsDiv from '@/components/boxes/PermissionsDiv.vue'
+
 import TimeIntervalForm from '@/components/forms/TimeIntervalForm.vue'
+
 import SleepBox from '@/components/boxes/SleepBox.vue'
 import SleepIntervalForm from '@/components/forms/SleepIntervalForm.vue'
+
+import Events from '@/components/events/Events.vue'
+import EventComparator from '@/components/events/EventComparator.vue'
+import EventOptions from '@/components/modals/EventOptions.vue'
 
 export default {
     middleware: ['check-log', 'log', 'medics-only'],
     components: {
         PermissionsDiv,
+
         TimeIntervalForm,
+
         SleepBox,
-        SleepIntervalForm
+        SleepIntervalForm,
+
+        Events,
+        EventComparator,
+        EventOptions,
     },
     head: {
         title: "Patients"
@@ -118,14 +124,33 @@ export default {
     data() {
         return {
             data_loaded: false,
+
             data_source: "/healthstatus",
+
             client_name: "",
-            client_username: "",
+            client_username: null,
+
             charts_build_data: {},
+
             start: null,
             end: null,
             interval: null,
-            valid_data: true
+
+            //if received valid or non empty data from a response
+            valid_data: true,
+
+            //events related
+            refresh: null,
+            width: 0,
+            height: 0,
+            options: {
+                easing: 'ease-in',
+                force: true,
+                cancelable: true,
+                x: false,
+                y: true
+            },
+            event: ""
         }
     },
     methods: {
@@ -337,9 +362,14 @@ export default {
         /**
          * Invoked whenever a medic click on a play button
          */
-        async use_permission(client_name, client_username) {
+        use_permission(client_name, client_username) {
             this.client_name = client_name;
             this.client_username = client_username;
+
+            this.data_source = "/healthstatus";
+            this.start = this.end = this.interval = null;
+            this.event = "";
+
             this.data_loaded = true;
 
             this.display_graphics();
@@ -353,16 +383,8 @@ export default {
 
             if (this.data_source == "/healthstatus" || this.data_source == "/environment")
                 this.display_graphics();
-        },
-
-        close_charts() {
-            this.data_loaded = false;
-
-            this.client_name = "";
-            this.client_username = "";
-
-            document.getElementById("health_status_radio").checked = true;
-            this.data_source = "/healthstatus"
+            else
+                this.valid_data = true;
         },
 
         time_interval_submit_handler(start, end, interval) {
@@ -372,13 +394,38 @@ export default {
 
             if (this.data_source == "/healthstatus" || this.data_source == "/environment")
                 this.display_graphics();
+            else if (this.data_source == "/event")
+                this.refresh = Math.random();
         },
 
         sleep_interval_submit_handler(date) {
-            console.log("sleep data update");
-            console.log(date);
             this.$refs.sleep_box.updateChart(date ? new Date(date).getTime() / 1000 : null);
-        }
+        },
+
+        changeEvent(eventTitle, w, h, objective){
+            if (objective == "refresh") {
+                this.event = "refresh";
+                this.refresh = eventTitle;
+                return;
+            }
+
+            if (eventTitle == "Others") {
+                return;
+            }
+
+            if (eventTitle.split(", ").length > 1) {
+                this.width = w;
+                this.height = h;
+                this.options = eventTitle.split(", ");
+                this.$modal.show("eventOptions");
+            }
+            else
+                this.event = eventTitle;
+        },
+        changeEvt(eventTitle){
+            if (eventTitle)
+                this.event=eventTitle;
+        },
     }
 }
 </script>
