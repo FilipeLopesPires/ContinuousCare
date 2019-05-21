@@ -709,7 +709,7 @@ class MySqlProxy:
 
             sourceResult = next(stored_results).fetchall()[0]
             source = {key: sourceResult[ind] for ind, key in enumerate(["username", "name", "email", "company"])}
-            source["duration"] = "{}:{}".format(duration)
+            source["duration"] = str(duration)[:-3]
 
             return source, destination
         except Exception as e:
@@ -762,7 +762,7 @@ class MySqlProxy:
 
             sourceResult = next(stored_results).fetchall()[0]
             source = {key: sourceResult[ind] for ind, key in enumerate(["username", "name", "email", "health_number"])}
-            source["duration"] = duration.total_seconds()
+            source["duration"] = str(duration)[:-3]
 
             return source, destination
         except Exception as e:
