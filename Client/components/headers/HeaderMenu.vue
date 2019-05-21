@@ -38,9 +38,8 @@ export default {
     mounted: function(){
         if(this.$store.getters.getReloadControl==null && this.$store.getters.isLoggedIn){
             this.$store.dispatch("setVue", this)
-            this.$store.dispatch("setReloadControl")
-            console.log("Connecting to WebSocket");
-            this.$connect('ws://mednat.ieeta.pt:8344', {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
+            //console.log("Connecting to WebSocket");
+            //this.$connect('ws://mednat.ieeta.pt:8344', {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
         }
     }
 }

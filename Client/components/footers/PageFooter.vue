@@ -97,7 +97,14 @@ export default {
             this.$toasted.show('This feature is not yet implemented. We are sorry for the inconvenience :(', 
                 {position: 'bottom-center', duration: 4000});
         }, 
-    }
+    },
+    mounted() {
+        if(this.$store.getters.getReloadControl==null && this.$store.getters.isLoggedIn){
+            console.log("Connecting to WebSocket");
+            this.$store.dispatch("setReloadControl")
+            this.$connect('ws://mednat.ieeta.pt:8344', {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
+        }
+    },
 }
 </script>
 
