@@ -758,7 +758,7 @@ class MySqlProxy:
             stored_results = cursor.stored_results()
 
             destinationResult = next(stored_results).fetchall()[0]
-            destination = {key: result[ind] for ind, key in enumerate(["name", "email", "company"])}
+            destination = {key: destinationResult[ind] for ind, key in enumerate(["name", "email", "company"])}
 
             sourceResult = next(stored_results).fetchall()[0]
             source = {key: sourceResult[ind] for ind, key in enumerate(["username", "name", "email", "health_number"])}
