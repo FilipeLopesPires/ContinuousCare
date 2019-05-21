@@ -23,7 +23,7 @@
                                 <b-row>
                                     <h1 class="col-md-11 mt-10">{{ client_name }}</h1>
                                     <div class="col-md-1 mt-10">
-                                        <button @click="data_loaded = false" class="genric-btn-xtra radius"><i class="fa fa-times"></i></button>
+                                        <button style="background:none; color:black; border:none; font-size:30px" @click="data_loaded = false" class="genric-btn-xtra radius"><i class="fa fa-times"></i></button>
                                     </div>
                                 </b-row>
                                 <b-row>
@@ -64,7 +64,7 @@
                                             </b-tab>
                                         </b-tabs>
                                     </b-card>
-                                    <SleepBox v-else-if="data_source == '/sleep'" :patient="client_username" :date="start" ref="sleep_box" />
+                                    <SleepBox style="margin-bottom:100px" v-else-if="data_source == '/sleep'" :patient="client_username" :date="start" ref="sleep_box" />
                                     <b-row v-else-if="data_source == '/event'" class="mt-25">
                                         <b-col md="6">
                                             <Events style="height:500px;" @clicked="changeEvent" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />

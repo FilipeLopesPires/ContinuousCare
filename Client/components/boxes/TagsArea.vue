@@ -156,7 +156,12 @@ export default {
                         this.$toasted.show('Daily update submitted.', 
                             {position: 'bottom-center', duration: 2500});
                         if(process.client) {
-                            window.location.reload(true);
+                            //window.location.reload(true);
+                            var copy = this.$data.selectedTags
+                            for(let sel in copy){
+                                this.unclickTag(copy[sel])
+                            }
+                            this.$emit("submited", event)
                         }
                         /*
                         this.availableTags = [];
@@ -166,8 +171,6 @@ export default {
                         }
                         */
                     }
-                    this.$toasted.show('Something went wrong while sending your health update. Please try again, if it still does not work, contact us through email.', 
-                        {position: 'bottom-center', duration: 7500});
                 })
                 .catch(e => {
                     console.log(e);

@@ -199,7 +199,9 @@ export default {
                     let mostRecentSleepSession = sleepSessions[sleepSessions.length - 1];
                     if(sleepSessions &&  sleepSessions.length>0 && mostRecentSleepSession.data && mostRecentSleepSession.data.level && mostRecentSleepSession.data.level.length>0) {
                         // process sleep session
-                        this.sleep_time = mostRecentSleepSession.info.duration / 60 / 60;
+                        let h = parseInt(mostRecentSleepSession.info.duration/60/60,10);
+                        let m = parseInt((mostRecentSleepSession.info.duration/60/60-h)*60,10);
+                        this.sleep_time = h+":"+m;
 
                         var sleep_times = [];
                         var t = null;
