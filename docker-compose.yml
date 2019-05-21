@@ -30,8 +30,8 @@ services:
     image: dbrelational
     volumes:
       - $HOME/database/relational:/var/lib/mysql
-    expose:
-      - "3306"
+    ports:
+      - "8087:3306"
     networks:
       - all
   db_time_series:
@@ -39,8 +39,8 @@ services:
     image: dbtime_series
     volumes:
       - $HOME/database/time_series:/var/lib/influxdb
-    expose:
-      - "8086"
+    ports:
+      - "8086:8086"
     networks:
       - all
 

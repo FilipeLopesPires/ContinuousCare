@@ -36,8 +36,10 @@ class WebSocket:
             logging.info("WEBSOCKET RECEIVED "+data)
             jsonData=json.loads(data)
             token=jsonData["token"]
-            self.processor.checkPermissions(token)
+            if token in self.sockets:
+                self.sockets[token].close()
             self.sockets[token]=websocket
+            self.processor.checkPermissions(token)
 
     async def send(self, data, token):
         socket = self.sockets.get(token)

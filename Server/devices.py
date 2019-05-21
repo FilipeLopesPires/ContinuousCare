@@ -51,7 +51,7 @@ class HearthRate(Metric):
 
     @property
     def updateTime(self):
-        return 360
+        return 5
 
     @property
     def metricType(self):
@@ -138,7 +138,7 @@ class Calories(Metric):
 
     @property
     def updateTime(self):
-        return 360
+        return 5
 
     @property
     def metricType(self):
@@ -175,7 +175,7 @@ class Activity(Metric):
 
     @property
     def updateTime(self):
-        return 360
+        return 5
 
     @property
     def metricType(self):
@@ -215,7 +215,7 @@ class Steps(Metric):
 
     @property
     def updateTime(self):
-        return 360
+        return 5
 
     @property
     def metricType(self):
@@ -463,7 +463,7 @@ class GPSmetric(Metric):
 
     @property
     def updateTime(self):
-        return 360
+        return 10
 
     @property
     def metricType(self):
