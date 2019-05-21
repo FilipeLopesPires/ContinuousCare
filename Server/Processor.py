@@ -752,7 +752,7 @@ class myThread (threading.Thread):
                             except Exception as e:
                                 logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
 
-                if allEvents!={}:
+                if len(allEvents["events"])>0:
                     responses.append(("Event", {"events": json.dumps(allEvents)})) 
                 self.processor.process(responses, self.user)
         print("ended")
