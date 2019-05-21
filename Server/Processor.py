@@ -728,7 +728,7 @@ class myThread (threading.Thread):
                             old_times[i]=now1
                             resp=self.deltaTimes[i][1].getData()
                             normalMetric=self.deltaTimes[i][1].normalizeData(resp)
-                            event=self.deltaTimes[i][1].checkEvent(resp)
+                            event=self.deltaTimes[i][1].checkEvent(normalMetric)
                             if event:
                                 allEvents["events"]=list(set(allEvents["events"]+event["events"]))
                                 allEvents["metrics"]=list(set(allEvents["metrics"]+event["metrics"]))
