@@ -725,7 +725,7 @@ class myThread (threading.Thread):
                             old_times[i]=now1
                             resp=self.deltaTimes[i][1].getData()
                             normalMetric=self.deltaTimes[i][1].normalizeData(resp)
-                            event=self.deltaTimes[i][1].checkEvent(resp)
+                            event=self.deltaTimes[i][1].checkEvent(normalMetric)
                             if event:
                                 allEvents["events"]=list(set(allEvents["events"]+event["events"]))
                                 allEvents["metrics"]=list(set(allEvents["metrics"]+event["metrics"]))
@@ -749,7 +749,7 @@ class myThread (threading.Thread):
                             except Exception as e:
                                 logging.error("<"+self.user+">Tried to refresh tokens and couldn't, caught error: "+str(e))
 
-                if allEvents!={}:
+                if len(allEvents["events"])>0:
                     responses.append(("Event", {"events": json.dumps(allEvents)})) 
                 self.processor.process(responses, self.user)
         print("ended")

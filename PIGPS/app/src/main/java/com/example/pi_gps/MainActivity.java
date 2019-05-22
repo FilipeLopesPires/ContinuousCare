@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         new Response.Listener<JSONObject>() {
                             @Override
                             public void onResponse(JSONObject s) {
-                                Toast.makeText(getApplicationContext(),s.toString(), Toast.LENGTH_SHORT).show();
                                 try {
                                     JSONObject response =new JSONObject(s.toString());
                                     if(response.getInt("status")==0){

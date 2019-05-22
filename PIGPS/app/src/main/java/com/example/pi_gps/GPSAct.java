@@ -38,7 +38,7 @@ public class GPSAct extends AppCompatActivity {
 
     private String username;
     private boolean mAlreadyStartedService = false;
-    private TextView msgView, fitbit_site, fitbit_app;
+    private TextView msgView, fitbit_site, fitbit_app, foobot_app, foobot_site;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +47,19 @@ public class GPSAct extends AppCompatActivity {
         username="joao";
         msgView = (TextView) findViewById(R.id.msgView);
         msgView.setText("Welcome Back\n"+username+"!");
+        foobot_app = (TextView) findViewById(R.id.foobot_app);
         fitbit_app = (TextView) findViewById(R.id.fitbit_app);
         fitbit_site = (TextView) findViewById(R.id.fitbit_site);
+        foobot_site = (TextView) findViewById(R.id.foobot_site);
+
+        foobot_app.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View arg0) {
+                Intent viewIntent =
+                        new Intent("android.intent.action.VIEW",
+                                Uri.parse("https://play.google.com/store/apps/details?id=com.airboxlab.foobot"));
+                startActivity(viewIntent);
+            }
+        });
 
         fitbit_app.setOnClickListener(new View.OnClickListener() {
             public void onClick(View arg0) {
@@ -63,7 +74,16 @@ public class GPSAct extends AppCompatActivity {
             public void onClick(View arg0) {
                 Intent viewIntent =
                         new Intent("android.intent.action.VIEW",
-                                Uri.parse("https://www.fitbit.com/whats-new"));
+                                Uri.parse("https://dev.fitbit.com/"));
+                startActivity(viewIntent);
+            }
+        });
+
+        foobot_site.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View arg0) {
+                Intent viewIntent =
+                        new Intent("android.intent.action.VIEW",
+                                Uri.parse("https://api.foobot.io/apidoc/index.html"));
                 startActivity(viewIntent);
             }
         });
