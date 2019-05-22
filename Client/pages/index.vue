@@ -47,7 +47,7 @@
       <PageBanner parent_page="Home" page="Profile" :name="full_name" />
 
       <!--================ Main Area =================-->
-      <div class="justify-content-center d-flex align-items-top">
+      <div class="justify-content-center d-flex align-items-top mb-20">
         <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920">
           <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 mr--30 mt-30 ">
             <Events style="height:600px;" :startTime="startEvents" :endTime="endEvents" :refresh="refresh"/>
@@ -59,7 +59,7 @@
       </div>
 
       <!--================ Sleep Area =================-->
-      <div class="justify-content-center d-flex align-items-top">
+      <div class="justify-content-center d-flex align-items-top mb-50">
         <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
           <h3 class="widget_title"> Sleep Pattern </h3>
           <SleepBox />

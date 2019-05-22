@@ -30,8 +30,6 @@ export default {
         return {
             sleep_time: 0,
             series,
-            start: null,
-            end: null,
             charts_options: {
                 chart: {
                     height: 100,
@@ -93,11 +91,8 @@ export default {
                         },
                     }
                 },
-                //series: series,
                 xaxis: {
                     type: 'datetime',
-                    //min: new Date('01 Mar 2012').getTime(),
-                    //tickAmount: 6,
                     title: {
                         text: 'Time',
                     },
@@ -106,7 +101,6 @@ export default {
                             var d = new Date(value);
                             return this.format_number(d.getHours()) + ":" + this.format_number(d.getMinutes());
                         },
-                        //format: 'HH',
                         tickPlacement: 'between'
                     },
                     tickAmount: 'dataPoints'
@@ -192,7 +186,6 @@ export default {
          */
         async updateChart(date) {
             var result = await this.getSleep(this.$store.getters.sessionToken, date);
-            console.log("result from axios", result);
             if(result) {
                 if(result.status==0) {
                     let sleepSessions = result.data;

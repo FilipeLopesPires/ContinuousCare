@@ -341,7 +341,7 @@ export default {
                                 username: username,
                                 name: res.data.name,
                                 email: res.data.email,
-                                health_number: res.data.company,
+                                company: res.data.company,
                                 duration: this.format_number(Math.floor(minutes / 60)) + ":" + this.format_number(minutes - Math.floor(minutes / 60) * 60)
                             }
                         );

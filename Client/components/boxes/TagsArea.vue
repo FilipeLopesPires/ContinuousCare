@@ -62,12 +62,11 @@ export default {
     },
     methods: {
         clickTag(area,tag) {
-            // advise user
-            /* if(this.selectedTags.length == 0 && this.firstClick) {
-                this.$toasted.show('Remember that once you switch to another page, your selections will be submitted.', 
-                    {position: 'bottom-center', duration: 5000});
-                this.firstClick = false;
-            } */
+            if (this.selectedTags.length >= 5) {
+                this.$toasted.show("Only 5 tags are allowed per submission.", {position: 'bottom-center', duration: 7500});
+                return;
+            }
+
             if(area) {
                 // add to selected tags
                 this.selectedTags.push({area:area, tag:tag});
@@ -84,6 +83,11 @@ export default {
                     }
                 }
             } else {
+                if (tag.length > 20 || tag.length < 3) {
+                    this.$toasted.show("A tag must have a number of characters between 3 and 20.", {position: 'bottom-center', duration: 7500});
+                    return;
+                }
+
                 // check if input already exists
                 var exists = false;
                 for(var i=0; i<this.selectedTags.length; i++) {
