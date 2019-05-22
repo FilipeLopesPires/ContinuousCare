@@ -207,8 +207,8 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            #if jsonData["type"] == "Foobot ":
-                #self._getFoobotUUID(jsonData["authentication_fields"])
+            if jsonData["authentication_fields"].get("foobot_name"):
+                self._getFoobotUUID(jsonData["authentication_fields"])
 
             userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
             for device in userDevices:
