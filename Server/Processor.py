@@ -42,7 +42,7 @@ class Processor:
         self.socket = WebSocket("0.0.0.0", 5678, self)
         self.socket.start()
         self.database=database.Database()
-        self.externalAPI=ExternalAPI("","","","",None, None).metrics
+        self.externalAPI=ExternalAPI(None, None,None, None).metrics
        
         self.userThreads={}
         self.clientTokens={}
@@ -60,7 +60,7 @@ class Processor:
                         metrics[metric.metricType]=[]
                     metrics[metric.metricType].append(metric)
 
-            for metric in GPS("","","",user,None, None).metrics+self.externalAPI:
+            for metric in GPS(None, user, None, None).metrics+self.externalAPI:
                 if metric.metricType not in metrics:
                     metrics[metric.metricType]=[]
                 metrics[metric.metricType].append(metric)
@@ -166,12 +166,37 @@ class Processor:
 
         try:
             devices=self.database.getAllDevices(user)
+
+            for device in devices:
+                auth_fields = device.pop("authentication_fields")
+                for field_name, field_value in auth_fields.items():
+                    device[field_name] = field_value
+
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
             return json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
 
         return json.dumps({"status":0 , "msg":"Successfull operation.", "data":devices}).encode("UTF-8")
+
+    def _getFoobotUUID(self, authentication_fields):
+        foobotUsername=authentication_fields.pop("foobot_username")
+        foobotName=authentication_fields.pop("foobot_name")
+        if not foobotName or not foobotUsername:
+            raise LogicException("Missing authentication fields \"foobot_username\" and \"foobot_name\"")
+
+        data=requests.get("https://api.foobot.io/v2/owner/" + foobotUsername + "/device/", headers={
+            "X-API-KEY-TOKEN":  authentication_fields["token"]
+        })
+        jsonData=json.loads(data.text)
+        found = False
+        for device in jsonData:
+            if device["name"] == foobotName:
+                authentication_fields["uuid"] = device["uuid"]
+                found = True
+                break
+        if not found:
+            raise LogicException("Invalid username, name or token")
 
     def updateDevice(self, token, deviceConf):
         if self.medicTokens.get(token):
@@ -182,6 +207,9 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
+            #if jsonData["type"] == "Foobot ":
+                #self._getFoobotUUID(jsonData["authentication_fields"])
+
             userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
             for device in userDevices:
                 if device.id==str(deviceConf["id"]):
@@ -241,6 +269,9 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
+            if jsonData["type"] == "Foobot ":
+                self._getFoobotUUID(jsonData["authentication_fields"])
+
             id=str(self.database.addDevice(user, jsonData))
             print(id)
 

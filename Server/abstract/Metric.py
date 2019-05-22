@@ -8,7 +8,10 @@ class Metric(ABC):
 
     @property
     def url(self):
-        return self.URLTemplate.replace("UUID", self.dataSource._uuid)
+        uuid = self.dataSource._authentication_fields.get("uuid")
+        if uuid:
+            return self.URLTemplate.replace("UUID", uuid)
+        return self.URLTemplate
 
     @abstractproperty
     def URLTemplate(self):

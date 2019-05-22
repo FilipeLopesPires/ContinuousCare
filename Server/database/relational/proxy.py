@@ -347,7 +347,8 @@ class MySqlProxy:
                     device = {
                         "id": device_id,
                         "type": "%s %s" % (brand, model),
-                        "photo": photo
+                        "photo": photo,
+                        "authentication_fields": {}
                     }
                     if latitude: # if one exist both exist
                         device["latitude"] = latitude
@@ -355,7 +356,7 @@ class MySqlProxy:
                     devices[device_id] = device
 
                 if auth_field_name:
-                    devices[device_id][auth_field_name] = auth_field_value
+                    devices[device_id]["authentication_fields"][auth_field_name] = auth_field_value
 
             return list(devices.values())
         except Exception as e:

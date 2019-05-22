@@ -47,11 +47,6 @@ class DataSource(ABC):
     def _refreshURL(self):
         return ""
 
-    @abstractproperty
-    def _refreshDataTemplate(self):
-        return ""
-
-
     @abstractmethod
     def refreshToken(self):
         pass
