@@ -86,7 +86,7 @@ export default {
             if(event.target.value==this.allOptions[0]) {
                 this.chosenDeviceFields = ["token","client_id","client_secret","refresh_token"];
             } else if(event.target.value==this.allOptions[1]) {
-                this.chosenDeviceFields = ["token","foobot_username","latitude","longitude"];
+                this.chosenDeviceFields = ["token","foobot_username", "foobot_name","latitude","longitude"];
             } else {
                 // this should never happen ...
             }
@@ -109,7 +109,7 @@ export default {
             if(result) {
                 if(result.status==0){ // device info retrieval successful
                     if(process.client) {
-                        window.location.reload(true);
+                        //window.location.reload(true);
                     }
                 } else {
                     this.showToast("Submission was invalid. Please make sure you fill in the fields correctly.", 5000);
@@ -132,7 +132,7 @@ export default {
             if(result) {
                 if(result.status==0){ // device info retrieval successful
                     if(process.client) {
-                        window.location.reload(true);
+                        //window.location.reload(true);
                     }
                 } else {
                     this.showToast("Submission was invalid. Please make sure you fill in the fields correctly.", 5000);
@@ -265,6 +265,7 @@ export default {
                     'type': type,
                     'authentication_fields': {
                         'foobot_username': document.querySelector("input[name=foobot_username]").value,
+                        'foobot_name': document.querySelector("input[name=foobot_name]").value,
                         'token': document.querySelector("input[name=token]").value},
                     'latitude': document.querySelector("input[name=latitude]").value,
                     'longitude': document.querySelector("input[name=longitude]").value
