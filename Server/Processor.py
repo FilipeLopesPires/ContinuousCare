@@ -54,7 +54,7 @@ class Processor:
             userDevices=self.database.getAllDevices(user)
             for device in userDevices:
                 deviceType=device["type"].strip().replace(" ", "_")
-                userDevice=eval(deviceType+"(\""+device.get("token","")+"\",\""+device.get("refresh_token","")+"\",\""+device.get("uuid","")+"\",\""+user+"\",\""+str(device.get("id", ""))+"\", ["+str(device.get("latitude",str(None)))+","+str(device.get("longitude", str(None)))+"])")
+                userDevice=eval(deviceType+"(device[\"authentication_fields\"],\""+user+"\",\""+str(device.get("id", ""))+"\", ["+str(device.get("latitude",str(None)))+","+str(device.get("longitude", str(None)))+"])")
                 for metric in userDevice.metrics:    
                     if metric.metricType not in metrics:
                         metrics[metric.metricType]=[]
@@ -185,17 +185,14 @@ class Processor:
             userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
             for device in userDevices:
                 if device.id==str(deviceConf["id"]):
-                    deviceId=device.id
-                    deviceToken=deviceConf["authentication_fields"]["token"] if "authentication_fields" in deviceConf and "token" in deviceConf["authentication_fields"] else device._token
-                    deviceRefreshToken=deviceConf["authentication_fields"]["refresh_token"] if "authentication_fields" in deviceConf and "refresh_token" in deviceConf["authentication_fields"] else device._refreshToken
-                    deviceUUID=deviceConf["authentication_fields"]["uuid"] if "authentication_fields" in deviceConf and "uuid" in deviceConf["authentication_fields"] else device._uuid
                     latitude=deviceConf["latitude"] if "latitude" in deviceConf else device._location[0]
                     longitude=deviceConf["longitude"] if "longitude" in deviceConf else device._location[1]
-                    device.update(deviceToken,deviceRefreshToken, deviceUUID, user, deviceId, [latitude, longitude])
+                    device.update(deviceConf["authentication_fields"], [latitude, longitude])
                     if user in self.userThreads:
                         self.userThreads[user].end()
                     self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
                     self.userThreads[user].start()
+                    break
             result=self.database.updateDevice(user, deviceConf)
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": result}).encode("UTF-8")
         except LogicException as e:
@@ -249,7 +246,7 @@ class Processor:
 
             if id not in [submetric.dataSource.id for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]]:
                 deviceType=jsonData["type"].strip().replace(" ", "_")
-                device=eval(deviceType+"(\""+jsonData["authentication_fields"].get("token","")+"\",\""+jsonData["authentication_fields"].get("refresh_token","")+"\",\""+jsonData["authentication_fields"].get("uuid","")+"\",\""+user+"\",\""+str(id)+"\", ["+jsonData.get("latitude",str(None))+","+jsonData.get("longitude", str(None))+"])")
+                device=eval(deviceType+"(jsonData[\"authentication_fields\"],\""+user+"\",\""+str(id)+"\", ["+jsonData.get("latitude",str(None))+","+jsonData.get("longitude", str(None))+"])")
                 for metric in device.metrics:
                     if metric.metricType not in self.userMetrics[user]:
                         self.userMetrics[user][metric.metricType]=[]

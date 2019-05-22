@@ -4,10 +4,12 @@ from abstract.DataSource import DataSource
 from abstract.Metric import Metric
 import dateutil.parser as dp
 
+from base64 import b64encode
+
 
 class FitBit_Charge_3(DataSource):
-    def __init__(self, token, refreshToken, uuid, user, id, location):
-        super().__init__(token, refreshToken, uuid, user, id, location)
+    def __init__(self, authentication_fields, user, id, location):
+        super().__init__(authentication_fields, user, id, location)
 
     @property
     def metrics(self):
@@ -18,16 +20,17 @@ class FitBit_Charge_3(DataSource):
         return json.dumps({"Authorization": "Bearer TOKEN"})
 
     @property
-    def _refreshHeaderTemplate(self):
-        return json.dumps({"Authorization": "Basic MjJESzJYOjUyNDRmZjEwNzliMTZlODQ4ZGE1YWI1NTc3ZDg5YzVl", "Content-Type": "application/x-www-form-urlencoded"})
+    def refreshHeader(self):
+        authorization = b64encode(self._authentication_fields["client_id"] + ":" + self._authentication_fields["client_secret"])
+        return json.dumps({"Authorization": "Basic " + authorization, "Content-Type": "application/x-www-form-urlencoded"})
+
+    @property
+    def refreshData(self):
+        return json.dumps({"grant_type": "refresh_token", "refresh_token": self._authentication_fields["refresh_token"]})
 
     @property
     def _refreshURL(self):
         return "https://api.fitbit.com/oauth2/token"
-
-    @property
-    def _refreshDataTemplate(self):
-        return json.dumps({"grant_type": "refresh_token", "refresh_token": "REFRESH_TOKEN"})
 
     def refreshToken(self):
         try:
@@ -247,8 +250,8 @@ class Steps(Metric):
 
 
 class Foobot(DataSource):
-    def __init__(self, token, refreshToken, uuid, user, id, location):
-        super().__init__(token, refreshToken, uuid, user, id, location)
+    def __init__(self, authentication_fields, user, id, location):
+        super().__init__(authentication_fields, user, id, location)
 
     @property
     def metrics(self):
@@ -259,7 +262,11 @@ class Foobot(DataSource):
         return json.dumps({"Accept":"application/json;charset=UTF-8","X-API-KEY-TOKEN":"TOKEN"})
 
     @property
-    def _refreshHeaderTemplate(self):
+    def refreshHeader(self):
+        return ""
+
+    @property
+    def refreshData(self):
         return ""
 
     @property
@@ -330,8 +337,8 @@ class Foobotmetric(Metric):
 
 
 class ExternalAPI(DataSource):
-    def __init__(self, token, refreshToken, uuid, user, id, location):
-        super().__init__(token, refreshToken, uuid, user, id, location)
+    def __init__(self, authentication_fields, user, id, location):
+        super().__init__(authentication_fields, user, id, location)
 
     @property
     def metrics(self):
@@ -342,7 +349,11 @@ class ExternalAPI(DataSource):
         return ""
 
     @property
-    def _refreshHeaderTemplate(self):
+    def refreshHeader(self):
+        return ""
+
+    @property
+    def refreshData(self):
         return ""
 
     @property
@@ -426,8 +437,8 @@ class WAQI(Metric):
 
 
 class GPS(DataSource):
-    def __init__(self, token, refreshToken, uuid, user, id, location):
-        super().__init__(token, refreshToken, uuid, user, id, location)
+    def __init__(self, authentication_fields, user, id, location):
+        super().__init__(authentication_fields, user, id, location)
 
     @property
     def metrics(self):
@@ -438,7 +449,11 @@ class GPS(DataSource):
         return ""
 
     @property
-    def _refreshHeaderTemplate(self):
+    def refreshHeader(self):
+        return ""
+
+    @property
+    def refreshData(self):
         return ""
 
     @property

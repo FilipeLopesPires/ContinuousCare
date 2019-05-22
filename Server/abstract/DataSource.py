@@ -4,11 +4,9 @@ import json
 
 class DataSource(ABC):
 
-    def __init__(self, token, refreshToken, uuid, user, id, location):
+    def __init__(self, authentication_fields, user, id, location):
         super().__init__()
-        self._token=token
-        self._refreshToken=refreshToken
-        self._uuid=uuid
+        self._authentication_fields = authentication_fields
         self._user=user
         self._id=id
         self._location=location
@@ -23,22 +21,19 @@ class DataSource(ABC):
 
     @property
     def header(self):
-        return json.loads(self._headerTemplate.replace("TOKEN", self._token))
+        return json.loads(self._headerTemplate.replace("TOKEN", self._authentication_fields["token"]))
 
-    @property
+    @abstractproperty
     def refreshHeader(self):
-        return json.loads(self._refreshHeaderTemplate.replace("REFRESH_TOKEN", self._refreshToken))
+        pass
 
-    @property
+    @abstractproperty
     def refreshData(self):
-        return json.loads(self._refreshDataTemplate.replace("REFRESH_TOKEN", self._uuid))
+        pass
 
-    def update(self, token, refreshToken, uuid, user, id, location):
-        self._token=token
-        self._refreshToken=refreshToken
-        self._uuid=uuid
-        self._user=user
-        self._id=id
+    def update(self, authentication_fields, location):
+        self._authentication_fields = authentication_fields
+        self._location = location
 
     @abstractproperty
     def metrics(self):
@@ -46,10 +41,6 @@ class DataSource(ABC):
 
     @abstractproperty
     def _headerTemplate(self):
-        return ""
-
-    @abstractproperty
-    def _refreshHeaderTemplate(self):
         return ""
 
     @abstractproperty
