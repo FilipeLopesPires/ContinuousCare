@@ -232,9 +232,11 @@ def removeAcceptedPermission(medic):
 
     return processor.removeAcceptedPermission(userToken, medic)
 
-context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-context.load_cert_chain("MyRootCA.crt", "MyRootCA.key")
 
+#If later in the project it is necessary to extablish a https server, this are the configurations needed for taht
+#context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+#context.load_cert_chain("MyRootCA.crt", "MyRootCA.key")
 #http_server = WSGIServer(('0.0.0.0', 5000), app, ssl_context=context)
+
 http_server = WSGIServer(('0.0.0.0', 5000), app)
 http_server.serve_forever()

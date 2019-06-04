@@ -44,7 +44,7 @@ public class GPSAct extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gps);
-        username="joao";
+        username= getIntent().getStringExtra("name");
         msgView = (TextView) findViewById(R.id.msgView);
         msgView.setText("Welcome Back\n"+username+"!");
         foobot_app = (TextView) findViewById(R.id.foobot_app);

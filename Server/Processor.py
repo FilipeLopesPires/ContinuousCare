@@ -19,6 +19,8 @@ from devices import *
 
 from WebSocket import WebSocket
 
+from cachetools import TTLCache
+
 '''
 Component responsable for doing all the information gathering and processing, scheduling all necessary operations.
 Is this component that is also responsable for answering all the requests that may come form the API.
@@ -34,19 +36,21 @@ error codes
 
 
 RADIUS=50       #variable that defines the distance from the personal home device the system should consider its information instead of the external one
+MaxTokensAtOnce=500  #variable tahat determines the dimension of the ttl cache and therefor the max number of users logged in at once
+TokensTTL=14400  #60*60*4 => 4 hours - the max time interval that each token is available for
 
 
 class Processor:
 
     def __init__(self):
-        self.socket = WebSocket("0.0.0.0", 5678, self)
+        self.socket = WebSocket("0.0.0.0", 5678, MaxTokensAtOnce, TokensTTL, self)
         self.socket.start()
         self.database=database.Database()
         self.externalAPI=ExternalAPI(None, None,None, None).metrics
        
         self.userThreads={}
-        self.clientTokens={}
-        self.medicTokens={}
+        self.clientTokens=TTLCache(maxsize=MaxTokensAtOnce, ttl=TokensTTL)
+        self.medicTokens=TTLCache(maxsize=MaxTokensAtOnce, ttl=TokensTTL)
         self.userMetrics={}
         allUsers=self.database.getAllUsers()
         for user in allUsers:
@@ -130,15 +134,14 @@ class Processor:
         max_char = 40
         allchar = string.ascii_letters + string.digits
 
+        for t, n in tokenMap.items():
+            if n==username:
+                return t
+
         token = "".join(choice(allchar) for x in range(randint(min_char, max_char)))
         while token in tokenMap:
             token = "".join(choice(allchar) for x in range(randint(min_char, max_char)))
 
-        aux=tokenMap.copy()
-        for t, n in aux.items():
-                if n==username:
-                    self.socket.delToken(t)
-                    del tokenMap[t]
         tokenMap[token] = username
 
         return token

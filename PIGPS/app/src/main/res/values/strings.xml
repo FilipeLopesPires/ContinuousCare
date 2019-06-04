@@ -15,43 +15,43 @@
     <string name="msg_location_service_started">Location Tracking Started</string>
     <string name="btn_label_refresh">Refresh</string>
     <string name="description1">
-        Welcome to Continuous Care. This application was designed to help you configure the necessary devices to allow you to have all the funcionalities
-        of the platform unlocked. The devices we support and will help you to configure are the Fitbit Charge 3, a fitness armband and the Foobot, a stationary
-        air quality indicator. Lastly, this application also serves to provide your location to our system, this information will be kept private and will only
-        serve to calculate the environment conditions from where you are.\n
-        The devices we use and ask you to configure were thoroughly tested and are legitimate products.
+        Welcome to Continuous Care! The app is designed to help you configure your health-tracking devices and allow you to have all of the platform\'s functionalities unlocked.\n\n
+        We currently support both the Fitbit Charge 3, a fitness armband, and the Foobot, a stationary air quality indicator. So make sure you have at least one of these available before you proceed with the configuration!\n\n
+        We would like to inform you that this application not only serves as a short user manual, but also as a location tracker. It is through this that we are able to analyse the air quality of the places you visit distant from the Foobot devices. As you will see, we have freely available tools for you to keep track of the data we store and process and to enjoy our health-monitoring features through them! So it is important to advise you to keep this app installed after the configurations for full access to our features and assure you that all personal information will be kept private at all times.\n\n
+        Friendly Note: The devices we support were thoroughly tested and are certified products.\n\n\n
+        Quick Guide:\n
+        To make sure that the devices are properly linked and avoid having to update configuration in the future, we provide you this quick step-by-step guide.\n
     </string>
     <string name="description2">
-        Fitbit Charge 3 was our choice in relation to the personal device that will inform you in real time about your heart rate, your sleep quality, the calories
-        you burnt during the day, the steps you done and a lot more important information, but also will help the system to collect that exact data and
-        aggreagate and analyze it in our platform. Once again we guarantee that all this information will remain private.\n
-        To assure you that all is correctly configures in relation to this device we will provide you a simple and quick guide of all the steps necessary
-        to fully connect the Fitbit Charge 3 to our platform and for you to enjoy every funcionality of it.\n
-        First download Fitbit app and create an account in their platform and register your Charge3.
-    </string>
-
-    <string name="description3">
-        Next you will need to visit the developers site of Fitbit to help us gain access to the information produced by your Charge 3. Once in the site,
-        if not logged in, log in the site with your already existing account and select the option \"Register an App\" inside the Manage tab and register an App, the content of the fields is not extremely important, so don\'t be afraid,
-        you only need to give a name to the application you seem appropriate, filling the organization information with Continuous Care information. Be sure to
-        select the \"Client\" application, put a valid site int the \"Callback URL\" and select the option \"Read-Only\", then Register.\n
-        Almost there, now please navigate to the tab \"Manage My Apps\" and select your newly created application. Scroll down until you find the \"OAuth 2.0 tutorial page\"
-        link, click on it and follow the tutorial carefully. In the end you should be left with an access token and a refresh token, save this tokens since this
-        information is what you need to provide when creating a Charge 3 device in our platform. But if you loose the tokens don\'t worry, you can repeat the process of
-        following the tutorial page and receive new tokens.
+        Fitbit Configuration:\n
+Step 1:\n
+Download the Fitbit mobile app and create an account in their platform.\n
+Step 2:\n
+Register your Fitbit Charge 3 in the app.\n
+Step 3:\n
+Visit the developers website of Fitbit to gain access to the information produced by your armband.\n
+Step 4:\n
+Once in the website, if not logged in, log in to your account and select the option \"Register an App\" inside the Manage tab.\n
+Step 5:\n
+Create a new app registration. The content of the input fields is not very much relevant, so don\'t be afraid. You only need to give a name you find appropriate to the application, fill the organization information with our data (from Continuous Care) and be sure to select the \"Client\" application type, put a valid site in the \"Callback URL\" and select the option \"Read-Only\".\n
+Step 6:\n
+Almost there! Now navigate to the tab \"Manage My Apps\" and select your newly created application. Scroll down until you find the \"OAuth 2.0 tutorial page\" link, click on it and follow the tutorial carefully. In the end you should be left with an access token and a refresh token, save these to associate the device with your ContinuousCare account. If you loose the tokens don\'t worry, you can repeat step 6 and receive new tokens.\n
     </string>
 
     <string name="description4">
-        Foobot is a stationary air quality sensor, this device in parallel with external data sources managed by us will enable us to provide to you at
-        all the times the type and quality of air you are living in.\n
-        To configure this device is much simpler that the last one, so don\'t worry, you are almost there.\n
-        First you will need to download the Foobot application, register in their platform and register your device by following the walkthrough provided
-        by the Foobot mobile application.
+        Foobot Configuration:\n
+Step 1:\n
+Download the Foobot mobile app and create an account in their platform.\n
+Step 2:\n
+Register your home device by following the walkthrough provided by the application.\n
+Step 3:\n
+Visit Foobot\'s Developer Area website, sign in with your account and simply click in \"Request an API key\". An access token will be given to you. Save this as well to associate the device with your ContinuousCare account. This token is always acessible through the Foobot\'s website.\n
+        Step 4:\n
+On the Developers website, while logged in, scroll down until the \"Identity API\" and click in the \"/v2/owner/{userName}/device/\" button. A form will appear where you only need to fill the userName with the email you used to create the Foobot account.
+        After clicking in the \"Try it out!\" button, in the section \"Response Body\" a uuid will present itself. Save this to associate the device with your ContinuousCare account. This uuid is always acessible through the Foobot\'s website.\n
     </string>
 
     <string name="description5">
-        Lastly you just need to visit the next site, a developer area of Foobot, and you just need to click in \"Request an API key\", logging in with
-        your already existing account, the site will present you with an access token, and that token is what i asked when creating a Foobot device in
-        our platform. This token is always acessible through this site and repeating the process.
+        All done! You may now sign in to your account at our website and add your home device and bracelet.
     </string>
 </resources>

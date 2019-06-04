@@ -5,11 +5,12 @@ from threading import Thread
 import logging
 logging.basicConfig(level=logging.INFO)
 
+from cachetools import TTLCache
 
 class WebSocket:
 
-    def __init__(self, host, port, processor):
-        self.sockets={}
+    def __init__(self, host, port, maxWebsockets, socketsTTL, processor):
+        self.sockets=TTLCache(maxsize=maxWebsockets, ttl=socketsTTL)
         self.t=None
         self.host=host
         self.port=port
