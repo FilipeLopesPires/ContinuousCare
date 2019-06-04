@@ -171,6 +171,9 @@ class Processor:
                 auth_fields = device.pop("authentication_fields")
                 for field_name, field_value in auth_fields.items():
                     device[field_name] = field_value
+                if device["type"].strip().lower() == "foobot":
+                    device["foobot_username"] = ""
+                    device["foobot_name"] = ""
 
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
@@ -188,15 +191,21 @@ class Processor:
         data=requests.get("https://api.foobot.io/v2/owner/" + foobotUsername + "/device/", headers={
             "X-API-KEY-TOKEN":  authentication_fields["token"]
         })
+
+        if data.status_code != 200:
+            raise LogicException("Invalid username, name or token")
+
         jsonData=json.loads(data.text)
+
         found = False
         for device in jsonData:
             if device["name"] == foobotName:
                 authentication_fields["uuid"] = device["uuid"]
                 found = True
                 break
+
         if not found:
-            raise LogicException("Invalid username, name or token")
+            raise LogicException("No device with the given name found")
 
     def updateDevice(self, token, deviceConf):
         if self.medicTokens.get(token):
@@ -207,8 +216,8 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            if jsonData["authentication_fields"].get("foobot_name"):
-                self._getFoobotUUID(jsonData["authentication_fields"])
+            if deviceConf["type"].strip().lower() == "foobot":
+                self._getFoobotUUID(deviceConf["authentication_fields"])
 
             userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
             for device in userDevices:
@@ -269,7 +278,7 @@ class Processor:
             return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
 
         try:
-            if jsonData["type"] == "Foobot ":
+            if jsonData["type"].strip().lower() == "foobot":
                 self._getFoobotUUID(jsonData["authentication_fields"])
 
             id=str(self.database.addDevice(user, jsonData))
