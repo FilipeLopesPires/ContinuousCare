@@ -87,7 +87,7 @@ class Processor:
                 if user not in self.userMetrics:
                     self.userMetrics[user]={}
 
-                    for metric in GPS("","","", user, None, None).metrics+self.externalAPI:
+                    for metric in GPS({}, user, None, None).metrics+self.externalAPI:
                         if metric.metricType not in self.userMetrics[user]:
                             self.userMetrics[user][metric.metricType]=[]
                         self.userMetrics[user][metric.metricType].append(metric)
