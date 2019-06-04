@@ -16,8 +16,8 @@ class FitBit_Charge_3(DataSource):
         return [HearthRate(self), Sleep(self), Calories(self), Steps(self), Activity(self)]
 
     @property
-    def _headerTemplate(self):
-        return json.dumps({"Authorization": "Bearer TOKEN"})
+    def header(self):
+        return json.dumps({"Authorization": "Bearer "+self._authentication_fields["token"]})
 
     @property
     def refreshHeader(self):
@@ -202,9 +202,11 @@ class Activity(Metric):
         return {"fairlyActiveMinutes":jsonData["summary"]["fairlyActiveMinutes"], "lightlyActiveMinutes":jsonData["summary"]["lightlyActiveMinutes"], "sedentaryMinutes":jsonData["summary"]["sedentaryMinutes"], "veryActiveMinutes":jsonData["summary"]["veryActiveMinutes"]}
 
     def checkEvent(self, normalJsonData):
+        previousValue=0
         sedentaryMinutes = normalJsonData["sedentaryMinutes"]
         if sedentaryMinutes:
-            if sedentaryMinutes > 5*60:
+            if sedentaryMinutes-previousValue > 5*60:
+                previousValue=sedentaryMinutes
                 return {"events":["Sedentary Behavior"], "metrics":["sedentaryMinutes"]}
         return None
 
@@ -242,9 +244,11 @@ class Steps(Metric):
         return {"steps":jsonData["summary"]["steps"]}
 
     def checkEvent(self, normalJsonData):
+        previousValue=0
         steps = normalJsonData["steps"]
         if steps:
-            if steps < 1000:
+            if steps-previousValue  > 1000 and steps-previousValue < 1500 and steps < 3000:
+                previousValue=steps
                 return {"events":["Not Enough Exercise"], "metrics":["steps"]}
         return None
 
@@ -258,8 +262,8 @@ class Foobot(DataSource):
         return [Foobotmetric(self)]
 
     @property
-    def _headerTemplate(self):
-        return json.dumps({"Accept":"application/json;charset=UTF-8","X-API-KEY-TOKEN":"TOKEN"})
+    def header(self):
+        return json.dumps({"Accept":"application/json;charset=UTF-8","X-API-KEY-TOKEN":self._authentication_fields["token"]})
 
     @property
     def refreshHeader(self):
@@ -271,10 +275,6 @@ class Foobot(DataSource):
 
     @property
     def _refreshURL(self):
-        return ""
-
-    @property
-    def _refreshDataTemplate(self):
         return ""
 
     def refreshToken(self):
@@ -345,7 +345,7 @@ class ExternalAPI(DataSource):
         return [WAQI(self)]
 
     @property
-    def _headerTemplate(self):
+    def header(self):
         return ""
 
     @property
@@ -358,10 +358,6 @@ class ExternalAPI(DataSource):
 
     @property
     def _refreshURL(self):
-        return ""
-
-    @property
-    def _refreshDataTemplate(self):
         return ""
 
     def refreshToken(self):
@@ -445,7 +441,7 @@ class GPS(DataSource):
         return [GPSmetric(self)]
 
     @property
-    def _headerTemplate(self):
+    def header(self):
         return ""
 
     @property
@@ -458,10 +454,6 @@ class GPS(DataSource):
 
     @property
     def _refreshURL(self):
-        return ""
-
-    @property
-    def _refreshDataTemplate(self):
         return ""
 
     def refreshToken(self):

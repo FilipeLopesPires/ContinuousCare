@@ -19,9 +19,9 @@ class DataSource(ABC):
     def id(self):
         return self._id
 
-    @property
+    @abstractproperty
     def header(self):
-        return json.loads(self._headerTemplate.replace("TOKEN", self._authentication_fields["token"]))
+        return ""
 
     @abstractproperty
     def refreshHeader(self):
@@ -38,10 +38,6 @@ class DataSource(ABC):
     @abstractproperty
     def metrics(self):
         return []
-
-    @abstractproperty
-    def _headerTemplate(self):
-        return ""
 
     @abstractproperty
     def _refreshURL(self):
