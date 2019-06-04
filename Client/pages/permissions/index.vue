@@ -8,14 +8,14 @@
             <PageBanner parent_page="Home" page="Permissions" />
 
             <!--================ Permissions Boxes Area ============-->
-            <div class="row justify-content-center align-items-center">
+            <div class="row d-flex justify-content-center align-items-center">
                 <div class="col-lg-9 col-md-9">
                     <PermissionsDiv />
                 </div>
             </div>
 
             <!--================ Footer Area =================-->
-            <PageFooter />
+            <PageFooter/>
             
         </body>
         <nuxt/>

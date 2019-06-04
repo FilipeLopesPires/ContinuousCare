@@ -27,7 +27,8 @@
             <div v-if="device.type!='Add Device'">
                 <div class="mt-10" v-for="field in Object.keys(device)" :key="field.id" :field="field"> 
                     <h5 v-if="field != 'photo' && field != 'type' && field != 'id'">{{ field }}:</h5>
-                    <input v-if="field != 'photo' && field != 'type' && field != 'id'" type="text" :value="device[field]" :placeholder="device[field]" :name="field" class="single-input"> 
+                    <input v-if="field != 'photo' && field != 'type' && field != 'id' && field != 'uuid'" type="text" :value="device[field]" :placeholder="device[field]" :name="field" class="single-input"> 
+                    <input v-if="field == 'uuid' && device.type.trim().toLowerCase() == 'foobot'" disabled type="text" :value="device[field]" class="single-input"> 
                 </div>
             </div>
             <div v-else>
@@ -132,7 +133,7 @@ export default {
             if(result) {
                 if(result.status==0){ // device info retrieval successful
                     if(process.client) {
-                        //window.location.reload(true);
+                        window.location.reload(true);
                     }
                 } else {
                     this.showToast("Submission was invalid. Please make sure you fill in the fields correctly.", 5000);
@@ -208,7 +209,12 @@ export default {
                                         this.$router.push("/login")
                                     });
                                 }
-                                this.showToast("Something went wrong while updating your device. Please try again later.", 5000);
+                                else if (res.status == 1) {
+                                    this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                }
+                                else {
+                                    this.showToast("Something went wrong while updating your device. Please try again later.", 5000);
+                                }
                                 return null;
                             }
                             return res;

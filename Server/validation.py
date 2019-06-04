@@ -149,12 +149,11 @@ class ArgumentValidator:
         fields = [
             ("authentication_fields", dict, True),
             ("latitude", float, False),
-            ("longitude", float, False)
+            ("longitude", float, False),
+            ("type", str, True)
         ]
 
-        if isAdd:
-            fields.append(("type", str, True))
-        else:
+        if not isAdd:
             fields.append(("id", int, True))
 
         result = ArgumentValidator._validate(data, fields)

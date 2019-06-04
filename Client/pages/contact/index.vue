@@ -8,7 +8,7 @@
             <PageBanner parent_page="Home" page="Contact Us" />
 
             <!--================ Contact Form Area =================-->
-            <div class="row justify-content-center align-items-center" >
+            <div class="row d-flex justify-content-center align-items-center" >
                 <div class="col-lg-6 col-md-6">
                     <div class="whole-wrap">
                         <div class="container">

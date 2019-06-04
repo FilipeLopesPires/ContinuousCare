@@ -267,6 +267,16 @@ a {
       margin-right: 15px;
       color: #3face4; }
 
+.navbar-logo {
+  min-height: 40px; 
+  height: 40px; 
+  max-height: 40px;
+  min-width: 115px;
+  width: 115px;
+  max-width: 115px;
+}
+
+
 .header_area {
   position: absolute;
   width: 100%;
