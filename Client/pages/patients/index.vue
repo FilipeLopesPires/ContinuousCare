@@ -56,7 +56,7 @@
                                         </b-col>
                                     </b-row>
                                     <div v-if="valid_data">
-                                        <b-card v-if="data_source == '/healthstatus' || data_source == '/environmnet'" no-body>
+                                        <b-card v-if="data_source == '/healthstatus' || data_source == '/environment'" no-body>
                                             <b-tabs card justified>
                                                 <b-tab v-for="(chart_build_data, metric) in charts_build_data" :key="metric" :title="metric">
                                                     <apexchart :options="chart_build_data.options" :series="[{name:metric, data:chart_build_data.data}]"></apexchart>
@@ -274,7 +274,7 @@ export default {
                 this.construct_annotation(chart_options, true, upper);
 
             if (metric_units)
-                this.chart_options.yaxis.title.text = metric_units;
+                chart_options.yaxis.title.text = metric_units;
             
             return chart_options
         },
@@ -354,6 +354,8 @@ export default {
                 }
                 else {
                     this.valid_data = false;
+                    console.log(res.msg);
+                    console.log(res.status);
                     this.show_toast("Some error occured when retrieving data.");
                 }
             })
