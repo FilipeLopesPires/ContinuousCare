@@ -2,7 +2,7 @@
     <footer class="footer-area section_gap">
         <div class="container">
             <div class="row">
-                <div class="col-lg-3  col-md-6">
+                <div class="col-lg-3 col-md-6">
                     <div class="single-footer-widget">
                         <h6>Top Features</h6>
                         <ul class="footer-nav">

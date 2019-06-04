@@ -6,7 +6,7 @@
                 <div class="container">
                     <!-- Brand and toggle get grouped for better mobile display -->
                     <nuxt-link class="navbar-brand logo_h" to="/patients"> 
-                        <img src="~/assets/img/logo/logo_cc_2.png" alt="">
+                        <img src="~/assets/img/logo/logo_cc_2.png" alt="" class="navbar-logo">
                     </nuxt-link>
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                     aria-expanded="false" aria-label="Toggle navigation">

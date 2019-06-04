@@ -7,86 +7,86 @@
             <!--================ Banner Area =================-->
             <PageBanner parent_page="Home" page="Patients" />
 
-            <!--================ Permissions Boxes Area ============-->
-            <div class="row justify-content-center align-items-center">
-                <div class="col-lg-9 col-md-9">
-                    <PermissionsDiv @use="use_permission" />
-                </div>
-            </div>
+            <div class="mb--20">  
+                <div class="row d-flex justify-content-center align-items-center">
+                    <!--================ Permissions Boxes Area ============-->
+                    <div class="col-lg-9 col-md-9">
+                        <PermissionsDiv @use="use_permission" />
+                    </div>
 
-            <!--================ Permissions Boxes Area ============-->
-            <div class="row justify-content-center align-items-center">
-                <div class="col-lg-11 col-md-11">
-                    <b-container ref="client_container" class="mb-20" v-if="data_loaded">
-                        <b-row>
-                            <div class="w-100">
-                                <b-row>
-                                    <h1 class="col-md-11 mt-10">{{ client_name }}</h1>
-                                    <div class="col-md-1 mt-10">
-                                        <button style="background:none; color:black; border:none; font-size:30px" @click="data_loaded = false" class="genric-btn-xtra radius"><i class="fa fa-times"></i></button>
-                                    </div>
-                                </b-row>
-                                <b-row>
-                                    <b-col md="3">
-                                        <b-card style="width:200px">
-                                            <h4>Metrics</h4>
-                                            <div class="form-inline">
-                                                <input @click="on_metric_option_change('/healthstatus')" type="radio" name="metric_option" id="health_status_radio" checked />
-                                                <label for="health_status_radio"> Health Status</label>
-                                            </div>
-                                            <div class="form-inline">
-                                                <input @click="on_metric_option_change('/environment')" type="radio" name="metric_option" id="environment_radio" />
-                                                <label for="environment_radio"> Environment</label>
-                                            </div>
-                                            <div class="form-inline">
-                                                <input @click="on_metric_option_change('/sleep')" type="radio" name="metric_option" id="sleep_radio" />
-                                                <label for="sleep_radio"> Sleep</label>
-                                            </div>
-                                            <div class="form-inline mb-20">
-                                                <input @click="on_metric_option_change('/event')" type="radio" name="metric_option" id="events_radio" />
-                                                <label for="events_radio"> Events</label>
-                                            </div>
-                                        </b-card>
-                                    </b-col>
-
-                                    <b-col v-if="data_source != '/sleep'" offset-md="1" md=7>
-                                        <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
-                                    </b-col>
-                                    <b-col v-else offset-md="1" md=7>
-                                        <SleepIntervalForm @sleep_interval_submit="sleep_interval_submit_handler" />
-                                    </b-col>
-                                </b-row>
-                                <div v-if="valid_data">
-                                    <b-card v-if="data_source == '/healthstatus' || data_source == '/environmnet'" no-body>
-                                        <b-tabs card justified>
-                                            <b-tab v-for="(chart_build_data, metric) in charts_build_data" :key="metric" :title="metric">
-                                                <apexchart :options="chart_build_data.options" :series="[{name:metric, data:chart_build_data.data}]"></apexchart>
-                                            </b-tab>
-                                        </b-tabs>
-                                    </b-card>
-                                    <SleepBox style="margin-bottom:100px" v-else-if="data_source == '/sleep'" :patient="client_username" :date="start" ref="sleep_box" />
-                                    <b-row v-else-if="data_source == '/event'" class="mt-25">
-                                        <b-col md="6">
-                                            <Events style="height:500px;" @clicked="changeEvent" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
-                                        </b-col>
-                                        <b-col md="6">
-                                            <EventComparator @clicked="changeEvent" id="comparator" :event="event" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
-                                        </b-col>
-                                        <EventOptions :height="height" :width="width" :options="options" @option="changeEvt"/>
+                    <!--================ Permissions Boxes Area ============-->
+                    <div class="col-lg-11 col-md-11">
+                        <b-container ref="client_container" class="mb-20" v-if="data_loaded">
+                            <b-row >
+                                <div class="w-100">
+                                    <b-row>
+                                        <h1 class="col-md-11 mt-10">{{ client_name }}</h1>
+                                        <div class="col-md-1 mt-10">
+                                            <button style="background:none; color:black; border:none; font-size:30px" @click="data_loaded = false" class="genric-btn-xtra radius"><i class="fa fa-times"></i></button>
+                                        </div>
                                     </b-row>
+                                    <b-row>
+                                        <b-col md="3">
+                                            <b-card style="width:200px">
+                                                <h4>Metrics</h4>
+                                                <div class="form-inline">
+                                                    <input @click="on_metric_option_change('/healthstatus')" type="radio" name="metric_option" id="health_status_radio" checked />
+                                                    <label for="health_status_radio"> Health Status</label>
+                                                </div>
+                                                <div class="form-inline">
+                                                    <input @click="on_metric_option_change('/environment')" type="radio" name="metric_option" id="environment_radio" />
+                                                    <label for="environment_radio"> Environment</label>
+                                                </div>
+                                                <div class="form-inline">
+                                                    <input @click="on_metric_option_change('/sleep')" type="radio" name="metric_option" id="sleep_radio" />
+                                                    <label for="sleep_radio"> Sleep</label>
+                                                </div>
+                                                <div class="form-inline mb-20">
+                                                    <input @click="on_metric_option_change('/event')" type="radio" name="metric_option" id="events_radio" />
+                                                    <label for="events_radio"> Events</label>
+                                                </div>
+                                            </b-card>
+                                        </b-col>
+
+                                        <b-col v-if="data_source != '/sleep'" offset-md="1" md=7>
+                                            <TimeIntervalForm @time_interval_submit="time_interval_submit_handler" />
+                                        </b-col>
+                                        <b-col v-else offset-md="1" md=7>
+                                            <SleepIntervalForm @sleep_interval_submit="sleep_interval_submit_handler" />
+                                        </b-col>
+                                    </b-row>
+                                    <div v-if="valid_data">
+                                        <b-card v-if="data_source == '/healthstatus' || data_source == '/environmnet'" no-body>
+                                            <b-tabs card justified>
+                                                <b-tab v-for="(chart_build_data, metric) in charts_build_data" :key="metric" :title="metric">
+                                                    <apexchart :options="chart_build_data.options" :series="[{name:metric, data:chart_build_data.data}]"></apexchart>
+                                                </b-tab>
+                                            </b-tabs>
+                                        </b-card>
+                                        <SleepBox style="margin-bottom:100px" v-else-if="data_source == '/sleep'" :patient="client_username" :date="start" ref="sleep_box" />
+                                        <b-row v-else-if="data_source == '/event'" class="mt-25">
+                                            <b-col md="6">
+                                                <Events style="height:500px;" @clicked="changeEvent" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
+                                            </b-col>
+                                            <b-col md="6">
+                                                <EventComparator @clicked="changeEvent" id="comparator" :event="event" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
+                                            </b-col>
+                                            <EventOptions :height="height" :width="width" :options="options" @option="changeEvt"/>
+                                        </b-row>
+                                    </div>
+                                    <div v-else class="text-center">
+                                        <p>No data for the given patient, interval and metrics option requested.</p>
+                                    </div>
                                 </div>
-                                <div v-else class="text-center">
-                                    <p>No data for the given patient, interval and metrics option requested.</p>
-                                </div>
-                            </div>
-                        </b-row>
-                    </b-container>
+                            </b-row>
+                        </b-container>
+                    </div>
                 </div>
-            </div>
             
             <!--================ Footer Area =================-->
             <PageFooter />
             
+            </div>
         </body>
         <nuxt/>
     </div>
