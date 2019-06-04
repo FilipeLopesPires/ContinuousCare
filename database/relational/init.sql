@@ -1000,6 +1000,9 @@ CREATE PROCEDURE update_permissions_user (
     FROM medic JOIN user ON medic.user_id = user.user_id
     WHERE username = _user;
 
+    -- If after the previous query __user_id IS NULL
+    --  there's no medic with the given username
+    --  so the received user is a client
     IF __user_id IS NULL THEN
       SELECT client_id INTO __user_id
       FROM client JOIN user ON client.user_id = user.user_id
@@ -1012,7 +1015,7 @@ CREATE PROCEDURE update_permissions_user (
         AND expiration_date < NOW();
 
       DELETE FROM accepted_permission
-      WHERE medic_id = __user_id
+      WHERE client_id = __user_id
         AND expiration_date < NOW();
 
       SELECT FALSE;
