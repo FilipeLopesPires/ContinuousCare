@@ -26,9 +26,10 @@
             </div>
             <div v-if="device.type!='Add Device'">
                 <div class="mt-10" v-for="field in Object.keys(device)" :key="field.id" :field="field"> 
-                    <h5 v-if="field != 'photo' && field != 'type' && field != 'id'">{{ field }}:</h5>
-                    <input v-if="field != 'photo' && field != 'type' && field != 'id' && field != 'uuid'" type="text" :value="device[field]" :placeholder="device[field]" :name="field" class="single-input"> 
-                    <input v-if="field == 'uuid' && device.type.trim().toLowerCase() == 'foobot'" disabled type="text" :value="device[field]" class="single-input"> 
+                    <div v-if="field != 'photo' && field != 'type' && field != 'id'">
+                        <h5>{{ field }}:</h5>
+                        <input type="text" :value="device[field]" :placeholder="device[field]" :name="field" class="single-input"> 
+                    </div>
                 </div>
             </div>
             <div v-else>
@@ -87,7 +88,7 @@ export default {
             if(event.target.value==this.allOptions[0]) {
                 this.chosenDeviceFields = ["token","client_id","client_secret","refresh_token"];
             } else if(event.target.value==this.allOptions[1]) {
-                this.chosenDeviceFields = ["token","foobot_username", "foobot_name","latitude","longitude"];
+                this.chosenDeviceFields = ["token","uuid","latitude","longitude"];
             } else {
                 // this should never happen ...
             }
@@ -110,7 +111,7 @@ export default {
             if(result) {
                 if(result.status==0){ // device info retrieval successful
                     if(process.client) {
-                        //window.location.reload(true);
+                        window.location.reload(true);
                     }
                 } else {
                     this.showToast("Submission was invalid. Please make sure you fill in the fields correctly.", 5000);
@@ -270,8 +271,7 @@ export default {
                     'id': this.device.id,
                     'type': type,
                     'authentication_fields': {
-                        'foobot_username': document.querySelector("input[name=foobot_username]").value,
-                        'foobot_name': document.querySelector("input[name=foobot_name]").value,
+                        'uuid': document.querySelector("input[name=uuid]").value,
                         'token': document.querySelector("input[name=token]").value},
                     'latitude': document.querySelector("input[name=latitude]").value,
                     'longitude': document.querySelector("input[name=longitude]").value
