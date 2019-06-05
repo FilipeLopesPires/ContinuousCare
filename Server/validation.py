@@ -134,6 +134,28 @@ class ArgumentValidator:
         )
 
     @staticmethod
+    def _verifyAuthenticationFields(type, authentication_fields):
+        mandatory_fields = [
+            ("token", str, True),
+        ]
+
+        if type.strip().lower() == "foobot":
+            mandatory_fields.append(
+                ("uuid", str, True)
+            )
+        elif type.strip().lower() == "fitbit charge 3":
+            mandatory_fields.append(
+                ("client_secret", str, True)
+                ("refresh_token", str, True)
+            )
+
+        return ArgumentValidator._validate(
+            authentication_fields,
+            mandatory_fields
+        )
+
+
+    @staticmethod
     def _addAndUpdateDevice(isAdd, data):
         """
         Use to validate arguments for both addDevice and updateDevice
@@ -166,7 +188,10 @@ class ArgumentValidator:
                     result.append("Authentication fields have to be strings.")
                     break
 
-        return result
+        if len(result) > 0:
+            return result
+
+        return result + ArgumentValidator._verifyAuthenticationFields(data["type"], data["authentication_fields"])
 
     @staticmethod
     def addDevice(data):
