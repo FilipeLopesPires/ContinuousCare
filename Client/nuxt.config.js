@@ -69,7 +69,7 @@ export default {
 
   env: {
     //baseURL: "http://192.168.43.136:5000",
-    websocketURL: 'ws://mednat.ieeta.pt:8341/websocket',
+    websocketURL: "ws://mednat.ieeta.pt:8341/websocket"
   },
 
   /* Build configuration */

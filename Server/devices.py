@@ -466,7 +466,7 @@ class GPSmetric(Metric):
 
     @property
     def URLTemplate(self):
-        return "http://mednat.ieeta.pt:8343/gps/USER"
+        return "http://mednat.ieeta.pt:8341/gps/USER"
 
     @property
     def updateTime(self):

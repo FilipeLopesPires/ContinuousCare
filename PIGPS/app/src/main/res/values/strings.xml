@@ -2,8 +2,8 @@
     <string name="app_name">PI-GPS</string>
     <string name="Login">Login</string>
     <string name="Logo">ContinuousCare</string>
-    <string name="endpoint">http://mednat.ieeta.pt:8342/%1$s</string>
-    <string name="gps_endpoint">http://mednat.ieeta.pt:8343/gps/%1$s</string>
+    <string name="endpoint">http://mednat.ieeta.pt:8341/api/%1$s</string>
+    <string name="gps_endpoint">http://mednat.ieeta.pt:8341/gps/%1$s</string>
 
     <string name="permission_rationale">Please grant location permission to start the service</string>
     <string name="permission_denied_explanation">You have not granted location permission. So the service cannot be started.</string>

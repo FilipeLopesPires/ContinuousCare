@@ -3,16 +3,11 @@ services:
   front_end:
     build: Client
     image: front_end
-    ports:
-      - 8081:3000
     networks:
       - all
   back_end:
     build: Server
     image: back_end
-    ports:
-      - 8082:5000
-      - 8084:5678
     networks:
       - all
     depends_on:
@@ -20,29 +15,37 @@ services:
       - db_time_series
   gps_module:
     build: GPS
-    image: gpsmodule
-    ports:
-      - 8083:5555
+    image: gps_module
     networks:
       - all
   db_relational:
     build: database/relational
-    image: dbrelational
+    image: db_relational
     volumes:
       - $HOME/database/relational:/var/lib/mysql
     ports:
-      - 8087:3306
+      - 8082:3306
     networks:
       - all
   db_time_series:
     build: database/time_series
-    image: dbtime_series
+    image: db_time_series
     volumes:
       - $HOME/database/time_series:/var/lib/influxdb
-    ports:
-      - 8086:8086
     networks:
       - all
+  nginx:
+    image: nginx:1.17.0
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 8081:80
+    networks:
+      - all
+    depends_on:
+      - front_end
+      - back_end
+      - gps_module
 
 networks:
   all:
