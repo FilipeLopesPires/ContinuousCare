@@ -65,12 +65,18 @@
                                         </b-card>
                                         <SleepBox style="margin-bottom:100px" v-else-if="data_source == '/sleep'" :patient="client_username" :date="start" ref="sleep_box" />
                                         <b-row v-else-if="data_source == '/event'" class="mt-25">
-                                            <b-col md="6">
-                                                <Events style="height:500px;" @clicked="changeEvent" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
-                                            </b-col>
-                                            <b-col md="6">
-                                                <EventComparator @clicked="changeEvent" id="comparator" :event="event" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
-                                            </b-col>
+                                            <b-container>
+                                                <b-row>
+                                                    <b-col md="12">
+                                                        <Events style="max-height:500px;" @clicked="changeEvent" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
+                                                    </b-col>
+                                                </b-row>
+                                                <b-row>
+                                                    <b-col md="12">
+                                                        <CompareTable @clicked="changeEvent" id="comparator" :event="event" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
+                                                    </b-col>
+                                                </b-row>
+                                            </b-container>
                                             <EventOptions :height="height" :width="width" :options="options" @option="changeEvt"/>
                                         </b-row>
                                     </div>
@@ -103,6 +109,7 @@ import SleepIntervalForm from '@/components/forms/SleepIntervalForm.vue'
 import Events from '@/components/events/Events.vue'
 import EventComparator from '@/components/events/EventComparator.vue'
 import EventOptions from '@/components/modals/EventOptions.vue'
+import CompareTable from '@/components/boxes/CompareTable.vue'
 
 export default {
     middleware: ['check-log', 'log', 'medics-only'],
@@ -117,6 +124,7 @@ export default {
         Events,
         EventComparator,
         EventOptions,
+        CompareTable,
     },
     head: {
         title: "Patients"
