@@ -64,11 +64,12 @@ export default {
  
   /* Axios module configuration */
   axios: {
-    baseURL: "http://mednat.ieeta.pt:8342",
+    baseURL: "http://mednat.ieeta.pt:8341/api",
   },
 
   env: {
     //baseURL: "http://192.168.43.136:5000",
+    websocketURL: "ws://mednat.ieeta.pt:8341/websocket"
   },
 
   /* Build configuration */

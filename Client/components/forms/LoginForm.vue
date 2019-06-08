@@ -83,7 +83,7 @@ export default {
                                 this.$store.dispatch("setVue", this)
                                 this.$store.dispatch("setReloadControl")
                                 console.log("Connecting to WebSocket");
-                                this.$connect('ws://mednat.ieeta.pt:8344', {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
+                                this.$connect(process.env.websocketURL, {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
                             }
 
                             this.$store.dispatch('setUserType', result.data.user_type);

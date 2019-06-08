@@ -102,7 +102,7 @@ export default {
         if(this.$store.getters.getReloadControl==null && this.$store.getters.isLoggedIn){
             console.log("Connecting to WebSocket");
             this.$store.dispatch("setReloadControl")
-            this.$connect('ws://mednat.ieeta.pt:8344', {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
+            this.$connect(process.env.websocketURL, {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
         }
     },
 }

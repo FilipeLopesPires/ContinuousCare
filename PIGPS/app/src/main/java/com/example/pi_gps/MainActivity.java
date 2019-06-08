@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 jsonMap.put("password", pass.getText().toString());
 
 
-                JsonObjectRequest s = new JsonObjectRequest(Request.Method.POST, "http://mednat.ieeta.pt:8342/signin",new JSONObject(jsonMap),
+                JsonObjectRequest s = new JsonObjectRequest(Request.Method.POST, getResources().getString(R.string.endpoint, "signin") ,new JSONObject(jsonMap),
                         new Response.Listener<JSONObject>() {
                             @Override
                             public void onResponse(JSONObject s) {
