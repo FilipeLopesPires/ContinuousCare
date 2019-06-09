@@ -83,7 +83,7 @@ export default {
 
         async getServerData(filledform, AuthToken, restPath) {
             var config;
-            if(filledform.end == null && filledform.interval == null) {
+            if(!filledform.start && !filledform.end && !filledform.interval) {
                 var params = {};
                 var today = new Date();
                 params['end'] = today.getTime() / 1000;
@@ -96,16 +96,24 @@ export default {
                 }
             } else {
                 config = {
-                    params: {'start': new Date(filledform.start).getTime() / 1000, 'end': new Date(filledform.end).getTime() / 1000, 'interval': filledform.interval},
+                    params: {start: null, end: null, interval: null},
                     headers: {'AuthToken': AuthToken}
                 }
+                if (filledform.start) {
+                    config.params.start = new Date(filledform.start).getTime() / 1000;
+                }
+                if (filledform.end) {
+                    config.params.end = new Date(filledform.end).getTime() / 1000;
+                }
+                if (filledform.interval) {
+                    config.params.interval = filledform.interval;
+                }
             }
-            console.log("getServerData");
-            console.log(config);
+            //console.log("getServerData");
+            //console.log(config);
             return await this.$axios.$get(restPath, config)
                                 .then(res => {
                                     if(res.status != 0) {
-                                        console.log(res);
                                         if(res.status == 1) {
                                             this.showToast(res.msg, 7500);
                                         } else if(res.status == 4) {
@@ -116,6 +124,8 @@ export default {
                                                 this.$router.push("/login")
                                             });
                                         } else {
+                                            console.log("Error status: ", res.status);
+                                            console.log("Message: ", res.msg);
                                             this.showToast("Something went terribly wrong while trying to retrieve data from the server. Please try again later or contact us through email.", 7500);
                                         }
                                         return null;
@@ -132,11 +142,10 @@ export default {
             const config = {
                 headers: {'AuthToken': AuthToken}
             }
-            console.log("getDevices");
+            //console.log("getDevices");
             return await this.$axios.$get("/devices",config)
                                 .then(res => {
                                     if(res.status != 0) {
-                                        console.log(res);
                                         if(res.status == 1) {
                                             this.showToast(res.msg, 7500);
                                         } else if(res.status == 4) {
@@ -147,6 +156,8 @@ export default {
                                                 this.$router.push("/login")
                                             });
                                         } else {
+                                            console.log("Error status: ", res.status);
+                                            console.log("Message: ", res.msg);
                                             this.showToast("Something went terribly wrong while trying to retrieve devices locations. Please try again later or contact us through email.", 7500);
                                         }
                                         return null;
@@ -174,8 +185,8 @@ export default {
             }
             var view = null;
             var path_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/path");
-            console.log("path_result")
-            console.log(path_result)
+            //console.log("path_result")
+            //console.log(path_result)
             if(path_result) {
                 if(path_result.status==0) {
                     if(path_result.data.hasOwnProperty('latitude')) {
@@ -226,8 +237,8 @@ export default {
             }
             if(isMapCreated) {
                 var events_result = await this.getServerData(this.filledform, this.$store.getters.sessionToken, "/event");
-                console.log("events_result");
-                console.log(events_result);
+                //console.log("events_result");
+                //console.log(events_result);
                 if(events_result) {
                     if(events_result.status==0) {
                         if(events_result.data.hasOwnProperty('latitude')) {
@@ -237,8 +248,8 @@ export default {
                 }
             }
             var foobot_result = await this.getDevices(this.$store.getters.sessionToken);
-            console.log("foobot_result");
-            console.log(foobot_result);
+            //console.log("foobot_result");
+            //console.log(foobot_result);
             if(foobot_result) {
                 if(foobot_result.status==0) {
                     if(foobot_result.data.length != 0) { 
@@ -265,7 +276,7 @@ export default {
                                 foobot_markers.push(marker);
                             }
                             if(!isMapCreated) {
-                                console.log("shouldnt be here")
+                                //console.log("shouldnt be here")
                                 var view = { coords:[foobot_markers[0].coords[0],foobot_markers[0].coords[1]], zoom:13 };
                                 
                                 this.map = L.map(this.$refs.worldmap).setView(view.coords, view.zoom);
@@ -314,8 +325,8 @@ export default {
         getMarkers(events) {
             var markers = [];
             var marker;
-            console.log("events");
-            console.log(events);
+            //console.log("events");
+            //console.log(events);
             for(var i=0; i<events.time.length; i++) {
                 if(events.latitude[i]) {
                     var event_obj = JSON.parse(events["events"][i]);
@@ -382,7 +393,7 @@ export default {
         },
         clickEvent(e) {
             var coords=[e.latlng.lat, e.latlng.lng]
-            console.log("Event Clicked! Coordenates: " + coords);
+            //console.log("Event Clicked! Coordenates: " + coords);
             // to do
             for(let l in this.map_layers._layers){
                 if(this.map_layers._layers[l]._latlng){

@@ -181,9 +181,10 @@ export default {
                                         this.$router.push("/login")
                                     });
                                 } else {
+                                    console.log("Error status: ", res.status);
+                                    console.log("Message: ", res.msg);
                                     this.showToast("Something went wrong while adding your device. Please try again later.", 5000);
                                 }
-                                console.log(res);
                                 return null;
                             }
                             return res;
@@ -201,7 +202,6 @@ export default {
             return await this.$axios.$put("/devices", data, config)
                         .then(res => {
                             if(res.status != 0) {
-                                console.log(res);
                                 if(res.status == 4) {
                                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
                                     this.$disconnect()
@@ -214,6 +214,8 @@ export default {
                                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
                                 }
                                 else {
+                                    console.log("Error status: ", res.status);
+                                    console.log("Message: ", res.msg);
                                     this.showToast("Something went wrong while updating your device. Please try again later.", 5000);
                                 }
                                 return null;
@@ -243,7 +245,14 @@ export default {
                                         this.$router.push("/login")
                                     });
                                 }
-                                this.showToast("Something went wrong while removing your device. Please try again later.", 5000);
+                                else if (res.status == 1) {
+                                    this.showToast(res.msg, 5000);
+                                }
+                                else {
+                                    console.log("Error status: ", res.status);
+                                    console.log("Message: ", res.msg);
+                                    this.showToast("Something went wrong while removing your device. Please try again later.", 5000);
+                                }
                                 return null;
                             }
                             return res;

@@ -1,11 +1,10 @@
-import json
 import asyncio
 import logging
 import string
 import threading
 import time
 from datetime import datetime, timedelta
-from math import sqrt
+import math
 from random import *
 
 import requests
@@ -74,7 +73,7 @@ class Processor:
             #print(metrics)
 
             #passing only the GPS, HealthStatus and Sleep to the Thread
-            self.userThreads[user]=myThread(self, {k:v for k,v in metrics.items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+            self.userThreads[user]=AggregatorThread(self, {k:v for k, v in metrics.items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
             self.userThreads[user].start()
 
 
@@ -96,7 +95,7 @@ class Processor:
                             self.userMetrics[user][metric.metricType]=[]
                         self.userMetrics[user][metric.metricType].append(metric)
 
-                    self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+                    self.userThreads[user]=AggregatorThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
                     self.userThreads[user].start()
 
             return json.dumps({"status":0, "msg":"Successfull operation."}).encode("UTF-8")
@@ -199,7 +198,7 @@ class Processor:
                     device.update(deviceConf["authentication_fields"], [latitude, longitude])
                     if user in self.userThreads:
                         self.userThreads[user].end()
-                    self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+                    self.userThreads[user]=AggregatorThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
                     self.userThreads[user].start()
                     break
             result=self.database.updateDevice(user, deviceConf)
@@ -230,7 +229,7 @@ class Processor:
             result=self.database.deleteDevice(user, deviceId)
             if user in self.userThreads:
                 self.userThreads[user].end()
-            self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+            self.userThreads[user]=AggregatorThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
             self.userThreads[user].start()
 
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": result}).encode("UTF-8")
@@ -265,7 +264,7 @@ class Processor:
                 print(self.userMetrics)
                 if user in self.userThreads:
                     self.userThreads[user].end()
-                self.userThreads[user]=myThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]},user)
+                self.userThreads[user]=AggregatorThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
                 self.userThreads[user].start()
 
 
@@ -706,13 +705,13 @@ class permissionThread(threading.Thread):
         await self.socket.send(str(self.permissions), self.token)
     
 
-class myThread (threading.Thread):
+class AggregatorThread (threading.Thread):
     def __init__(self, processor, urls, user):
         threading.Thread.__init__(self)
         self.processor=processor
         self.user=user
         self.urls=urls
-        self.deltaTimes=[(timedelta(minutes=submetric.updateTime),submetric) for metric in urls for submetric in urls[metric] if submetric.updateTime>0]
+        self.deltaTimes=[(timedelta(minutes=math.ceil(submetric.updateTime)),submetric) for metric in urls for submetric in urls[metric] if submetric.updateTime>0]
         self.running=True
         print(self.deltaTimes)
 
@@ -761,6 +760,7 @@ class myThread (threading.Thread):
                 if len(allEvents["events"])>0:
                     responses.append(("Event", {"events": json.dumps(allEvents)})) 
                 self.processor.process(responses, self.user)
+            time.sleep(60)
         print("ended")
       
     def end(self):

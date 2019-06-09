@@ -117,7 +117,14 @@ export default {
                                                     this.$router.push("/login")
                                                 });
                                             }
-                                            console.log(res)
+                                            else if (res.status == 1) {
+                                                this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                            }
+                                            else {
+                                                console.log("Error status: ", res.status);
+                                                console.log("Message: ", res.msg);
+                                            }
+                                            //console.log(res)
                                             return [];
                                         } 
                                         return res.data;
@@ -146,8 +153,15 @@ export default {
                                                 this.$router.push("/login")
                                             });
                                         }
+                                        else if (res.status == 1) {
+                                            this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
+                                        }
+                                        else {
+                                            console.log("Error status: ", res.status);
+                                            console.log("Message: ", res.msg);
+                                        }
                                         this.requestError = true;
-                                        console.log(res)
+                                        //console.log(res)
                                         return [];
                                     }
                                     return res.data;

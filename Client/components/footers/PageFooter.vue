@@ -100,7 +100,7 @@ export default {
     },
     mounted() {
         if(this.$store.getters.getReloadControl==null && this.$store.getters.isLoggedIn){
-            console.log("Connecting to WebSocket");
+            //console.log("Connecting to WebSocket");
             this.$store.dispatch("setReloadControl")
             this.$connect(process.env.websocketURL, {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
         }

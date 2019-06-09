@@ -71,7 +71,7 @@ export default {
         if(this.patient)
           config.params.patient = this.patient;
 
-        console.log("before request /event", config);
+        //console.log("before request /event", config);
         await this.$axios.$get("/event", config)
         .then(res => {
             if(res.status==0){
@@ -129,6 +129,8 @@ export default {
               this.$store.dispatch('logout'),
               this.$router.push("/login")
           }else{
+              console.log("Error status: ", res.status);
+              console.log("Message: ", res.msg);
               this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
                           {position: 'bottom-center', duration: 7500});
           }
@@ -191,6 +193,8 @@ export default {
                 this.$store.dispatch('logout'),
                 this.$router.push("/login")
             }else{
+              console.log("Error status: ", res.status);
+              console.log("Message: ", res.msg);
               this.$toasted.show('Something went wrong while deleting your event. Please try again, if it still does not work, contact us through email.', 
                           {position: 'bottom-center', duration: 7500});
             }

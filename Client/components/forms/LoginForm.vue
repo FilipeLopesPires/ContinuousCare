@@ -82,7 +82,7 @@ export default {
                             if(this.$store.getters.isLoggedIn){
                                 this.$store.dispatch("setVue", this)
                                 this.$store.dispatch("setReloadControl")
-                                console.log("Connecting to WebSocket");
+                                //console.log("Connecting to WebSocket");
                                 this.$connect(process.env.websocketURL, {store:this.$store,reconnectionAttempts: 5,reconnectionDelay: 3000})
                             }
 
@@ -93,7 +93,6 @@ export default {
                     } 
                 } 
             }
-            /* this.logInDev("medic"); */
         }, 
         forgotMyPassword() {
             //this.showToast("This feature is not yet implemented. We are sorry for the inconvenience :(", 5000);
@@ -109,7 +108,6 @@ export default {
                         .then(res => {
                             if(res.status != 0) {
                                 // warn which login field is invalid
-                                console.log(res);
                                 //this.showToast("Invalid username or password. Please make sure you fill in the fields correctly.", 5000);
                                 if(res.status == 1) {
                                     this.showToast(res.msg, 5000);
@@ -121,6 +119,8 @@ export default {
                                         this.$router.push("/login")
                                     });
                                 } else {
+                                    console.log("Error status: ", res.status);
+                                    console.log("Message: ", res.msg);
                                     this.showToast("Something went wrong with the login process. The server might be down at the moment. Please re-submit or try again later.", 7500);
                                 }
                                 return null;
@@ -142,7 +142,6 @@ export default {
                         .then(res => {
                             if(res.status != 0) {
                                 // warn what exactly went wrong inside the server
-                                console.log(res);
                                 //this.showToast("Something went terribly wrong while trying to retrieve information about the user. Please try to login again, if it does not work contact us through email.", 7500);
                                 if(res.status == 1) {
                                     this.showToast(res.msg, 5000);
@@ -154,6 +153,8 @@ export default {
                                         this.$router.push("/login")
                                     });
                                 } else {
+                                    console.log("Error status: ", res.status);
+                                    console.log("Message: ", res.msg);
                                     this.showToast("Something went wrong while trying to retrieve information about the user. The server might be down at the moment. Please re-submit or try again later.", 7500);
                                 }
                                 return null;
@@ -176,27 +177,6 @@ export default {
         showToast(message, duration) {
             this.$toasted.show(message, {position: 'bottom-center', duration: duration});
         },
-        logInDev(type) {
-            this.$store.dispatch('setSessionToken', 'development-token');
-            this.$store.dispatch('setUserType', type);
-            var dev_profile = {
-                full_name: "Admin Developer",
-                email: "admin@admin.com",
-                health_number: 1234,
-                birth_date: "01-01-0001",
-                weight: 50,
-                height: 1.70,
-                additional_info: "allergies",
-                company: "pt gov",
-                specialities: "ginobs"
-            }
-            this.$store.dispatch('setProfile', dev_profile); 
-            if(type == "medic") {
-                this.$router.push("/patients");
-            } else {
-                this.$router.push("/");
-            }
-        }
     }
 };
 </script>
