@@ -66,7 +66,6 @@
         </div>
       </div>
       
-      
       <!--================ Footer Area =================-->
       <PageFooter />
 
@@ -92,8 +91,10 @@ export default {
     SleepBox,
   },
   data() {
+    var d = new Date()
     return {
-      refresh:null,
+      event: "",
+      refresh: null,
       startEvents:parseInt(new Date().setHours(0,0,0,0)/1000),
       endEvents:parseInt(new Date().getTime()/1000),
       full_name: this.$store.getters.profile.full_name,

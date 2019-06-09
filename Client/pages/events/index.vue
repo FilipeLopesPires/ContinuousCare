@@ -7,7 +7,7 @@
             <!--================ Banner Area =================-->
             <PageBanner parent_page="Home" page="Events" />
 
-            <div class="justify-content-center d-flex" style="margin-bottom:-50px">
+            <div class="justify-content-center d-flex" style="min-height:50vh">
                 <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920 row">
                     <div class="col-lg-5 col-md-12 col-sm-12 col-xs-12 mr--30 mt-30">
                         <Events style="height:500px;" @clicked="changeEvent" :startTime="startEvents" :endTime="endEvents" :intervalTime="intervalEvents" :refresh="refresh"/>
@@ -20,7 +20,8 @@
                     </div>
                 </div>
             </div>
-            <EventComparator @clicked="changeEvent" id="comparator" :event="event" :startTime="startEvents" :endTime="endEvents" :intervalTime="intervalEvents"/>
+
+            <CompareTable @clicked="changeEvent" id="comparator" :event="event" :startTime="startEvents" :endTime="endEvents" :intervalTime="intervalEvents" style="width: 90%; margin:auto"/>
             
             
             <EventOptions :height="height" :width="width" :options="options" @option="changeEvt"/>
@@ -37,6 +38,7 @@
 import Events from '@/components/events/Events.vue'
 import EventComparator from '@/components/events/EventComparator.vue'
 import EventOptions from '@/components/modals/EventOptions.vue'
+import CompareTable from '@/components/boxes/CompareTable.vue'
 
 export default {
     middleware: ['check-log', 'log', 'clients-only'],
@@ -44,6 +46,7 @@ export default {
         Events,
         EventComparator,
         EventOptions,
+        CompareTable,
     },
     data() {
         var d = new Date()
