@@ -68,7 +68,7 @@
                                             <b-container>
                                                 <b-row>
                                                     <b-col md="12">
-                                                        <Events style="max-height:500px;" @clicked="changeEvent" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
+                                                        <Events style="max-height:500px;" :title="title" @clicked="changeEvent" :startTime="start" :endTime="end" :intervalTime="interval" :refresh="refresh" :patient="client_username" />
                                                     </b-col>
                                                 </b-row>
                                                 <b-row>
@@ -131,6 +131,8 @@ export default {
     },
     data() {
         return {
+            title:"Month's Events",
+
             data_loaded: false,
 
             data_source: "/healthstatus",
