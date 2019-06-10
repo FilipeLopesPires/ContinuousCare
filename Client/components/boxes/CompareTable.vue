@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h2 id="eventName"></h2>
+        <h3 class="widget_title" id="eventName" style="visibility:hidden"></h3>
         <b-table responsive hover :items="eventToShow" :fields="fields"></b-table>
     </div>
 </template>
@@ -46,22 +46,24 @@ export default {
 
 
         async getEnvStatus(config){
-            var result
+            var result={}
             await this.$axios.$get("/environment", config)
             .then(res => {
                 if(res.status==0){
-                    var output={}
                     var status=res.data
                     if("time" in status){
-                        for(var key in status){
-                            if(!"time,latitude,longitude".includes(key)){
-                                if(status[key][status["time"].length-1]){
-                                    output[key]=status[key][status["time"].length-1]
+                        status["time"].forEach(function(time, i){
+                            var output={}
+                            for(var key in status){
+                                if(!"time,latitude,longitude".includes(key)){
+                                    if(status[key][i]){
+                                        output[key]=status[key][i]
+                                    }
                                 }
                             }
-                        }
+                            result[time]=output
+                        })
                     }
-                    result=output
                 } else if(res.status == 4) {
                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
                     this.$store.dispatch('logout'),
@@ -86,22 +88,24 @@ export default {
             return result
         },
         async getHealthStatus(config){
-            var result
+            var result={}
             await this.$axios.$get("/healthstatus", config)
             .then(res => {
                 if(res.status==0){
-                    var output={}
                     var status=res.data
                     if("time" in status){
-                        for(var key in status){
-                            if(!"time,latitude,longitude".includes(key)){
-                                if(status[key][status["time"].length-1]){
-                                    output[key]=status[key][status["time"].length-1]
+                        status["time"].forEach(function(time, i){
+                            var output={}
+                            for(var key in status){
+                                if(!"time,latitude,longitude".includes(key)){
+                                    if(status[key][i]){
+                                        output[key]=status[key][i]
+                                    }
                                 }
                             }
-                        }
+                            result[time]=output
+                        })
                     }
-                    result=output
                 } else if(res.status == 4) {
                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
                     this.$store.dispatch('logout'),
@@ -126,6 +130,10 @@ export default {
             return result
         },
         async showEvents(config){
+
+            $("#eventName").text(this.event)
+            $("#eventName").css("visibility", "visible")
+
             var healthState = await this.getHealthStatus(config)
             var envState = await this.getEnvStatus(config)
             await this.$axios.$get("/event", config)
@@ -147,21 +155,82 @@ export default {
                                         if(!("Time" in myFields)){
                                             myFields.push("Time")
                                         }
-                                        eventInstance["Time"]=events["time"][j]
-                                        for(let [key, value] of Object.entries({...healthState, ...envState})){
-                                            if(evt["metrics"].includes(key)){
+                                        eventInstance["Time"]=this.formatDateTime(events["time"][i])
+
+
+
+
+                                        var healthKey=""
+                                        var healthValue
+                                        for(var key in Object.keys(healthState).sort()){
+                                            if(Object.keys(healthState).sort()[key]>events["time"][i]){
+                                                break;
+                                            }
+                                            if(Object.keys(healthState).sort()[key]===events["time"][i]){
+                                                healthKey=key
+                                                healthValue=healthState[Object.keys(healthState).sort()[key]]
+                                                break;
+                                            }
+                                            healthKey=key
+                                            healthValue=healthState[Object.keys(healthState).sort()[key]]
+                                        }
+                                        if(healthKey==""){
+                                            healthValue=healthState[Object.keys(healthState).sort()[0]]
+                                        }
+
+
+                                        for(var keySecond in healthValue){
+                                            if(evt["metrics"].includes(keySecond)){
                                                 if(!("_cellVariants" in eventInstance)){
                                                     eventInstance["_cellVariants"] = {}
                                                 }
-                                                eventInstance["_cellVariants"][key] = "danger"
+                                                eventInstance["_cellVariants"][keySecond] = "danger"
                                             }
                                             
-                                            if(!(key in myFields)){
-                                                myFields.push(key)
+                                            if(!(keySecond in myFields)){
+                                                myFields.push(keySecond)
                                             }
-                                            eventInstance[key] = value
-                                            
+                                            eventInstance[keySecond] = healthValue[keySecond]
                                         }
+
+
+
+
+                                        var envKey=""
+                                        var envValue
+                                        for(var key in Object.keys(envState).sort()){
+                                            if(Object.keys(envState).sort()[key]>events["time"][i]){
+                                                break;
+                                            }
+                                            if(Object.keys(envState).sort()[key]===events["time"][i]){
+                                                envKey=key
+                                                envValue=envState[Object.keys(envState).sort()[key]]
+                                                break;
+                                            }
+                                            envKey=key
+                                            envValue=envState[Object.keys(envState).sort()[key]]
+                                        }
+                                        if(envKey==""){
+                                            envValue=envState[Object.keys(envState).sort()[0]]
+                                        }
+
+
+                                        for(var keySecond in envValue){
+                                            if(evt["metrics"].includes(keySecond)){
+                                                if(!("_cellVariants" in eventInstance)){
+                                                    eventInstance["_cellVariants"] = {}
+                                                }
+                                                eventInstance["_cellVariants"][keySecond] = "danger"
+                                            }
+                                            
+                                            if(!(keySecond in myFields)){
+                                                myFields.push(keySecond)
+                                            }
+                                            eventInstance[keySecond] = envValue[keySecond]
+                                        }
+
+                                                                            
+
                                     }
 
                                     if(Object.keys(eventInstance).length !== 0){
@@ -214,7 +283,6 @@ export default {
                 this.event=this.oldEvent
             }else{
                 this.oldEvent=this.event
-                $("#eventName").text(this.event)
                 this.showEvents(config)
             }
         },

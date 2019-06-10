@@ -1,5 +1,6 @@
 <template>
   <div class='mycontainer mt-25'>
+    <h3 class="widget_title" id="eventsTitle"></h3>
     <input v-model='searchQuery' class='single-input mb-20' placeholder='Filter your events...'>
     <VuePerfectScrollbar class="scroll-area container" :settings="settings">
       <div class='timeline' v-if='anyEvent()'>
@@ -24,6 +25,7 @@ import VuePerfectScrollbar from 'vue-perfect-scrollbar'
 export default {
     name: 'Events',
     props: [
+      "title",
       "startTime",
       "endTime",
       "intervalTime",
@@ -64,6 +66,9 @@ export default {
     },
     methods: {
       async buildEvents(){
+
+        $("#eventsTitle").text(this.title)
+
         let config = {
           params: {'start': this.startTime, 'end': this.endTime, 'interval': this.intervalTime},
           headers: {'AuthToken': this.$store.getters.sessionToken},
@@ -353,4 +358,13 @@ datesEvents: {
     width: 100%;
     height: 90%;
 }
+
+.widget_title {
+    font-size: 18px;
+    line-height: 25px;
+    background: #3face4;
+    text-align: center;
+    color: #fff;
+    padding: 8px 0px;
+    margin-bottom: 30px; }
 </style>

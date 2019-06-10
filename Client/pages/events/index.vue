@@ -10,7 +10,7 @@
             <div class="justify-content-center d-flex" style="min-height:50vh">
                 <div class="justify-content-center d-flex align-items-top col-lg-11 col-md-11 max-width-1920 row">
                     <div class="col-lg-5 col-md-12 col-sm-12 col-xs-12 mr--30 mt-30">
-                        <Events style="height:500px;" @clicked="changeEvent" :startTime="startEvents" :endTime="endEvents" :intervalTime="intervalEvents" :refresh="refresh"/>
+                        <Events style="height:500px;" @clicked="changeEvent" :startTime="startEvents" :endTime="endEvents" :intervalTime="intervalEvents" :refresh="refresh" :title="title"/>
                     </div>
                     <div class="col-lg-7 col-md-12 col-sm-12 col-xs-12 ml--30">
                         <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10" style="margin: auto; margin-top:29px">
@@ -21,7 +21,7 @@
                 </div>
             </div>
 
-            <CompareTable @clicked="changeEvent" id="comparator" :event="event" :startTime="startEvents" :endTime="endEvents" :intervalTime="intervalEvents" style="width: 90%; margin:auto"/>
+            <CompareTable @clicked="changeEvent" id="comparator" :event="event" :startTime="startEvents" :endTime="endEvents" :intervalTime="intervalEvents" style="width: 90%; margin:auto; margin-bottom:50px; padding-top:70px; margin-top:-60px;"/>
             
             
             <EventOptions :height="height" :width="width" :options="options" @option="changeEvt"/>
@@ -51,6 +51,7 @@ export default {
     data() {
         var d = new Date()
         return {
+            title: "Month's Events",
             refresh:null,
             startEvents:parseInt(d.setMonth(d.getMonth() - 1)/1000),
             endEvents:parseInt(new Date().getTime()/1000),
