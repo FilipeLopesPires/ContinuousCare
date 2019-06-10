@@ -1,8 +1,13 @@
 <template>
     <div class="sleep-box">
         <div class="container">
-            <h5 class="text-heading title_color">Last night's review:</h5>
-            <p class="sample-text mt--10">You slept for {{sleep_time}} hours.</p>
+            <div v-if="received_date">
+                <p class="sample-text">You slept for {{sleep_time}} hours.</p>
+            </div>
+            <div v-else>
+                <h5 class="text-heading title_color">Last night's review:</h5>
+                <p class="sample-text mt--10">You slept for {{sleep_time}} hours.</p>
+            </div>
             <p class="sample-text">Check out your pattern bellow.</p>
         </div>
         <apexchart id="sleep-box" width="100%" height="100%" type="line" :options="charts_options" :series="series"></apexchart>
@@ -30,6 +35,7 @@ export default {
         return {
             sleep_time: 0,
             series,
+            received_date: false,
             charts_options: {
                 chart: {
                     height: 100,
@@ -131,6 +137,7 @@ export default {
             }
 
             if (!date) {
+                this.received_date = false;
                 let now = parseInt(Date.now() / 1000);
 
                 /*
@@ -143,6 +150,7 @@ export default {
                 config.params.end = now;
             }
             else {
+                this.received_date = true;
                 config.params.start = date;
                 config.params.end = date;
             }
@@ -196,7 +204,7 @@ export default {
                         // process sleep session
                         let h = parseInt(mostRecentSleepSession.info.duration/60/60,10);
                         let m = parseInt((mostRecentSleepSession.info.duration/60/60-h)*60,10);
-                        this.sleep_time = h+":"+m;
+                        this.sleep_time = h + ":" + this.format_number(m);
 
                         var sleep_times = [];
                         var t = null;
