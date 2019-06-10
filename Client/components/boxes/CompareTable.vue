@@ -130,10 +130,11 @@ export default {
             return result
         },
         async showEvents(config){
-
-            $("#eventName").text(this.event)
-            $("#eventName").css("visibility", "visible")
-
+            if(this.event!=""){
+                $("#eventName").text(this.event)
+                $("#eventName").css("visibility", "visible")
+            }
+            
             var healthState = await this.getHealthStatus(config)
             var envState = await this.getEnvStatus(config)
             await this.$axios.$get("/event", config)
