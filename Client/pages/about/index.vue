@@ -21,9 +21,9 @@
                 <div class="container">
                      <h1 class="text-heading title_color">Our Team</h1>
                     <div class="row justify-content-center d-flex align-items-center">
-                        <TeamMemberBox name="André Pedrosa" description="Back-End Developer" image="andre" slack_profile="https://slack.com/" git_profile="https://github.com/" />
-                        <TeamMemberBox name="Filipe Pires" description="Front-End Developer" image="filipe" slack_profile="https://slack.com/" git_profile="https://github.com/" />
-                        <TeamMemberBox name="João Alegria" description="Back-End Developer" image="joao" slack_profile="https://slack.com/" git_profile="https://github.com/" />
+                        <TeamMemberBox name="André Pedrosa" description="Back-End Developer" image="andre" slack_profile="https://slack.com/" git_profile="https://github.com/aspedrosa" />
+                        <TeamMemberBox name="Filipe Pires" description="Front-End Developer" image="filipe" slack_profile="https://slack.com/" git_profile="https://github.com/FilipePires98" />
+                        <TeamMemberBox name="João Alegria" description="Back-End Developer" image="joao" slack_profile="https://slack.com/" git_profile="https://github.com/joao-alegria" />
                     </div>
                 </div>
             </section>

@@ -160,6 +160,8 @@ export default {
                                                 this.$router.push("/login")
                                             });
                                         } else {
+                                            console.log("Error status: ", res.status);
+                                            console.log("Message: ", res.msg);
                                             this.showToast("Something went terribly wrong while trying to retrieve your sleep log. Please try again later or contact us through email.", 7500);
                                         }
                                         return null;

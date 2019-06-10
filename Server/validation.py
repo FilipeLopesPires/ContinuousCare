@@ -146,6 +146,8 @@ class ArgumentValidator:
         elif type.strip().lower() == "fitbit charge 3":
             mandatory_fields.append(
                 ("client_secret", str, True)
+            )
+            mandatory_fields.append(
                 ("refresh_token", str, True)
             )
 

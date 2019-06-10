@@ -25,15 +25,15 @@ const createStore = () => {
         },
         mutations: {        /* ========== mutations ========== */
             SOCKET_ONOPEN (state,event)  {
-                console.log("entrou")
+                //console.log("entrou")
                 event.currentTarget.send('{\"token\":\"'+state.sessionToken+'\"}')
             },
             SOCKET_ONCLOSE (state,event)  {
-                console.log("fechado")
+                //console.log("fechado")
             },
             SOCKET_ONMESSAGE (state, message)  {
                 var jsonData = JSON.parse(message.data.replace(/'/g,"\"").replace(/None/g,"null"));
-                console.log(jsonData)
+                //console.log(jsonData)
                 for(var permIndex in jsonData){
                     state.vue.$notify({
                         group: 'permissions',
@@ -165,7 +165,7 @@ const createStore = () => {
                     localStorage.setItem("session_profile_email", new_profile.email);
                     localStorage.setItem("session_profile_health_number", new_profile.health_number);
                     localStorage.setItem("session_profile_birth_date", new_profile.birth_date);
-                    localStorage.setItem("session_profilappe_weight", new_profile.weight);
+                    localStorage.setItem("session_profile_weight", new_profile.weight);
                     localStorage.setItem("session_profile_height", new_profile.height);
                     localStorage.setItem("session_profile_additional_info", new_profile.additional_info);
                     localStorage.setItem("session_profile_company", new_profile.company);

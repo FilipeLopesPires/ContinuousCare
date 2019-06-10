@@ -53,10 +53,10 @@
             <p v-if="!is_medic" class="title-form-wrap">Weight and Height:</p>
             <div v-if="!is_medic" class="row justify-content-center d-flex align-items-center">
                 <div class="mt-10 col-lg-6 col-md-6 single-team " >
-                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model.number="filledform.weight" type="number" name="weight" placeholder="Weight (kg)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Weight (kg)'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.weight" type="number" name="weight" placeholder="Weight (kg)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Weight (kg)'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team ">
-                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model.number="filledform.height" type="number" min="0.10" max="2.50" step="0.10" name="height" placeholder="Height (m)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height (m)'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.height" type="number" min="0.10" max="2.50" step="0.01" name="height" placeholder="Height (m)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height (m)'">
                 </div>
             </div>
             <!-- Aditional Info -->
@@ -179,6 +179,7 @@ export default {
                         }
                     }
                     this.$store.dispatch('setProfile', profile);
+                    this.$toasted.show("Profile updated with success.", {position: 'bottom-center', duration: duration});
                 } else {
                     return;
                 }
@@ -228,7 +229,6 @@ export default {
             return await this.$axios.$put("/profile", data, config)
                         .then(res => {
                             if(res.status != 0) {
-                                console.log(res);
                                 if(res.status == 4) {
                                     this.$toasted.show(res.msg, {position: 'bottom-center', duration: 7500});
                                     this.$disconnect()
@@ -237,7 +237,14 @@ export default {
                                         this.$router.push("/login")
                                     });
                                 }
-                                this.showToast("Update was invalid. Please make sure you fill in the form correctly.", 5000);
+                                else if (res.status == 1) {
+                                    this.showToast(res.msg, 5000);
+                                }
+                                else {
+                                    console.log("Error status", res.status);
+                                    console.log("message", res.msg);
+                                    this.showToast("Update was invalid. Please make sure you fill in the form correctly.", 5000);
+                                }
                             }
                             return res;
                         })

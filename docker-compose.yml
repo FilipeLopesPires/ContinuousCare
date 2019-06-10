@@ -32,6 +32,8 @@ services:
     image: db_time_series
     volumes:
       - $HOME/database/time_series:/var/lib/influxdb
+    ports:
+      - 8083:8086
     networks:
       - all
   nginx:

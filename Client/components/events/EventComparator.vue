@@ -60,7 +60,7 @@ export default {
                 if(res.status==0){
                     var output={}
                     var status=res.data
-                    console.log(res)
+                    //console.log(res)
                     if("time" in status){
                         for(var key in status){
                             if(!"time,latitude,longitude".includes(key)){
@@ -80,6 +80,8 @@ export default {
                                 {position: 'bottom-center', duration: 7500});
                     result={}
                 }else{
+                    console.log("Error status: ", res.status);
+                    console.log("Message: ", res.msg);
                     this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
                                 {position: 'bottom-center', duration: 7500});
                     result={}
@@ -120,6 +122,8 @@ export default {
                                 {position: 'bottom-center', duration: 7500});
                     result={}
                 }else{
+                    console.log("Error status: ", res.status);
+                    console.log("Message: ", res.msg);
                     this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
                                 {position: 'bottom-center', duration: 7500});
                     result={}
@@ -179,6 +183,8 @@ export default {
                     this.$toasted.show(res.msg, 
                                 {position: 'bottom-center', duration: 7500});
                 }else{
+                    console.log("Error status: ", res.status);
+                    console.log("Message: ", res.msg);
                     this.$toasted.show('Something went wrong while getting your events. Please try again, if it still does not work, contact us through email.', 
                                 {position: 'bottom-center', duration: 7500});
                 }
@@ -203,7 +209,7 @@ export default {
                 config.params.patient = this.patient;
             
             if(this.event=="refresh"){
-                console.log("aqui")
+                //console.log("aqui")
                 this.event=this.oldEvent
             }else{
                 this.oldEvent=this.event

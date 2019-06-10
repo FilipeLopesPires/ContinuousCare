@@ -110,6 +110,33 @@ def registerMood():
         return processor.deleteMood(userToken, data)
 
 
+def _interval_to_timedelta(interval):
+    """
+    Converts a valid influx format received from an user
+      to an object datetime.timedelta
+
+    :param interval: interval to convert
+    :type interval: str
+    :rtype: datetime.timedelta
+    """
+    if "ns" in interval:
+        return datetime.timedelta(microseconds=0)
+    elif "u" in interval:
+        return datetime.timedelta(microseconds=int(interval[:-1]))
+    elif "ms" in interval:
+        return datetime.timedelta(milliseconds=int(interval[:-2]))
+    elif "s" in interval:
+        return datetime.timedelta(seconds=int(interval[:-1]))
+    elif "m" in interval:
+        return datetime.timedelta(minutes=int(interval[:-1]))
+    elif "h" in interval:
+        return datetime.timedelta(hours=int(interval[:-1]))
+    elif "d" in interval:
+        return datetime.timedelta(days=int(interval[:-1]))
+    elif "w" in interval:
+        return datetime.timedelta(weeks=int(interval[:-1]))
+
+
 @app.route('/environment', endpoint="Environment", methods = ['GET'])
 @app.route('/healthstatus', endpoint="HealthStatus", methods = ['GET'])
 @app.route('/personalstatus', endpoint="PersonalStatus", methods = ['GET'])
@@ -135,6 +162,26 @@ def getData():
     })
     if len(argsErrors) > 0:
         return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
+    # Verify if the interval requested extends 30 days
+    time_interval = datetime.timedelta() # no time
+
+    if interval:
+        if start and end:
+            return json.dumps({"status": 1, "msg": "Only combination of two and one paremeters are allowed,"
+                                                    "ex: start and end, start and interval"}).encode("UTF-8")
+        else:
+            time_interval = _interval_to_timedelta(interval)
+    else:
+        if start and end:
+            time_interval = datetime.datetime.fromtimestamp(int(end)) - datetime.datetime.fromtimestamp(int(start))
+        elif start:
+            time_interval = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(start))
+        elif end:
+            time_interval = datetime.timedelta.max
+
+    if time_interval > datetime.timedelta(days=40):
+        return json.dumps({"status": 1, "msg": "Interval requested extends 40 days."}).encode("UTF-8")
 
     return processor.getData(userToken, request.endpoint, start, end, interval, patient)
 
