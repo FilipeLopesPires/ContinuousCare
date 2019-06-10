@@ -92,7 +92,7 @@ create table sleep_session (
 create table supported_device (
   id                      integer       primary key auto_increment,
 -- PRIMARY KEY
-  type                    enum("bracelet", "home_device"), -- TODO doesn't allow easy extensability
+  type                    enum("bracelet", "home_device"), -- TODO might not allow easy extensability
   brand                   varchar(30),
   model                   varchar(30),
   photo                   varchar(200)

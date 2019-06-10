@@ -69,7 +69,7 @@
                     <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.weight" type="number" name="weight" placeholder="Weight (kg)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Weight (kg)'">
                 </div>
                 <div class="mt-10 col-lg-6 col-md-6 single-team ">
-                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.height" type="number" min="0.10" max="2.50" step="0.01" name="height" placeholder="Height (cm)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height (cm)'">
+                    <input class="single-input" v-bind="$attrs" v-on="$listeners" v-model="filledform.height" type="number" min="0.10" max="2.50" step="0.01" name="height" placeholder="Height (m)" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Height (m)'">
                 </div>
             </div>
             <!-- Aditional Info -->
