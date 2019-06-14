@@ -36,9 +36,9 @@ class FitBit_Charge_3(DataSource):
         try:
             response=requests.post(self._refreshURL, headers=self.refreshHeader, data=self.refreshData)
             jsonData=json.loads(response.text)
-            tokens={"token":jsonData["access_token"],"refresh_token":jsonData["refresh_token"]}
-            self._authentication_fields["token"]
-            self._authentication_fields["refresh_token"]
+
+            self._authentication_fields["token"] = jsonData["access_token"]
+            self._authentication_fields["refresh_token"] = jsonData["refresh_token"]
             return tokens
         except Exception as e:
             raise Exception("Unable to refresh tokens due to error: "+str(e))
