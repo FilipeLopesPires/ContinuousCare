@@ -21,8 +21,8 @@ class FitBit_Charge_3(DataSource):
 
     @property
     def refreshHeader(self):
-        authorization = b64encode(self._authentication_fields["client_id"] + ":" + self._authentication_fields["client_secret"])
-        return json.dumps({"Authorization": "Basic " + authorization, "Content-Type": "application/x-www-form-urlencoded"})
+        authorization = b64encode(bytes(self._authentication_fields["client_id"] + ":" + self._authentication_fields["client_secret"], "UTF-8")).decode("UTF-8")
+        return {"Authorization": "Basic " + authorization, "Content-Type": "application/x-www-form-urlencoded"}
 
     @property
     def refreshData(self):
@@ -37,8 +37,8 @@ class FitBit_Charge_3(DataSource):
             response=requests.post(self._refreshURL, headers=self.refreshHeader, data=self.refreshData)
             jsonData=json.loads(response.text)
             tokens={"token":jsonData["access_token"],"refresh_token":jsonData["refresh_token"]}
-            self._token=tokens["token"]
-            self._refreshToken=tokens["refresh_token"]
+            self._authentication_fields["token"]
+            self._authentication_fields["refresh_token"]
             return tokens
         except Exception as e:
             raise Exception("Unable to refresh tokens due to error: "+str(e))
