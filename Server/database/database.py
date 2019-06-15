@@ -319,15 +319,15 @@ class Database:
             data = {}
 
             if measurement == "Sleep":
-                if start and end: # within
+                if start is not None and end is not None: # within
                     start_date = datetime.date.fromtimestamp(start)
                     end_date = datetime.date.fromtimestamp(end)
                     results = self.relational_proxy.get_sleep_sessions(user, start_date, end_date)
-                elif start: # just end None -> from start to now
+                elif start is not None: # just end None -> from start to now
                     start_date = datetime.date.fromtimestamp(start)
                     results = self.relational_proxy.get_sleep_sessions(user, begin=start_date)
-                elif end: # just start None -> all from until end
-                    start_date = datetime.date.fromtimestamp(start)
+                elif end is not None: # just start None -> all from until end
+                    end_date = datetime.date.fromtimestamp(start)
                     results = self.relational_proxy.get_sleep_sessions(user, end=end_date)
                 else: #both None -> last
                     results = self.relational_proxy.get_sleep_sessions(user)
@@ -371,7 +371,7 @@ class Database:
                         none_count[key] = 0
 
                     data[key].append(value)
-                    if not value:
+                    if value is None:
                         none_count[key] += 1
 
             for key, count in none_count.items():

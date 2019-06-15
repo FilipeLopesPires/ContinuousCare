@@ -25,7 +25,7 @@ Component responsable for doing all the information gathering and processing, sc
 Is this component that is also responsable for answering all the requests that may come form the API.
 
 error codes
- 0 - successfull
+ 0 - successful
 -1 - internal error - database or server
  1 - logical error - i.e. username already exists. Important to show on the web page
  2 - arguments error - missing arguments
@@ -98,7 +98,7 @@ class Processor:
                     self.userThreads[user]=AggregatorThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
                     self.userThreads[user].start()
 
-            return json.dumps({"status":0, "msg":"Successfull operation."}).encode("UTF-8")
+            return json.dumps({"status":0, "msg":"Successful operation."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -116,7 +116,7 @@ class Processor:
         elif medic:
             del self.medicTokens[token]
 
-        return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+        return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8")
 
     def _generateToken(self, tokenMap, username):
         """
@@ -156,7 +156,7 @@ class Processor:
         elif userType == 2: # valid login and user is a medic
             token = self._generateToken(self.medicTokens, jsonData["username"])
 
-        return json.dumps({"status":0 , "msg":"Successfull operation.", "data":{"token":token}}).encode("UTF-8")
+        return json.dumps({"status":0 , "msg":"Successful operation.", "data":{"token":token}}).encode("UTF-8")
 
     def getAllDevices(self, token):
         if self.medicTokens.get(token):
@@ -179,7 +179,7 @@ class Processor:
         except DatabaseException as e:
             return json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
 
-        return json.dumps({"status":0 , "msg":"Successfull operation.", "data":devices}).encode("UTF-8")
+        return json.dumps({"status":0 , "msg":"Successful operation.", "data":devices}).encode("UTF-8")
 
     def updateDevice(self, token, deviceConf):
         if self.medicTokens.get(token):
@@ -202,7 +202,7 @@ class Processor:
                     self.userThreads[user].start()
                     break
             result=self.database.updateDevice(user, deviceConf)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data": result}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data": result}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -232,7 +232,7 @@ class Processor:
             self.userThreads[user]=AggregatorThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
             self.userThreads[user].start()
 
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data": result}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data": result}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -269,7 +269,7 @@ class Processor:
 
 
             
-            return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -294,13 +294,41 @@ class Processor:
                     return json.dumps({"status":2, "msg":"Missing argument \"patient\""}).encode("UTF-8")
 
                 values = self.database.getDataByMedic(medic, endpoint, patient, start, end, interval)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":values}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
             return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+
+    def download(self, userCount):
+        """
+        Gets all data from a number of users, received
+        If the number received is less than the number
+         of existing users than the users are chosen randomly
+        Else all the users are sent
+
+        :param userCount: number os users to retrieve
+        :type userCount: int
+        :return: of all users, with all metrics and its data in each one
+        :rtype: list
+        """
+        users = self.database.getAllUsers()
+
+        if userCount < len(users):
+            users = choices(users, k=userCount)
+
+        allData = []
+
+        for user in users:
+            userData = {}
+            for metric in ["Environment", "Event", "HealthStatus", "Path", "PersonalStatus", "Sleep"]:
+                userData[metric] = self.database.getData(metric, user, 0, None, None)
+
+            allData.append(userData)
+
+        return json.dumps({"status": 0, "msg": "Successful operation.", "data": allData}).encode("UTF-8")
 
     def updateProfile(self, token, data):
         client = self.clientTokens.get(token, None)
@@ -318,7 +346,7 @@ class Processor:
 
         try:
             self.database.updateProfile("client" if client else "medic", user, data)
-            return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -344,7 +372,7 @@ class Processor:
             else:
                 profile = self.database.getProfile(user)
 
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data": profile}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data": profile}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -364,7 +392,7 @@ class Processor:
 
         try:
             self.database.deleteProfile(user)
-            return json.dumps({"status":0 , "msg":"Successfull operation."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -375,7 +403,7 @@ class Processor:
     def getSupportedDevices(self):
         try:
             values=self.database.getSupportedDevices()
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":values}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":values}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -415,7 +443,7 @@ class Processor:
         
             permissionThread([source], targetToken, self.socket).start()
 
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":destination}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":destination}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -436,7 +464,7 @@ class Processor:
         
         try:
             data = self.database.allPermissionsData(client if client else medic)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":data}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":data}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -461,7 +489,7 @@ class Processor:
 
         try:
             self.database.acceptPermission(client, medic)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission accepted with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Permission accepted with success."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -487,7 +515,7 @@ class Processor:
 
         try:
             self.database.rejectPermission(client, medic)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission rejected with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Permission rejected with success."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -512,7 +540,7 @@ class Processor:
 
         try:
             self.database.deleteRequestPermission(medic, client)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission removed with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Permission removed with success."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -537,7 +565,7 @@ class Processor:
 
         try:
             self.database.removeAcceptedPermission(client, medic)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Permission removed with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Permission removed with success."}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
         except DatabaseException as e:
@@ -636,7 +664,7 @@ class Processor:
             concatMoods+=m+","
         try: 
             self.process([("PersonalStatus", {"moods":concatMoods[:-1]}),("Event", {"events":json.dumps(allMoods)})], user)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Mood(s) registered with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Mood(s) registered with success."}).encode("UTF-8")
         except DatabaseException as e:
             return  json.dumps({"status":-1, "msg":"While saving data. "+str(e)}).encode("UTF-8")
         except Exception as e:
@@ -655,7 +683,7 @@ class Processor:
         try: 
             for metric in deleteMetrics:
                 self.database.delete(metric, time, user)
-            return json.dumps({"status":0 , "msg":"Successfull operation.", "data":"Mood(s) deleted with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Mood(s) deleted with success."}).encode("UTF-8")
         except DatabaseException as e:
             return  json.dumps({"status":-1, "msg":"While saving data. "+str(e)}).encode("UTF-8")
         except Exception as e:

@@ -68,7 +68,7 @@ class InfluxProxy:
         :return: list of maps
         :rtype: list
         """
-        if begin_time and end_time and interval:
+        if begin_time is not None and end_time is not None and interval is not None:
             raise LogicException("Combination of start, end and interval arguments invalid.")
 
         # Parameters on query only work on the where clause
@@ -82,25 +82,25 @@ class InfluxProxy:
 
         if interval:
 
-            if begin_time:
+            if begin_time is not None:
                 query += " AND time >= $begin_time AND time <= $begin_time + " + interval
                 params["begin_time"] = begin_time * 1000000000
 
-            elif end_time:
+            elif end_time is not None:
                 query += " AND time <= $end_time AND time >= $end_time - " + interval
                 params["end_time"] = end_time * 1000000000
             else:
                 query += " AND time >= now() - " + interval
 
-        elif not begin_time and not end_time:
+        elif begin_time is None and end_time is None:
             query += " ORDER BY time DESC LIMIT 1"
 
         else:
-            if begin_time:
+            if begin_time is not None:
                 query += " AND time >= $begin_time"
                 params["begin_time"] = begin_time * 1000000000
 
-            if end_time:
+            if end_time is not None:
                 query += " AND time <= $end_time"
                 params["end_time"] = end_time * 1000000000
 

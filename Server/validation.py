@@ -245,6 +245,14 @@ class ArgumentValidator:
         return result
 
     @staticmethod
+    def download(data):
+        return ArgumentValidator._validate(
+            data, [
+                ("userCount", int, True)
+            ]
+        )
+
+    @staticmethod
     def get_profile(data):
         return ArgumentValidator._validate(
             data, [("patient", str, False)]

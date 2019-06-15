@@ -143,7 +143,6 @@ def _interval_to_timedelta(interval):
 @app.route('/sleep', endpoint="Sleep", methods = ['GET'])
 @app.route('/event', endpoint="Event", methods = ['GET'])
 @app.route('/path', endpoint="Path", methods = ['GET'])
-@app.route('/download', endpoint="download",methods = ['GET'])
 def getData():
     userToken = request.headers.get("AuthToken")
     if not userToken and request.endpoint != "download":
@@ -184,6 +183,26 @@ def getData():
         return json.dumps({"status": 1, "msg": "Interval requested extends 40 days."}).encode("UTF-8")
 
     return processor.getData(userToken, request.endpoint, start, end, interval, patient)
+
+@app.route('/download', methods = ['GET'])
+def download():
+    """
+    Allows researchers to extract anonymous data from
+     our platform
+
+    params
+        userCount: number os how much users to retrieve
+                   if the database contains less users
+                    than the number received then all
+                    existing users will be retrieved
+    """
+    args = request.args
+
+    argsErrors = ArgumentValidator.download(args)
+    if len(argsErrors) > 0:
+        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
+    return processor.download(int(args["userCount"]))
 
 @app.route('/profile', methods = ['GET', 'PUT', 'DELETE'])
 def profile():
