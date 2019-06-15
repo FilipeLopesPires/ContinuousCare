@@ -17,7 +17,7 @@ class FitBit_Charge_3(DataSource):
 
     @property
     def header(self):
-        return json.dumps({"Authorization": "Bearer "+self._authentication_fields["token"]})
+        return {"Authorization": "Bearer "+self._authentication_fields["token"]}
 
     @property
     def refreshHeader(self):
@@ -37,8 +37,11 @@ class FitBit_Charge_3(DataSource):
             response=requests.post(self._refreshURL, headers=self.refreshHeader, data=self.refreshData)
             jsonData=json.loads(response.text)
 
-            self._authentication_fields["token"] = jsonData["access_token"]
-            self._authentication_fields["refresh_token"] = jsonData["refresh_token"]
+            tokens = {"token": jsonData["access_token"], "refresh_token": jsonData["refresh_token"]}
+
+            self._authentication_fields["token"] = tokens["token"]
+            self._authentication_fields["refresh_token"] = tokens["refresh_token"]
+
             return tokens
         except Exception as e:
             raise Exception("Unable to refresh tokens due to error: "+str(e))
