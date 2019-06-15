@@ -244,6 +244,12 @@ class ArgumentValidator:
 
         return result
 
+    @staticmethod
+    def get_profile(data):
+        return ArgumentValidator._validate(
+            data, [("patient", str, False)]
+        )
+
     # =============================== Processor.py =========================================
 
     @staticmethod

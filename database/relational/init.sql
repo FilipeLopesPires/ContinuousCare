@@ -395,7 +395,7 @@ CREATE PROCEDURE get_user_info (
       FROM medic JOIN user ON medic.user_id = user.user_id
       WHERE username = _username;
     ELSE
-	  	SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There is no user with that username";
+      SIGNAL SQLSTATE '03000' SET MESSAGE_TEXT = "There is no user with the given username.";
     END IF;
 
   END //

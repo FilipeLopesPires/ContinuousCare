@@ -198,7 +198,15 @@ def profile():
 
         return processor.updateProfile(userToken, data)
     elif request.method == 'GET':
-        return processor.getProfile(userToken)
+        data = request.args
+        if not data:
+            data = {}
+
+        argsErrors =  ArgumentValidator.get_profile(data)
+        if len(argsErrors) > 0:
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+
+        return processor.getProfile(userToken, data)
     else:
         return processor.deleteProfile(userToken)
 

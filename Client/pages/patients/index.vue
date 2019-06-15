@@ -26,6 +26,24 @@
                                         </div>
                                     </b-row>
                                     <b-row>
+                                        <strong class="col-md-2">Birth Date:</strong>
+                                        <span v-if="client_info.birth_date != null && client_info.birth_date != ''" class="col-md-2">{{client_info.birth_date}}</span>
+                                        <span v-else class="col-md-2">Not inserted</span>
+
+                                        <strong class="col-md-2">Weight (Kilograms):</strong>
+                                        <span v-if="client_info.weight != null && client_info.weight != ''" class="col-md-2">{{client_info.weight}}</span>
+                                        <span v-else class="col-md-2">Not inserted</span>
+
+                                        <strong class="col-md-2">Height (Meters):</strong>
+                                        <span v-if="client_info.height != null && client_info.height != ''" class="col-md-2">{{client_info.height}}</span>
+                                        <span v-else class="col-md-2">Not inserted</span>
+                                    </b-row>
+                                    <b-row>
+                                        <strong class="col-md-2">Additional Info: </strong>
+                                        <span v-if="client_info.additional_info != null && client_info.additional_info != ''" class="col-md-8">{{client_info.addtional_info}}</span>
+                                        <span v-else class="col-md-8">Not inserted</span>
+                                    </b-row>
+                                    <b-row>
                                         <b-col md="3">
                                             <b-card style="width:200px">
                                                 <h4>Metrics</h4>
@@ -139,6 +157,13 @@ export default {
 
             client_name: "",
             client_username: null,
+
+            client_info: {
+                birth_date: "",
+                weight: "",
+                height: "",
+                additional_info: ""
+            },
 
             charts_build_data: {},
 
@@ -380,9 +405,59 @@ export default {
         /**
          * Invoked whenever a medic click on a play button
          */
-        use_permission(client_name, client_username) {
+        async use_permission(client_name, client_username) {
             this.client_name = client_name;
             this.client_username = client_username;
+
+            //reset client info
+            this.client_info = {
+                birth_date: "",
+                weight: "",
+                height: "",
+                additional_info: ""
+            },
+
+            await this.$axios.$get("/profile", {
+                headers: {
+                    AuthToken: this.$store.getters.sessionToken
+                },
+                params: {
+                    patient: this.client_username,
+                }
+            })
+            .then(res => {
+                if (res.status == 0) {
+                    console.log("profile received ", res.data);
+                    let new_client_info = {
+                        birth_date: res.data.birth_date,
+                        height: res.data.height,
+                        weight: res.data.weight,
+                        additional_info: res.data.additional_info
+                    }
+
+                    this.client_info = new_client_info;
+                }
+                else if (res.status == 1) {
+                    this.show_toast(res.msg);
+                }
+                else if(res.status == 4) {
+                    this.show_toast(res.msg);
+                    this.$disconnect()
+                    this.$nextTick(() => {
+                        this.$store.dispatch('logout'),
+                        this.$router.push("/login")
+                    });
+                }
+                else {
+                    console.log(res.msg);
+                    console.log(res.status);
+                    this.show_toast("Some error occured when retrieving client's personal info.");
+                }
+            })
+            .catch(e => {
+                console.log(e);
+                this.show_toast("Some error occured when retrieving client's personal info.");
+            });
 
             this.data_source = "/healthstatus";
             this.start = this.end = this.interval = null;

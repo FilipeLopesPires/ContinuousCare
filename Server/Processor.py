@@ -326,18 +326,24 @@ class Processor:
         except Exception as e:
             return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
 
-    def getProfile(self, token):
+    def getProfile(self, token, data):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
+        patient = None
         if not client and not medic:
             return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
         elif client:
             user = client
         elif medic:
             user = medic
+            patient = data.get("patient")
 
         try:
-            profile=self.database.getProfile(user)
+            if patient:
+                profile = self.database.getPatientProfile(medic, patient)
+            else:
+                profile = self.database.getProfile(user)
+
             return json.dumps({"status":0 , "msg":"Successfull operation.", "data": profile}).encode("UTF-8")
         except LogicException as e:
             return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")

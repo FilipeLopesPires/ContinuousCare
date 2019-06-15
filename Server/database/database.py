@@ -155,6 +155,35 @@ class Database:
         except Exception as e:
             raise ProxyException(str(e))
 
+    def getPatientProfile(self, medic, patient):
+        """
+        Allows a medic to get the additional information that the client
+          inserted on his profile section
+
+        :param medic: the one requesting
+        :type medic: str
+        :param patient: the one to get the information
+        :type patient: str
+        :return: keys: birth_date, height, weight, additional_info
+        :rtype: dict
+        """
+        try:
+            if not self.relational_proxy.has_permission(medic, patient):
+                raise LogicException("You don't have permission to access this data")
+
+            profile = self.relational_proxy.get_user_profile_data(patient)
+            if "medic_id" in profile:
+                return json.dumps({"status":1, "msg":"There is no patient with the given username."}).encode("UTF-8")
+
+            for key in ["client_id", "full_name", "email", "health_number"]:
+                del profile[key]
+
+            return profile
+        except (InternalException, LogicException):
+            raise
+        except Exception as e:
+            raise ProxyException(str(e))
+
     def getAllUsers(self):
         """
         Obtain all usernames of all clients registered on the system
