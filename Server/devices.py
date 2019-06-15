@@ -174,6 +174,7 @@ class Calories(Metric):
 class Activity(Metric):
     def __init__(self, dataSource):
         super().__init__(dataSource)
+        self.previousValue = 0
 
     @property
     def URLTemplate(self):
@@ -205,17 +206,17 @@ class Activity(Metric):
         return {"fairlyActiveMinutes":jsonData["summary"]["fairlyActiveMinutes"], "lightlyActiveMinutes":jsonData["summary"]["lightlyActiveMinutes"], "sedentaryMinutes":jsonData["summary"]["sedentaryMinutes"], "veryActiveMinutes":jsonData["summary"]["veryActiveMinutes"]}
 
     def checkEvent(self, normalJsonData):
-        previousValue=0
         sedentaryMinutes = normalJsonData["sedentaryMinutes"]
         if sedentaryMinutes:
-            if sedentaryMinutes-previousValue > 5*60:
-                previousValue=sedentaryMinutes
+            if sedentaryMinutes-self.previousValue > 5*60:
+                self.previousValue=sedentaryMinutes
                 return {"events":["Sedentary Behavior"], "metrics":["sedentaryMinutes"]}
         return None
 
 class Steps(Metric):
     def __init__(self, dataSource):
         super().__init__(dataSource)
+        self.previousValue = 0
 
     @property
     def URLTemplate(self):
@@ -247,11 +248,10 @@ class Steps(Metric):
         return {"steps":jsonData["summary"]["steps"]}
 
     def checkEvent(self, normalJsonData):
-        previousValue=0
         steps = normalJsonData["steps"]
         if steps:
-            if steps-previousValue  > 1000 and steps-previousValue < 1500 and steps < 3000:
-                previousValue=steps
+            if steps-self.previousValue  > 1000 and steps-self.previousValue < 1500 and steps < 3000:
+                self.previousValue=steps
                 return {"events":["Not Enough Exercise"], "metrics":["steps"]}
         return None
 
