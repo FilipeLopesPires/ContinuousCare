@@ -25,23 +25,23 @@
                                             <button style="background:none; color:black; border:none; font-size:30px" @click="data_loaded = false" class="genric-btn-xtra radius"><i class="fa fa-times"></i></button>
                                         </div>
                                     </b-row>
-                                    <b-row>
+                                    <b-row class="mt-10">
                                         <strong class="col-md-2">Birth Date:</strong>
                                         <span v-if="client_info.birth_date != null && client_info.birth_date != ''" class="col-md-2">{{client_info.birth_date}}</span>
-                                        <span v-else class="col-md-2">Not inserted</span>
+                                        <span v-else class="col-md-2">Not filled</span>
 
                                         <strong class="col-md-2">Weight (Kilograms):</strong>
                                         <span v-if="client_info.weight != null && client_info.weight != ''" class="col-md-2">{{client_info.weight}}</span>
-                                        <span v-else class="col-md-2">Not inserted</span>
+                                        <span v-else class="col-md-2">Not filled</span>
 
                                         <strong class="col-md-2">Height (Meters):</strong>
                                         <span v-if="client_info.height != null && client_info.height != ''" class="col-md-2">{{client_info.height}}</span>
-                                        <span v-else class="col-md-2">Not inserted</span>
+                                        <span v-else class="col-md-2">Not filled</span>
                                     </b-row>
-                                    <b-row>
+                                    <b-row class="mb-20 mt-10">
                                         <strong class="col-md-2">Additional Info: </strong>
                                         <span v-if="client_info.additional_info != null && client_info.additional_info != ''" class="col-md-8">{{client_info.addtional_info}}</span>
-                                        <span v-else class="col-md-8">Not inserted</span>
+                                        <span v-else class="col-md-8">Not filled</span>
                                     </b-row>
                                     <b-row>
                                         <b-col md="3">
