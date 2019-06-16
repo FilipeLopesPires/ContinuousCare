@@ -27,7 +27,7 @@ def signup():
 
     argsErrors =  ArgumentValidator.signup(data)
     if len(argsErrors) > 0:
-        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
     return processor.signup(data)
 
@@ -39,7 +39,7 @@ def signin():
 
     argsErrors =  ArgumentValidator.signin(data)
     if len(argsErrors) > 0:
-        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
     return processor.signin(data)
 
@@ -48,7 +48,7 @@ def logout():
 
     authToken = request.headers.get("AuthToken")
     if not authToken:
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     return processor.logout(authToken)
 
@@ -56,7 +56,7 @@ def logout():
 def devices():
     authToken = request.headers.get("AuthToken")
     if not authToken:
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     data = request.json
     if not data:
@@ -68,21 +68,21 @@ def devices():
 
         argsErrors =  ArgumentValidator.addDevice(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
         return processor.addDevice(authToken, data)
     elif request.method == 'PUT':
 
         argsErrors =  ArgumentValidator.updateDevice(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
         return processor.updateDevice(authToken, data)
     else:
 
         argsErrors =  ArgumentValidator.deleteDevice(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
     return processor.deleteDevice(authToken, data)
 
@@ -90,7 +90,7 @@ def devices():
 def registerMood():
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     data = request.json
     if not data:
@@ -99,13 +99,13 @@ def registerMood():
     if request.method=="POST":
         argsErrors =  ArgumentValidator.registerMood(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
         return processor.registerMood(userToken, data)
     else:
         argsErrors =  ArgumentValidator.deleteMood(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
         return processor.deleteMood(userToken, data)
 
@@ -146,7 +146,7 @@ def _interval_to_timedelta(interval):
 def getData():
     userToken = request.headers.get("AuthToken")
     if not userToken and request.endpoint != "download":
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     start=request.args.get('start', type=int)
     end=request.args.get('end', type=int)
@@ -160,7 +160,7 @@ def getData():
         'patient': patient
     })
     if len(argsErrors) > 0:
-        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
     # Verify if the interval requested extends 30 days
     time_interval = datetime.timedelta() # no time
@@ -168,7 +168,7 @@ def getData():
     if interval:
         if start and end:
             return json.dumps({"status": 1, "msg": "Only combination of two and one paremeters are allowed,"
-                                                    "ex: start and end, start and interval"}).encode("UTF-8")
+                                                    "ex: start and end, start and interval"}).encode("UTF-8"), 406
         else:
             time_interval = _interval_to_timedelta(interval)
     else:
@@ -180,7 +180,7 @@ def getData():
             time_interval = datetime.timedelta.max
 
     if time_interval > datetime.timedelta(days=40):
-        return json.dumps({"status": 1, "msg": "Interval requested extends 40 days."}).encode("UTF-8")
+        return json.dumps({"status": 1, "msg": "Interval requested extends 40 days."}).encode("UTF-8"), 406
 
     return processor.getData(userToken, request.endpoint, start, end, interval, patient)
 
@@ -200,7 +200,7 @@ def download():
 
     argsErrors = ArgumentValidator.download(args)
     if len(argsErrors) > 0:
-        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
     return processor.download(int(args["userCount"]))
 
@@ -208,7 +208,7 @@ def download():
 def profile():
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     if request.method == 'PUT':
         data = request.json
@@ -223,7 +223,7 @@ def profile():
 
         argsErrors =  ArgumentValidator.get_profile(data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
         return processor.getProfile(userToken, data)
     else:
@@ -251,7 +251,7 @@ def permissions():
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     if request.method == 'GET':
         return processor.getAllPermissions(userToken)
@@ -269,7 +269,7 @@ def acceptPermission(medic):
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     return processor.acceptPermission(userToken, medic)
 
@@ -280,7 +280,7 @@ def rejectPermission(medic):
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     return processor.rejectPermission(userToken, medic)
 
@@ -291,7 +291,7 @@ def removePendingPermission(client):
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     return processor.removePendingPermission(userToken, client)
 
@@ -302,7 +302,7 @@ def removeAcceptedPermission(medic):
     """
     userToken = request.headers.get("AuthToken")
     if not userToken:
-        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8")
+        return json.dumps({"status":2, "msg":"This path requires an authentication token on headers named \"AuthToken\""}).encode("UTF-8"), 400
 
     return processor.removeAcceptedPermission(userToken, medic)
 

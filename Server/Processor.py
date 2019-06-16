@@ -98,25 +98,25 @@ class Processor:
                     self.userThreads[user]=AggregatorThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
                     self.userThreads[user].start()
 
-            return json.dumps({"status":0, "msg":"Successful operation."}).encode("UTF-8")
+            return json.dumps({"status":0, "msg":"Successful operation."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def logout(self, token):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
         elif client:
             del self.clientTokens[token]
         elif medic:
             del self.medicTokens[token]
 
-        return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8")
+        return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8"), 200
 
     def _generateToken(self, tokenMap, username):
         """
@@ -149,22 +149,22 @@ class Processor:
         userType = self.database.verifyUser(jsonData)
 
         if userType == 0: # invalid login
-            return json.dumps({"status":1, "msg":"Incorrect username or password."}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":"Incorrect username or password."}).encode("UTF-8"), 406
 
         elif userType == 1: # valid login and user is a client
             token = self._generateToken(self.clientTokens, jsonData["username"])
         elif userType == 2: # valid login and user is a medic
             token = self._generateToken(self.medicTokens, jsonData["username"])
 
-        return json.dumps({"status":0 , "msg":"Successful operation.", "data":{"token":token}}).encode("UTF-8")
+        return json.dumps({"status":0 , "msg":"Successful operation.", "data":{"token":token}}).encode("UTF-8"), 200
 
     def getAllDevices(self, token):
         if self.medicTokens.get(token):
-            return  json.dumps({"status":1, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
+            return  json.dumps({"status":1, "msg":"Medic users don't have devices associated."}).encode("UTF-8"), 406
 
         user = self.clientTokens.get(token, None)
         if not user:
-            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         try:
             devices=self.database.getAllDevices(user)
@@ -175,19 +175,19 @@ class Processor:
                     device[field_name] = field_value
 
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
 
-        return json.dumps({"status":0 , "msg":"Successful operation.", "data":devices}).encode("UTF-8")
+        return json.dumps({"status":0 , "msg":"Successful operation.", "data":devices}).encode("UTF-8"), 200
 
     def updateDevice(self, token, deviceConf):
         if self.medicTokens.get(token):
-            return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
+            return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8"), 403
 
         user = self.clientTokens.get(token, None)
         if not user:
-            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         try:
             userDevices={submetric.dataSource for metric in self.userMetrics[user] for submetric in self.userMetrics[user][metric]}
@@ -201,23 +201,23 @@ class Processor:
                     self.userThreads[user]=AggregatorThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
                     self.userThreads[user].start()
                     break
-            result=self.database.updateDevice(user, deviceConf)
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data": result}).encode("UTF-8")
+            self.database.updateDevice(user, deviceConf)
+            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
 
     def deleteDevice(self, token, data):
         if self.medicTokens.get(token):
-            return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
+            return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8"), 403
 
         user = self.clientTokens.get(token, None)
         if not user:
-            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         try:
             deviceId=data["id"]
@@ -226,27 +226,27 @@ class Processor:
                     if submetric.dataSource.id == deviceId:
                         self.userMetrics[user][metric].remove(submetric)
                 
-            result=self.database.deleteDevice(user, deviceId)
+            self.database.deleteDevice(user, deviceId)
             if user in self.userThreads:
                 self.userThreads[user].end()
             self.userThreads[user]=AggregatorThread(self, {k:v for k, v in self.userMetrics[user].items() if k in ["GPS", "HealthStatus", "Sleep"]}, user)
             self.userThreads[user].start()
 
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data": result}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def addDevice(self, token, jsonData):
         if self.medicTokens.get(token):
-            return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8")
+            return  json.dumps({"status":3, "msg":"Medic users don't have devices associated."}).encode("UTF-8"), 403
 
         user = self.clientTokens.get(token, None)
         if not user:
-            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         try:
             id=str(self.database.addDevice(user, jsonData))
@@ -269,38 +269,38 @@ class Processor:
 
 
             
-            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def getData(self, token, endpoint, start, end, interval, patient):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return  json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         try:
             if client:
                 values = self.database.getData(endpoint, client, start, end, interval)
             elif medic:
                 if endpoint == "Path":
-                    return json.dumps({"status":4, "msg":"Only accecible to patitents."}).encode("UTF-8")
+                    return json.dumps({"status":4, "msg":"Only accecible to patitents."}).encode("UTF-8"), 401
 
                 if not patient:
-                    return json.dumps({"status":2, "msg":"Missing argument \"patient\""}).encode("UTF-8")
+                    return json.dumps({"status":2, "msg":"Missing argument \"patient\""}).encode("UTF-8"), 400
 
                 values = self.database.getDataByMedic(medic, endpoint, patient, start, end, interval)
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":values}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":values}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def download(self, userCount):
         """
@@ -334,7 +334,7 @@ class Processor:
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
         elif client:
             user = client
         elif medic:
@@ -342,24 +342,24 @@ class Processor:
 
         argsErrors = ArgumentValidator.signupAndUpdateProfile(True if client else False, True, data)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
         try:
             self.database.updateProfile("client" if client else "medic", user, data)
-            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def getProfile(self, token, data):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         patient = None
         if not client and not medic:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
         elif client:
             user = client
         elif medic:
@@ -372,19 +372,19 @@ class Processor:
             else:
                 profile = self.database.getProfile(user)
 
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data": profile}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data": profile}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def deleteProfile(self, token):
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
         elif client:
             user = client
         elif medic:
@@ -392,24 +392,24 @@ class Processor:
 
         try:
             self.database.deleteProfile(user)
-            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def getSupportedDevices(self):
         try:
             values=self.database.getSupportedDevices()
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":values}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":values}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def uploadPermission(self, token, jsonData):
         """
@@ -423,11 +423,11 @@ class Processor:
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         argsErrors = ArgumentValidator.uploadPermissions("medic" if medic else "client", jsonData)
         if len(argsErrors) > 0:
-            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8")
+            return json.dumps({"status":2, "msg":"Argument errors : " + ", ".join(argsErrors)}).encode("UTF-8"), 400
 
         try:
             target = jsonData["username"]
@@ -443,13 +443,13 @@ class Processor:
         
             permissionThread([source], targetToken, self.socket).start()
 
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":destination}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":destination}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
 
     def getAllPermissions(self, token):
@@ -460,17 +460,17 @@ class Processor:
         client = self.clientTokens.get(token, None)
         medic = self.medicTokens.get(token, None)
         if not client and not medic:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
         
         try:
             data = self.database.allPermissionsData(client if client else medic)
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":data}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation.", "data":data}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def acceptPermission(self, token, medic):
         """
@@ -481,21 +481,21 @@ class Processor:
         medic - str - of the medic that he wants to reject request for permission
         """
         if self.medicTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8"), 406
 
         client = self.clientTokens.get(token)
         if not client:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         try:
             self.database.acceptPermission(client, medic)
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Permission accepted with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation. Permission accepted with success."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
 
     def rejectPermission(self, token, medic):
@@ -507,21 +507,21 @@ class Processor:
         medic - str - of the medic that he wants to reject request for permission
         """
         if self.medicTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8"), 406
 
         client = self.clientTokens.get(token)
         if not client:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         try:
             self.database.rejectPermission(client, medic)
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Permission rejected with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation. Permission rejected with success."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def removePendingPermission(self, token, client):
         """
@@ -532,21 +532,21 @@ class Processor:
         client - str - of the client that he wants to remove the active permission
         """
         if self.clientTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to medics"}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":"Only accessible to medics"}).encode("UTF-8"), 406
 
         medic = self.medicTokens.get(token)
         if not medic:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         try:
             self.database.deleteRequestPermission(medic, client)
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Permission removed with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation. Permission removed with success."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def removeAcceptedPermission(self, token, medic):
         """
@@ -557,21 +557,21 @@ class Processor:
         username - str - of the medic that he wants to remove an accepted permission
         """
         if self.medicTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8"), 406
 
         client = self.clientTokens.get(token)
         if not client:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         try:
             self.database.removeAcceptedPermission(client, medic)
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Permission removed with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation. Permission removed with success."}).encode("UTF-8"), 200
         except LogicException as e:
-            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":str(e)}).encode("UTF-8"), 406
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def process(self, responses, user):
         normalData={}
@@ -649,11 +649,11 @@ class Processor:
 
     def registerMood(self, token, data):
         if self.medicTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8"), 406
 
         user=self.clientTokens.get(token)
         if not user:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         moods=data["moods"]
         concatMoods=moods[0]
@@ -661,33 +661,33 @@ class Processor:
         for m in moods:
             allMoods["events"].append(m)
             allMoods["metrics"].append("PersonalStatus")
-            concatMoods+=m+","
+            concatMoods+=","+m
         try: 
             self.process([("PersonalStatus", {"moods":concatMoods[:-1]}),("Event", {"events":json.dumps(allMoods)})], user)
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Mood(s) registered with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation. Mood(s) registered with success."}).encode("UTF-8"), 200
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":"While saving data. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"While saving data. "+str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"While saving data.Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"While saving data.Server internal error. "+str(e)}).encode("UTF-8"), 500
 
     def deleteMood(self, token, data):
         if self.medicTokens.get(token):
-            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8")
+            return json.dumps({"status":1, "msg":"Only accessible to patients"}).encode("UTF-8"), 406
 
         user=self.clientTokens.get(token)
         if not user:
-            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8")
+            return json.dumps({"status":4, "msg":"Invalid Token."}).encode("UTF-8"), 401
 
         time=data["time"]
         deleteMetrics=["Event", "PersonalStatus"]
         try: 
             for metric in deleteMetrics:
                 self.database.delete(metric, time, user)
-            return json.dumps({"status":0 , "msg":"Successful operation.", "data":"Mood(s) deleted with success."}).encode("UTF-8")
+            return json.dumps({"status":0 , "msg":"Successful operation. Mood(s) deleted with success."}).encode("UTF-8"), 200
         except DatabaseException as e:
-            return  json.dumps({"status":-1, "msg":"While saving data. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"While saving data. "+str(e)}).encode("UTF-8"), 500
         except Exception as e:
-            return  json.dumps({"status":-1, "msg":"While saving data. Server internal error. "+str(e)}).encode("UTF-8")
+            return  json.dumps({"status":-1, "msg":"While saving data. Server internal error. "+str(e)}).encode("UTF-8"), 500
         
     
     def _save(self, data, user):
