@@ -106,7 +106,12 @@ export default {
     },
     methods: {
         async getSupportedDevices() {
-            this.supported_devices = await this.$axios.$get("/supportedDevices")
+            const config = {
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
+            };
+            this.supported_devices = await this.$axios.$get("/supportedDevices", config)
                                     .then(res => {
                                         if(res.status != 0) {
                                             if(res.status == 4) {
@@ -140,8 +145,11 @@ export default {
         },
         async getDevices(AuthToken) {
             const config = {
-                headers: {'AuthToken': AuthToken}
-            }
+                headers: {'AuthToken': AuthToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
+            };
             var new_devices = await this.$axios.$get("/devices",config)
                                 .then(res => {
                                     if(res.status != 0) {

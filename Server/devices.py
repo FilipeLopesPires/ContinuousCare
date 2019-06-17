@@ -26,7 +26,7 @@ class FitBit_Charge_3(DataSource):
 
     @property
     def refreshData(self):
-        return json.dumps({"grant_type": "refresh_token", "refresh_token": self._authentication_fields["refresh_token"]})
+        return {"grant_type": "refresh_token", "refresh_token": self._authentication_fields["refresh_token"]}
 
     @property
     def _refreshURL(self):

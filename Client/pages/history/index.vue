@@ -172,7 +172,10 @@ export default {
         async getServerData(start,end,interval,AuthToken,restPath) {
             const config = {
                 params: {'start': start, 'end': end, 'interval': interval},
-                headers: {'AuthToken': AuthToken}
+                headers: {'AuthToken': AuthToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
             //console.log("inside)" + this.showChart);
             this.serverData = await this.$axios.$get(restPath,config)

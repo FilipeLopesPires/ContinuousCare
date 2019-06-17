@@ -92,12 +92,18 @@ export default {
                 params['interval'] = null;
                 config = {
                     params: params,
-                    headers: {'AuthToken': AuthToken}
+                    headers: {'AuthToken': AuthToken},
+                    validateStatus: function (status) {
+                        return (status >= 200 && status < 300) || status == 406 || status == 401;
+                    },
                 }
             } else {
                 config = {
                     params: {start: null, end: null, interval: null},
-                    headers: {'AuthToken': AuthToken}
+                    headers: {'AuthToken': AuthToken},
+                    validateStatus: function (status) {
+                        return (status >= 200 && status < 300) || status == 406 || status == 401;
+                    },
                 }
                 if (filledform.start) {
                     config.params.start = new Date(filledform.start).getTime() / 1000;
@@ -140,7 +146,10 @@ export default {
         },
         async getDevices(AuthToken) {
             const config = {
-                headers: {'AuthToken': AuthToken}
+                headers: {'AuthToken': AuthToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
             //console.log("getDevices");
             return await this.$axios.$get("/devices",config)

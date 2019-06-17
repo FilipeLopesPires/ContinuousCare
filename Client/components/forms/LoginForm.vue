@@ -100,11 +100,16 @@ export default {
         },
 
         async checkLogin(filledform) {
-            const config = {
+            const data = {
                 'username': filledform.username,
                 'password': filledform.password
-            }
-            return await this.$axios.$post("/signin", config)
+            };
+            const config = {
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
+            };
+            return await this.$axios.$post("/signin", data, config)
                         .then(res => {
                             if(res.status != 0) {
                                 // warn which login field is invalid
@@ -136,7 +141,10 @@ export default {
         },
         async getProfile(AuthToken) {
             const config = {
-                headers: {'AuthToken': AuthToken}
+                headers: {'AuthToken': AuthToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
             return await this.$axios.$get("/profile", config)
                         .then(res => {

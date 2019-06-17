@@ -200,6 +200,11 @@ export default {
 
         async checkRegistration(filledform, account_type) {
             const config = {
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
+            };
+            const data = {
                 'type': account_type,
                 'name': filledform.first_name + " " + filledform.last_name,
                 'username': filledform.username,
@@ -213,7 +218,7 @@ export default {
                 'company': filledform.company,
                 'specialities': filledform.specialities,
             }
-            return await this.$axios.$post("/signup",config)
+            return await this.$axios.$post("/signup", data, config)
                         .then(res => {
                             if(res.status != 0) {
                                 // warn which registration fields are invalid
@@ -244,11 +249,16 @@ export default {
                         });
         },
         async checkLogin(filledform) {
-            const config = {
+            const data = {
                 'username': filledform.username,
                 'password': filledform.password
             }
-            return await this.$axios.$post("/signin",config)
+            const config = {
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
+            };
+            return await this.$axios.$post("/signin", data, config)
                         .then(res => {
                             if(res.status != 0) {
                                 //this.showToast("Something went terribly wrong with the registration process. Please try to login, if it does not work contact us through email.", 7500);

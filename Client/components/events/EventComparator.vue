@@ -203,6 +203,9 @@ export default {
             let config = {
                 params: {'start': this.startTime, 'end': this.endTime, 'interval': this.intervalTime},
                 headers: {'AuthToken': this.$store.getters.sessionToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
 
             if(this.patient)
@@ -220,6 +223,9 @@ export default {
             let config = {
                 params: {'start': this.startTime, 'end': this.endTime, 'interval': this.intervalTime},
                 headers: {'AuthToken': this.$store.getters.sessionToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
 
             if(this.patient)

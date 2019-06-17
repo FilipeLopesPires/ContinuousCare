@@ -83,6 +83,9 @@ export default {
             },
             requests_header: {
                 headers: {AuthToken: this.$store.getters.sessionToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             },
             request_by_username: false,
             health_number: "",

@@ -329,7 +329,10 @@ export default {
                     start: this.start,
                     end: this.end,
                     interval: this.interval
-                }
+                },
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             })
             .then(res => {
                 if (res.status == 0) {
@@ -423,7 +426,10 @@ export default {
                 },
                 params: {
                     patient: this.client_username,
-                }
+                },
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             })
             .then(res => {
                 if (res.status == 0) {

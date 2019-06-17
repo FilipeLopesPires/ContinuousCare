@@ -167,6 +167,9 @@ export default {
             
             const config = {
                 headers: {'AuthToken': AuthToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
             return await this.$axios.$post("/devices", data, config)
                         .then(res => {
@@ -198,6 +201,9 @@ export default {
         async updateDevice(data,AuthToken) {
             const config = {
                 headers: {'AuthToken': AuthToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
             return await this.$axios.$put("/devices", data, config)
                         .then(res => {
@@ -232,6 +238,9 @@ export default {
             const config = {
                 headers: {'AuthToken': AuthToken, "Content-Type":"application/json"},
                 data: data,
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
             return await this.$axios.$delete("/devices", config)
                         .then(res => {

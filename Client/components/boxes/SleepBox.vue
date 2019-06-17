@@ -129,7 +129,10 @@ export default {
         async getSleep(AuthToken, date) {
             let config = {
                 headers: {'AuthToken': AuthToken},
-                params: {}
+                params: {},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             };
 
             if (this.patient) {

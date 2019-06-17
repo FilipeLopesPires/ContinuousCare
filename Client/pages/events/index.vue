@@ -92,7 +92,10 @@ export default {
         async updateChart(){
             const config = {
                 params: {'start': this.startEvents, 'end': this.endEvents},
-                headers: {'AuthToken': this.$store.getters.sessionToken}
+                headers: {'AuthToken': this.$store.getters.sessionToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
             await this.$axios.$get("/event", config)
             .then(res => {

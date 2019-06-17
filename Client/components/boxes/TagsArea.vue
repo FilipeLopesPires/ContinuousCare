@@ -140,6 +140,9 @@ export default {
             }
             const config = {
                 headers: {'AuthToken': this.$store.getters.sessionToken},
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
             // send data
             await this.$axios.$post("/mood", data, config)

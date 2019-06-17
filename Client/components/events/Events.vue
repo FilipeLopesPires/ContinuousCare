@@ -72,6 +72,9 @@ export default {
         let config = {
           params: {'start': this.startTime, 'end': this.endTime, 'interval': this.intervalTime},
           headers: {'AuthToken': this.$store.getters.sessionToken},
+          validateStatus: function (status) {
+              return (status >= 200 && status < 300) || status == 406 || status == 401;
+          },
         }
         if(this.patient)
           config.params.patient = this.patient;
@@ -176,7 +179,10 @@ export default {
       async deleteEvent(event){
         const config = {
           headers: {'AuthToken': this.$store.getters.sessionToken},
-          data: {"time": parseInt(new Date(event["time"]).getTime()/1000)}
+          data: {"time": parseInt(new Date(event["time"]).getTime()/1000)},
+          validateStatus: function (status) {
+              return (status >= 200 && status < 300) || status == 406 || status == 401;
+          },
         }
         await this.$axios.$delete("/mood", config)
         .then(res => {

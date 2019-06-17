@@ -210,7 +210,9 @@ export default {
         async checkUpdateProfile(filledform, AuthToken) {
             const config = {
                 headers: {'AuthToken': AuthToken, "Content-Type":"application/json"},
-                
+                validateStatus: function (status) {
+                    return (status >= 200 && status < 300) || status == 406 || status == 401;
+                },
             }
             var data = {
                 'type': this.$store.getters.userType,
