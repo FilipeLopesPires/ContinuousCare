@@ -4,7 +4,7 @@
 
 ![Cover](https://github.com/FilipePires98/ContinuousCare/blob/main/docs/presentations/img/CoverSlide.png)
 
-![](https://img.shields.io/badge/PRs-Welcome-success)
+[![](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com)
 ![](https://img.shields.io/badge/Deployment-Docker-blue)
 ![](https://img.shields.io/badge/Platform-Web-blue)
 ![](https://img.shields.io/badge/Platform-Mobile-blue)
