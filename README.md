@@ -54,7 +54,7 @@ ContinuousCare encompasses:
 
 The authors of this repository are André Pedrosa, Filipe Pires and João Alegria, and the project was developed for the Informatics Project Course of the licenciate's degree in Informatics Engineering of the University of Aveiro.
 
-For further information, please contact us through the corresponding author Filipe at fsnap@protonmail.com.
+For further information, please contact us through the corresponding author Filipe at filipesnetopires@ua.pt.
 
 ## Citation
 
